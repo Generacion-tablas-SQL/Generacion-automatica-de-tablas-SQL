@@ -9,6 +9,7 @@ NUMERIC
 FLOAT  
 REAL  
 DECIMAL
+TINYINT
 
 ### Tipos de datos de caracteres
 
