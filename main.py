@@ -10,19 +10,18 @@ from random import randint
 # Generador de numeros enteros
 # INT = INTEGER
 
-def generate_int(id, valor):
+def generate_int(id, opt1, opt2):
 
     if(eval("id.lower() == 'integer' or id.lower() == 'int'")):
-        if(not eval("id.lower() == 'null'")):
+        if(not eval("opt1.lower() == 'nullable' or opt1.lower() == 'null'" )):
             n = random.randint(0,500)
             print(n)
 
 
-generate_int("INT")
+generate_int("INT", "", "")
 #generate_int("INTEGER")
 #generate_int("inTeGer")
 #generate_int("integer")
-
 
 
 
