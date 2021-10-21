@@ -6,11 +6,11 @@ INTEGER
 SMALLINT  
 BIG INT  
 NUMERIC  
-DOUBLE
 FLOAT  
+DOUBLE
 REAL  
-DECIMAL
 TINYINT
+DECIMAL
 
 ### Tipos de datos de caracteres
 
