@@ -8,8 +8,10 @@
 -NUMERIC  
 -FLOAT  
 -DOUBLE
+
 -REAL  
 -TINYINT
+
 -DECIMAL
 
 ### Tipos de datos de caracteres
