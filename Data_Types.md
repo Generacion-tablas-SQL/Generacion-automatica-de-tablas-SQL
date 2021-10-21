@@ -7,7 +7,7 @@
 -BIG INT  
 -NUMERIC  
 -FLOAT  
--DOUBLE 
+-DOUBLE   
 -REAL  
 -TINYINT  
 -DECIMAL  
