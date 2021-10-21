@@ -7,12 +7,10 @@
 -BIG INT  
 -NUMERIC  
 -FLOAT  
--DOUBLE
-
+-DOUBLE 
 -REAL  
--TINYINT
-
--DECIMAL
+-TINYINT  
+-DECIMAL  
 
 ### Tipos de datos de caracteres
 
