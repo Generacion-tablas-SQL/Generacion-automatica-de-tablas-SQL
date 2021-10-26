@@ -8,18 +8,28 @@ from random import randint
 # Generador de números enteros
 # id = INT or INTEGER
 # opt1 = null or nullable
-# opt2 = unique (no implementado )
+# opt2 = unique 
 
 def generate_int(id, opt1, opt2):
-
+    generados = []
     if(eval("id.lower() == 'integer' or id.lower() == 'int'")):  #Es un entero
         if(not eval("opt1.lower() == 'nullable' or opt1.lower() == 'null'" )): #No es nulo
             n = random.randint(0,500)
+            generados.append(n)
             print(n)
         else:
             n = None;
             print(n);
         if(eval("id.lower() == 'unique'")): #Es valor unico
+            n = random.randint(0,500)
+            while n in generados:
+                n = random.randint(0, 500)
+            print(n)
+
+
+    else:
+        print("Tipo no entero \n")
+
 
 
 #generate_int("INT", "", "")
