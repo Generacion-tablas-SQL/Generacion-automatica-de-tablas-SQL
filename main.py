@@ -8,35 +8,40 @@ from random import randint
 # Generador de números enteros
 # id = INT or INTEGER
 # opt1 = null or nullable
-# opt2 = unique 
+# opt2 = unique
 
 def generate_int(id, opt1, opt2):
+    n = None;
     generados = []
-    if(eval("id.lower() == 'integer' or id.lower() == 'int'")):  #Es un entero
-        if(not eval("opt1.lower() == 'nullable' or opt1.lower() == 'null'" )): #No es nulo
-            n = random.randint(0,500)
-            generados.append(n)
-            print(n)
+    if (not eval("opt1.lower() == 'nullable' or opt1.lower() == 'null'")):  # No es nulo
+        if(eval("id.lower() == 'integer' or id.lower() == 'int'")):  #Es un entero
+                n = random.randint(0,10)
+                generados.append(n)
+                if(eval("id.lower() == 'unique'")): #Es valor unico
+                    while n in generados:
+                        n = random.randint(0, 10)
+                    generados.append(n)
+                print(n)
         else:
-            n = None;
-            print(n);
-        if(eval("id.lower() == 'unique'")): #Es valor unico
-            n = random.randint(0,500)
-            while n in generados:
-                n = random.randint(0, 500)
-            print(n)
-
-
+            print("No es un entero")
+            exit()
     else:
-        print("Tipo no entero \n")
+        print(n)
 
 
 
-#generate_int("INT", "", "")
-generate_int("INT", "NULL", "")
-#generate_int("INTEGER")
-#generate_int("inTeGer")
-#generate_int("integer")
+generate_int("INT", "", "UNIQUE")
+generate_int("INT", "", "UNIQUE")
+generate_int("INT", "", "UNIQUE")
+generate_int("INT", "", "UNIQUE")
+generate_int("", "", "UNIQUE")
+generate_int("INT", "NULL", "UNIQUE")
+generate_int("INT", "nuLL", "UNIQUE")
+generate_int("INT", "", "UNIQUE")
+generate_int("INT", "", "UNIQUE")
+
+
+
 
 
 
