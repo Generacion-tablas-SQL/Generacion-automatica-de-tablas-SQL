@@ -1,5 +1,7 @@
 import json
 import constantes
+import random
+from mo_sql_parsing import format
 
 # sentencia_tablas4 = """CREATE TABLE Persona (
 #   Id INTEGER CHECK (Id > 50) ,
@@ -17,17 +19,13 @@ import constantes
 # generate_int({'name': 'id', 'type': {'integer': {}}, 'option': {'check': {'gt': ['Id', 50]}}},
 # "{'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}")
 def generate_int2(column, constraint):
-    column_json = json.dumps(column)
-    print(column_json)
-    print(type(column_json))
-   # tipo = column_json["type"]
-    #print(tipo)
-    #tipo = column_json[0]
+    data_type = column.get("type")
+    key = list(data_type.keys())
 
-    #if key not in constantes.ENTEROS:
-     #   return -1
-    #else:
-     #   return random.randint()
+    if key[0] not in constantes.ENTEROS:
+        return -1
+    else:
+        return random.randint(0, 100)
 
-generate_int2({'name': 'id', 'type': {'integer': {}}, 'option': {'check': {'gt': ['Id', 50]}}},
- "{'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}")
+print(generate_int2({'name': 'id', 'type': {'number': {}}, 'option': {'check': {'gt': ['Id', 50]}}},
+              "{'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}"))
