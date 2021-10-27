@@ -15,41 +15,28 @@ def number_of_digits(precision):  # precision 3 --> max_num = 999
     return max_num
 
 
-# sentencia_tablas4 = """CREATE TABLE Persona (
-#   Id INTEGER CHECK (Id > 50) ,
-#   Nombre VARCHAR(30) ,
-#   CONSTRAINT NombreLargo CHECK (LENGTH(Nombre) > 5)
-# );"""
-
-# print(parse(sentencia_tablas4))
-
-# salida: {'create table': {'name': 'Persona', 'columns': [
-# {'name': 'id', 'type': {'integer': {}}, 'option': {'check': {'gt': ['Id', 50]}}},
-# {'name': 'nombre', 'type': {'varchar': 30}}],
-# 'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}}
-
-# generate_int({'name': 'id', 'type': {'integer': {}}, 'option': {'check': {'gt': ['Id', 50]}}},
-# "{'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}")
-def generate_int2(column, constraint):
+def generate_int(column, constraint):
     data_type = column.get("type")
-    key = list(data_type.keys())
+    key_list = list(data_type.keys())
+    key = key_list[0].lower()
     restriction = list(data_type.values())
 
-    if key[0] not in constantes.ENTEROS:
+    if key not in constantes.ENTEROS:
         return "Este tipo de datos no es un entero"
     else:
-        if key[0] != "number" and str(restriction[0]) != "{}":  # Ej: {integer : 9}
+        if key != "number" and str(restriction[0]) != "{}":  # Ej: {integer : 9}
             return "Este tipo de datos no soporta parámetros"
-        if key[0] == "number" and str(restriction[0]) == "{}":  # {number: {}}
+        if key == "number" and str(restriction[0]) == "{}":  # {number: {}}
             return "Este tipo de datos es un número real, no un entero"
-        if key[0] == "number" and isinstance(restriction[0], int):  # {number: 5}
+        if key == "number" and isinstance(restriction[0], int):  # {number: 5}
             return random.randint(0, number_of_digits(restriction[0]))
-        if key[0] == "number" and len(restriction[0]) == 2 and restriction[0][1] != 0:  # Ej: {number : [4, 2]}
+        if key == "number" and len(restriction[0]) == 2 and restriction[0][1] != 0:  # Ej: {number : [4, 2]}
             return "Este tipo de datos es un número real, no un entero"
-        if key[0] == "number" and len(restriction[0]) == 2:  # Ej: {number: 4, 0}
+        if key == "number" and len(restriction[0]) == 2:  # Ej: {number: 4, 0}
             return random.randint(0, number_of_digits(restriction[0][0]))
+
         return random.randint(0, number_of_digits(38))  # int, integer y smallint tienen una precision de 38
 
 
-print(generate_int2({'name': 'id', 'type': {'number': [4, 0]}, 'option': {'check': {'gt': ['Id', 50]}}},
-                    "{'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}"))
+print(generate_int({'name': 'id', 'type': {'NUMBER': [4, 0]}, 'option': {'check': {'gt': ['Id', 50]}}},
+                   {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}))
