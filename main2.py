@@ -4,6 +4,11 @@ import random
 
 
 def number_of_digits(precision):  # precision 3 --> max_num = 999
+    """Devuelve el número máximo que se puede generar con la precisión indicada.
+
+    :param precision: precisión del entero. Número de dígitos
+    :return: número máximo que se puede generar con la precisión indicada
+    """
     max_num = 9
     aux = 9
     if precision == 1:
@@ -15,28 +20,70 @@ def number_of_digits(precision):  # precision 3 --> max_num = 999
     return max_num
 
 
-def generate_int(column, constraint):
-    data_type = column.get("type")
-    key_list = list(data_type.keys())
-    key = key_list[0].lower()
-    restriction = list(data_type.values())
+def check_restrictions(name, generated_number, option):
+    """Comprueba las restricciones en el campo option.
 
-    if key not in constantes.ENTEROS:
-        return "Este tipo de datos no es un entero"
-    else:
-        if key != "number" and str(restriction[0]) != "{}":  # Ej: {integer : 9}
-            return "Este tipo de datos no soporta parámetros"
-        if key == "number" and str(restriction[0]) == "{}":  # {number: {}}
-            return "Este tipo de datos es un número real, no un entero"
-        if key == "number" and isinstance(restriction[0], int):  # {number: 5}
-            return random.randint(0, number_of_digits(restriction[0]))
-        if key == "number" and len(restriction[0]) == 2 and restriction[0][1] != 0:  # Ej: {number : [4, 2]}
-            return "Este tipo de datos es un número real, no un entero"
-        if key == "number" and len(restriction[0]) == 2:  # Ej: {number: 4, 0}
-            return random.randint(0, number_of_digits(restriction[0][0]))
+    :param name: nombre de la columna
+    :param generated_number: numero generado sin tener en cuenta el campo option
+    :param option: restricciones. Ej: {'check': {'gt': ['Id', 50]}}
+    :return: un entero aleatorio o un string definiendo el error
+    """
+    pass
 
+
+def generate_int(data_type, parameters, option, constraint):
+    """Genera un entero aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
+
+        :param data_type: tipo de dato
+        :param parameters: parámetros del tipo de dato
+        :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, CHECK)
+        :param constraint: restricciones definidas después de las columnas
+        :return: un entero aleatorio
+        """
+    if data_type != "number":
         return random.randint(0, number_of_digits(38))  # int, integer y smallint tienen una precision de 38
+    else:
+        return random.randint(0, number_of_digits(parameters[0]))
 
 
-print(generate_int({'name': 'id', 'type': {'NUMBER': [4, 0]}, 'option': {'check': {'gt': ['Id', 50]}}},
-                   {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}))
+def generate_real(data_type, parameters, option, constraint):
+    pass
+
+
+def main(sentencia):
+    """Detecta el tipo de datos y delega la generación del tipo de dato detectado.
+
+    :param sentencia:
+    {'create table':
+        {'name': 'Persona',
+        'columns':
+            [{'name': 'id', 'type': {'number': 5}, 'option': ['not null', {'check': {'gte': ['Id', 50]}}]},
+            {'name': 'nombre', 'type': {'varchar': 30}}],
+        'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}}
+    :return:
+    """
+    constraint = sentencia.get("create table").get("constraint")  # constraint compartido por todas las columnas
+    for column in sentencia.get("create table").get("columns"):
+        data_type = column.get("type")  # {'NUmbEr': [5, 0]}
+        key_list = list(data_type.keys())  # ['NUmbEr']
+        key = key_list[0].lower()  # number
+        parameters = list(data_type.values())  # [[5, 0]]
+        option = ""
+
+        if "option" in column:
+            option = column.get("option")
+
+        is_real = None
+        if key == "number":
+            if parameters[0] == "{}" or isinstance(parameters[0], list):
+                is_real = True
+        if is_real is not True and key in constantes.ENTEROS:
+            print(generate_int(key, parameters, option, constraint))
+        elif key in constantes.REALES:
+            print(generate_real(key, parameters, option, constraint))
+
+
+if __name__ == '__main__':
+    main({'create table': {'name': 'Persona', 'columns': [{'name': 'id', 'type': {'number': 5},
+          'option': ['not null', {'check': {'gte': ['Id', 50]}}]}, {'name': 'nombre', 'type': {'number': [4, 2]}}],
+          'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
