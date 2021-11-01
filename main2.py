@@ -3,11 +3,12 @@ import random
 # from mo_sql_parsing import format
 
 
-def max_number(precision):  # Ej: precision 3 --> max_num = 999
+def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     """Devuelve el número máximo que se puede generar con la precisión indicada.
         Ejemplo: si precision == 3, max_num = 999
-                 si precision == 5, max_num = 99999
-    :param precision: precisión del entero. Número de dígitos
+                 si precision == 5 y precision == 2,  max_num = 999.99
+    :param precision: precisión de la parte entera del número
+    :param scale: número de decimales
     :return: número máximo que se puede generar con la precisión indicada
     """
     max_num = 9
@@ -21,16 +22,17 @@ def max_number(precision):  # Ej: precision 3 --> max_num = 999
     return max_num
 
 
-def option_check(check, max_digits):
+def option_check(check, precision, scale):
     """Comprueba las restricciones CHECK
 
     :param check: campo check de la sentencia parseada
-    :param max_digits: número máximo de dígitos del número a generar
+    :param precision: precisión de la parte entera del número
+    :param scale: número de decimales
     :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
     """
 
-    _min = 0
-    _max = max_number(max_digits)
+    _max = max_number(precision, scale)
+    _min = -_max
     _neq = None
     operator = list(check.keys())[0].lower()
     if operator == "and" or operator == "or":
@@ -57,10 +59,11 @@ def option_check(check, max_digits):
     return generated_number
 
 
-def option_restrictions(max_digits, options):
+def option_restrictions(precision, scale, options):
     """Comprueba las restricciones en el campo option.
 
-    :param max_digits: número máximo de dígitos del número a generar
+    :param precision: precisión de la parte entera del número
+    :param scale: número de decimales
     :param options: restricciones. Ej: {'check': {'gt': ['Id', 50]}} o
                                        {'check': {'and': [{'gte': ['Id', 50]}, {'lt': ['ID', 100]}]} o
                                       {'option': ['unique', 'not null', {'check': {'gte': ['Id', 50]}}}
@@ -69,25 +72,26 @@ def option_restrictions(max_digits, options):
 
     check = [d['check'] for d in options if 'check' in d]
 
+    if len(check) == 0:
+        return random.randint(0, max_number(precision, scale))
+
     if not isinstance(options, list):  # Si solo hay una opción
         options = [options]
 
     if "null" in options:
         return None
     if "not null" in options and len(options) == 1:
-        return random.randint(0, max_number(max_digits))
+        return random.randint(0, max_number(precision, scale))
     if "unique" in options:
         pass
     if check:
-        return option_check(check[0], max_digits)
+        return option_check(check[0], precision, scale)
     return "Opciones no implementadas"
 
 
-def generate_int(name, data_type, parameters, option, constraint):
-    """Genera un entero aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
+def generate_int(parameters, option, constraint):
+    """Genera un número entero aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
 
-        :param name: nombre de la columna
-        :param data_type: tipo de dato
         :param parameters: parámetros del tipo de dato
         :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
                         Ej: ['not null', {'check': {'gte': ['Id', 50]}}]
@@ -96,15 +100,36 @@ def generate_int(name, data_type, parameters, option, constraint):
         :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
         :return: un entero aleatorio
         """
-    if data_type != "number":
+    if parameters[0] == {}:
         # int, integer y smallint tienen una precision de 38
-        return option_restrictions(38, option)
+        return option_restrictions(38, 0, option)
     else:
-        return option_restrictions(parameters[0], option)
+        return option_restrictions(parameters[0], 0, option)
 
 
-def generate_real(name, data_type, parameters, option, constraint):
-    pass
+def generate_real(data_type, parameters, option, constraint):
+    """Genera un número real aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
+
+            :param data_type: tipo de dato de la columna
+            :param parameters: parámetros del tipo de dato
+            :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
+                            Ej: ['not null', {'check': {'gte': ['Id', 50]}}]
+                                'unique'
+                                {'check': {'gte': ['Id', 50]}}
+            :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
+            :return: un entero aleatorio
+            """
+
+    if parameters[0] == "{}":
+        precision = 38
+        scale = 127
+    elif data_type == "float":
+        precision = 0.30103 * parameters[0]
+        scale = None
+    else:  # data_type == "number"
+        precision = parameters[0][0]
+        scale = parameters[0][1]
+    option_restrictions(precision, scale, option)
 
 
 def main(sentencia):
@@ -121,7 +146,6 @@ def main(sentencia):
     """
     constraint = sentencia.get("create table").get("constraint")  # constraint compartido por todas las columnas
     for column in sentencia.get("create table").get("columns"):
-        name = column.get("name")
         data_type = column.get("type")  # {'NUmbEr': [5, 0]}
         key_list = list(data_type.keys())  # ['NUmbEr']
         key = key_list[0].lower()  # number
@@ -136,9 +160,9 @@ def main(sentencia):
             if parameters[0] == "{}" or isinstance(parameters[0], list):
                 is_real = True
         if is_real is not True and key in constantes.ENTEROS:
-            print(generate_int(name, key, parameters, option, constraint))
+            print(generate_int(parameters, option, constraint))
         elif key in constantes.REALES:
-            print(generate_real(name, key, parameters, option, constraint))
+            print(generate_real(key, parameters, option, constraint))
 
 
 if __name__ == '__main__':
@@ -146,9 +170,9 @@ if __name__ == '__main__':
             'name': 'Persona',
             'columns': [
                 {'name': 'id',
-                 'type': {'number': 5},
+                 'type': {'number': {}},
                  'option': ['unique', 'not null',
-                            {'check': {'and': [{'gte': ['Id', 50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
+                            {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
                 {'name': 'nombre',
                  'type': {'number': [4, 2]}
                  }
