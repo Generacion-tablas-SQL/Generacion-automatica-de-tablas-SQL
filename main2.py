@@ -7,7 +7,6 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
     """Devuelve el número máximo que se puede generar con la precisión indicada.
         Ejemplo: si precision == 3, max_num = 999
                  si precision == 5 y precision == 2,  max_num = 999.99
-
     :param es_float: indica si se trata de un float
     :param precision: número de dígitos que contiene un número como máximo
     :param scale: número máximo de dígitos decimales
@@ -25,40 +24,27 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                 max_num = max_num + aux
         else:  # Number con decimales, rango s:(-84,127)
             max_num = 9.0
+            aux = 9.0
+
             if scale in range(-84, -1):  # Se trata de un scale negativo
-                # FALTA ESTA PARTE DE SCALE NEGATIVO ----------------------
-                if precision == 1:
-                    pass
-                while precision > 1:
-                    precision -= 1
-                    aux *= 10
-                    max_num = max_num + aux
-
-                    if precision > scale:
-                        pass
-                    elif precision == scale:
-                        pass
-                    else:                  # precision < scale
-                        pass
-                # ------------------------
-
-            if scale in range(1, 127):  # Se trata de un scale positivo
-                # max_num = 9.0
-                # aux = 9.0
 
                 if precision == 1:
-                    if scale == precision:   # 0.9
-                        max_num = max_num / 10.0
-                    else:  # scale > precision
-                        max_num /= 10.0 ** scale
+                    max_num = 0.0
                 else:
-                    n = precision
+                    n = precision - abs(scale)
                     while n > 1:
                         aux *= 10.0
                         max_num += aux
                         n -= 1
-                    if precision != scale:
-                        max_num /= (10.0**float(scale))
+                    max_num *= 10 ** abs(scale)
+
+            if scale in range(1, 127):  # Se trata de un scale positivo
+                n = precision
+                while n > 1:
+                    aux *= 10.0
+                    max_num += aux
+                    n -= 1
+                max_num /= 10.0 ** scale
 
     else:  # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
         pass
