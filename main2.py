@@ -11,7 +11,7 @@ def max_number(esFloat, precision, scale):  # Ej: precision 3 --> max_num = 999
     :param scale: número de decimales
     :return: número máximo que se puede generar con la precisión indicada
     """
-       if esFloat is False:  #NUMBER(p,s) con p(1,38) y s(-84,127)
+          if esFloat is False:  #NUMBER(p,s) con p(1,38) y s(-84,127)
         if scale == 0:  # Number sin decimales
             max_num = 9
             aux = 9
@@ -40,22 +40,23 @@ def max_number(esFloat, precision, scale):  # Ej: precision 3 --> max_num = 999
 
             if scale in range(1,127):    #Se trata de un scale positivo
                 max_num = 9.0
+                aux = 9.0
+
                 if precision == 1:
-                    if scale == precision:
+                    if scale == precision:   #0.9
                         max_num = max_num / 10.0
                     else:  #scale > precision
                         max_num = max_num / (10.0**float(scale))
 
-                while precision > 1:
-                    precision -= 1
-                    aux *= 10
-                    max_num = max_num + aux
-
-                    if (precision > scale):
-
-                    elif (precision == scale):
-
-                    else:  # precision < scale
+                else: 
+                    n = precision
+                    while n > 1:
+                        aux *= 10.0
+                        max_num += aux
+                        n -= 1
+                    if precision != scale:
+                        max_num /= (10.0**float(scale))
+                        
 
     else:  # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
         pass
