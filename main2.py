@@ -3,7 +3,7 @@ import random
 # from mo_sql_parsing import format
 
 
-def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
+def max_number(esFloat, precision, scale):  # Ej: precision 3 --> max_num = 999
     """Devuelve el número máximo que se puede generar con la precisión indicada.
         Ejemplo: si precision == 3, max_num = 999
                  si precision == 5 y precision == 2,  max_num = 999.99
@@ -11,14 +11,33 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     :param scale: número de decimales
     :return: número máximo que se puede generar con la precisión indicada
     """
-    max_num = 9
-    aux = 9
-    if precision == 1:
-        return 9
-    while precision > 1:
-        precision -= 1
-        aux *= 10
-        max_num = max_num + aux
+    if esFloat is False:  # Generamos un number(n)    NUMBER(p,s) con p(1,38) y s(-84,127)
+        if scale == 0:  # Number sin decimales
+            max_num = 9
+            aux = 9
+
+            if precision == 1:
+                return 9
+            while precision > 1:
+                precision -= 1
+                aux *= 10
+                max_num = max_num + aux
+                
+        else:  # Number con decimales s(-84,127)
+            max_num = 9.0
+            aux = 9
+            if precision == 1:
+                if scale == 1:
+                    return 9.0
+            while precision > 1:
+                precision -= 1
+                aux *= 10
+                max_num = max_num + aux
+
+    else:  # Generamos un float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
+        max_num = 9.0
+        # SIN IMPLEMENTAR
+
     return max_num
 
 
@@ -178,3 +197,4 @@ if __name__ == '__main__':
                  }
             ],
             'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
+
