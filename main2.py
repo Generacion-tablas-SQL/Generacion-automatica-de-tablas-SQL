@@ -25,9 +25,7 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
         else:  # Number con decimales, rango s:(-84,127)
             max_num = 9.0
             aux = 9.0
-
             if scale in range(-84, -1):  # Se trata de un scale negativo
-
                 if precision == 1:
                     max_num = 0.0
                 else:
@@ -37,7 +35,6 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                         max_num += aux
                         n -= 1
                     max_num *= 10 ** abs(scale)
-
             if scale in range(1, 127):  # Se trata de un scale positivo
                 n = precision
                 while n > 1:
@@ -45,7 +42,6 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                     max_num += aux
                     n -= 1
                 max_num /= 10.0 ** scale
-
     else:  # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
         pass
         # SIN IMPLEMENTAR TIPO FLOAT
