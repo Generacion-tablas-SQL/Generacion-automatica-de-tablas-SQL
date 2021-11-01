@@ -9,16 +9,16 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                  si precision == 5 y precision == 2,  max_num = 999.99
 
     :param es_float: indica si se trata de un float
-    :param precision: precisión de la parte entera del número
-    :param scale: número de decimales
+    :param precision: número de dígitos que contiene un número como máximo
+    :param scale: número máximo de dígitos decimales
     :return: número máximo que se puede generar con la precisión indicada
     """
     if es_float is False:  # NUMBER(p,s) con p(1,38) y s(-84,127)
+        max_num = 9
+        aux = 9
         if scale == 0:  # Number sin decimales
-            max_num = 9
-            aux = 9
             if precision == 1:
-                return 9
+                return max_num
             while precision > 1:
                 precision -= 1
                 aux *= 10
@@ -26,9 +26,7 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
         else:  # Number con decimales, rango s:(-84,127)
             max_num = 9.0
             if scale in range(-84, -1):  # Se trata de un scale negativo
-
                 # FALTA ESTA PARTE DE SCALE NEGATIVO ----------------------
-                aux = 1
                 if precision == 1:
                     pass
                 while precision > 1:
@@ -45,14 +43,14 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                 # ------------------------
 
             if scale in range(1, 127):  # Se trata de un scale positivo
-                max_num = 9.0
-                aux = 9.0
+                # max_num = 9.0
+                # aux = 9.0
 
                 if precision == 1:
                     if scale == precision:   # 0.9
                         max_num = max_num / 10.0
                     else:  # scale > precision
-                        max_num = max_num / (10.0**float(scale))
+                        max_num /= 10.0 ** scale
                 else:
                     n = precision
                     while n > 1:
@@ -176,16 +174,17 @@ def generate_real(data_type, parameters, option, constraint):
             :return: un entero aleatorio
             """
     es_float = False
-    if parameters[0] == "{}":
-        precision = 38
-        scale = 127
-    elif data_type == "float":
-        precision = 0.30103 * parameters[0]
+    if data_type == "float":
+        precision = 126 if parameters[0] == "{}" else parameters[0]
         scale = None
         es_float = True
     else:  # data_type == "number"
-        precision = parameters[0][0]
-        scale = parameters[0][1]
+        if parameters[0] == "{}":
+            precision = 38
+            scale = 127
+        else:
+            precision = parameters[0][0]
+            scale = parameters[0][1]
     option_restrictions(es_float, precision, scale, option)
 
 
