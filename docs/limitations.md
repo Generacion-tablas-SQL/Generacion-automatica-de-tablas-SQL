@@ -1,0 +1,2 @@
+
+Limitaciones del proyecto:
