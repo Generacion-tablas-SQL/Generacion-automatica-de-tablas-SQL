@@ -1,7 +1,8 @@
 # Limitaciones del proyecto
 
-A continuación se realizará una descripción de las limitaciones existentes en nuestro proyecto diferenciadas en los diferentes ámbitos de implementación.
+A continuación se realizará una descripción de las limitaciones existentes en nuestro proyecto diferenciadas en los distintos ámbitos de implementación.
 Muchas de estas limitaciones se pueden considerar para un trabajo futuro posterior a la finalización del proyecto.
+
 
 ### Generadores de datos:
 
