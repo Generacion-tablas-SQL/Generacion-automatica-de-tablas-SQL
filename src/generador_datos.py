@@ -91,18 +91,23 @@ def option_check(check, es_float, precision, scale):
     for comparison in comparisons:
         comparison_key = list(comparison.keys())
         if comparison_key[0] == "eq" or comparison_key[1] == "eq":
-            return comparison.get("eq")
+            if comparison_key[0] == "eq": return comparison.get("eq")[1]
+            else: return comparison.get("eq")[0]
         elif comparison_key[0] == "neq" or comparison_key[1] == "neq":
-            _neq = comparison.get("neq")
+            if comparison_key[0] == "neq": _neq = comparison.get("neq")[1]
+            else: _neq = comparison.get("neq")[0]
         elif comparison_key[0] == "gt" or comparison_key[1] == "gt":
             if(comparison_key[0] == "gt"): _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
             else: _min = max(_min, comparison.get("gt")[0] + 1)
         elif comparison_key[0] == "gte" or comparison_key[1] == "gte":
-            _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
+            if (comparison_key[0] == "gte"):  _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
+            else:  _min = max(_min, comparison.get("gte")[0])
         elif comparison_key[0] == "lt" or comparison_key[1] == "lt":
-            _max = min(_max, comparison.get("lt")[1] - 1)  # (id < 36) and (id < 38) --> _min = 35;
+            if (comparison_key[0] == "lt"): _max = min(_max, comparison.get("lt")[1] - 1)  # (id < 36) and (id < 38) --> _min = 35;
+            else: _max = min(_max, comparison.get("lt")[0] - 1)
         elif comparison_key[0] == "lte" or comparison_key[1] == "lte":
-            _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
+            if (comparison_key[0] == "lte"): _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
+            else: _max = min(_max, comparison.get("lte")[0])
         else:
             return "ERROR: Comparador no implementado"
 
