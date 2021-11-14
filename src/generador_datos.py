@@ -16,17 +16,14 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
 
     max_num = 9
     aux = 9
+
     if es_float is False:  # NUMBER(p,s) con p(1,38) y s(-84,127)
         if scale == 0:                      # Number sin decimales
-            # if precision == 1:              # Solo 1 dígito entero
-            #    return max_num
             while precision > 1:            # Más de 1 dígito
                 precision -= 1
                 aux *= 10
                 max_num += aux
         else:                               # Number con decimales, rango scale:[-84,0), (0,127]
-            # max_num = 9.0
-            # aux = 9.0
             if scale in range(-84, 0):      # Se trata de un scale negativo
                 precision -= abs(scale)  # Dígitos no redondeados
                 if precision <= 0:
@@ -44,15 +41,16 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                     aux *= 10
                     max_num += aux
                 max_num /= 10 ** scale
-    else:                                     # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10).
+    else:                                     # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
         pass  # SIN IMPLEMENTAR TIPO FLOAT
     print(max_num)
     return max_num
 
 
-
-
 def generate_number(es_float, _min, _max, _neq, scale):
+
+    if random.random() < constantes.NULL_PROBABILITY:
+        return None
 
     if not es_float and scale == 0:
         generated_number = random.randint(_min, _max)  # Genera un número entero
@@ -70,11 +68,12 @@ def generate_number(es_float, _min, _max, _neq, scale):
     return generated_number
 
 
-def option_check(check, es_float, precision, scale):
-
+def option_check(check, es_float, not_null, precision, scale):
     """Comprueba las restricciones CHECK
+
     :param check: campo check de la sentencia parseada
     :param es_float: indica si el tipo de dato es un float
+    :param not_null: indica si la sentencia contiene la opción NOT NULL
     :param precision: precisión de la parte entera del número
     :param scale: número de decimales
     :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
@@ -83,64 +82,69 @@ def option_check(check, es_float, precision, scale):
     _max = max_number(es_float, precision, scale)
     _min = -_max
     _neq = None
-    operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
-    if operator == "and" or operator == "or":
-        comparisons = check.get(operator)  # lista de comparaciones
-    else:
-        comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
-    for comparison in comparisons:
-        comparison_key = list(comparison.keys())
-        if comparison_key[0] == "eq" or comparison_key[1] == "eq":
-            return comparison.get("eq")
-        elif comparison_key[0] == "neq" or comparison_key[1] == "neq":
-            _neq = comparison.get("neq")
-        elif comparison_key[0] == "gt" or comparison_key[1] == "gt":
-            if(comparison_key[0] == "gt"): _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
-            else: _min = max(_min, comparison.get("gt")[0] + 1)
-        elif comparison_key[0] == "gte" or comparison_key[1] == "gte":
-            _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
-        elif comparison_key[0] == "lt" or comparison_key[1] == "lt":
-            _max = min(_max, comparison.get("lt")[1] - 1)  # (id < 36) and (id < 38) --> _min = 35;
-        elif comparison_key[0] == "lte" or comparison_key[1] == "lte":
-            _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
+    if len(check) != 0:  # hay campo check
+        operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
+        if operator == "and" or operator == "or":
+            comparisons = check.get(operator)  # lista de comparaciones
         else:
-            return "ERROR: Comparador no implementado"
+            comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
+        for comparison in comparisons:
+            comparison_key = list(comparison.keys())
+            if comparison_key[0] == "eq":
+                return comparison.get("eq")
+            elif comparison_key[0] == "neq":
+                _neq = comparison.get("neq")
+            elif comparison_key[0] == "gt":
+                if isinstance(comparison.get("gt")[1], int):
+                    _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
+                else:
+                    _min = max(_min, comparison.get("gt")[0] + 1)
+            elif comparison_key[0] == "gte":
+                _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
+            elif comparison_key[0] == "lt":
+                _max = min(_max, comparison.get("lt")[1] - 1)  # (id < 36) and (id < 38) --> _min = 35;
+            elif comparison_key[0] == "lte":
+                _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
+            else:
+                return "ERROR: Comparador no implementado"
 
-    return generate_number(es_float, _min, _max, _neq, scale)
-
+    number = generate_number(es_float, _min, _max, _neq, scale)
+    if not_null is True:
+        while number is None:
+            number = generate_number(es_float, _min, _max, False, scale)
+    return number
 
 
 def option_restrictions(es_float, precision, scale, options):
     """Comprueba las restricciones en el campo option.
+
     :param es_float: indica si el tipo de dato es un float
     :param precision: precisión de la parte entera del número
     :param scale: número de decimales
-
     :param options: restricciones. Ej: {'check': {'gt': ['Id', 50]}} o
                                        {'check': {'and': [{'gte': ['Id', 50]}, {'lt': ['ID', 100]}]} o
                                       {'option': ['unique', 'not null', {'check': {'gte': ['Id', 50]}}}
     :return: un entero aleatorio o un string definiendo el error
     """
+
     check = [d['check'] for d in options if 'check' in d]
+    not_null = False
 
     if not isinstance(options, list):  # Si solo hay una opción
         options = [options]
-    if "null" in options:
-        return None
-    if "not null" in options and len(options) == 1:
-        return random.randint(0, max_number(es_float, precision, scale))
-    if "unique" in options:
+
+    if "null" in options:  # No afecta
         pass
-    if "primary key" in options:
+    if "not null" in options:
+        not_null = True
+    if "unique" in options:  # De momento no afecta
         pass
-    if len(check) == 0:  # No hay campo check
-        _max = max_number(es_float, precision, scale)
-        _min = -_max
-        return generate_number(es_float, _min, _max, False, scale)
-        # return random.randint(_min, _max)
-    elif check:
-        return option_check(check[0], es_float, precision, scale)
-    return "Opciones no implementadas"
+    if "primary key" in options:  # De momento no afecta
+        pass
+    if len(check) == 0:
+        return option_check([], es_float, not_null, precision, scale)
+    else:
+        return option_check(check[0], es_float, not_null, precision, scale)
 
 
 def generate_int(parameters, option, constraint):
@@ -174,15 +178,21 @@ def generate_real(data_type, parameters, option, constraint):
             :return: un entero aleatorio
             """
     es_float = False
-    if data_type == "float":
+    if data_type == "float":  # float-point
         precision = 126 if parameters[0] == "{}" else parameters[0]
         scale = None
         es_float = True
-    else:  # data_type == "number"
+    elif data_type == "real":  # float-point
+        precision = 63
+        scale = None
+        es_float = True
+    else:  # fixed-point
         if parameters[0] == "{}":
-            print("sin parámetros, {}")
             precision = 38
             scale = 127
+        elif isinstance(parameters[0], int):
+            precision = parameters[0]
+            scale = 0
         else:
             precision = parameters[0][0]
             scale = parameters[0][1]
@@ -212,18 +222,14 @@ def main(sentencia):
         if "option" in column:
             option = column.get("option")
 
-        is_real = None
-        if key == "number":
-            if parameters[0] == "{}" or isinstance(parameters[0], list):
-                is_real = True
-        if not is_real and key in constantes.ENTEROS:
+        if key in constantes.ENTEROS:
             print(generate_int(parameters, option, constraint))
         elif key in constantes.REALES:
             print(generate_real(key, parameters, option, constraint))
         elif key in constantes.STRINGS:
-            print("Datos de tipo cadena de caracteres sin implementar.")
+            print("Datos de tipo cadena de caracteres aun sin implementar.")
         elif key in constantes.FECHA:
-            print("Datos de tipo fecha")
+            print("Datos de tipo fecha aun sin implementar")
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
 
@@ -232,12 +238,16 @@ main({'create table': {
         'name': 'Persona',
         'columns': [
             {'name': 'id',
-             'type': {'number': [4, 2]},
+             'type': {'number': 5},
              'option': ['unique', 'not null',
                         {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
-            {'name': 'nombre',
-             'type': {'number': [8, 2]},
-             'option': ['unique', 'not null']
+            {'name': 'real',
+             'type': {'number': [4, 2]},
+             'option': ['unique', 'null',
+                        {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
+            {'name': 'real2',
+             'type': {'number': [2, 4]},
+
              }
         ],
         'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
