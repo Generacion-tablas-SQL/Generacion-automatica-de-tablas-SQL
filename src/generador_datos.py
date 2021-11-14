@@ -13,6 +13,7 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
     :param scale: número máximo de dígitos decimales
     :return: número máximo que se puede generar con la precisión indicada
     """
+
     max_num = 9
     aux = 9
     if es_float is False:  # NUMBER(p,s) con p(1,38) y s(-84,127)
@@ -43,21 +44,25 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                     aux *= 10
                     max_num += aux
                 max_num /= 10 ** scale
-    else:                                     # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
+    else:                                     # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10).
         pass  # SIN IMPLEMENTAR TIPO FLOAT
     print(max_num)
     return max_num
 
 
+
+
 def generate_number(es_float, _min, _max, _neq, scale):
+
     if not es_float and scale == 0:
         generated_number = random.randint(_min, _max)  # Genera un número entero
-        if _neq is not None and generated_number == _neq:
+        if not _neq and generated_number == _neq:
             generated_number += 1
     else:
         generated_number = random.uniform(_min, _max)  # Genera un número real. No tiene en cuenta la escala
         generated_number = Decimal(str(generated_number)).quantize(Decimal(10) ** -scale)
-        if _neq is not None and generated_number == _neq:
+        if not _neq and generated_number == _neq:
+
             if scale < 0:
                 generated_number += 1
             else:
@@ -66,8 +71,8 @@ def generate_number(es_float, _min, _max, _neq, scale):
 
 
 def option_check(check, es_float, precision, scale):
-    """Comprueba las restricciones CHECK
 
+    """Comprueba las restricciones CHECK
     :param check: campo check de la sentencia parseada
     :param es_float: indica si el tipo de dato es un float
     :param precision: precisión de la parte entera del número
@@ -103,23 +108,22 @@ def option_check(check, es_float, precision, scale):
     return generate_number(es_float, _min, _max, _neq, scale)
 
 
+
 def option_restrictions(es_float, precision, scale, options):
     """Comprueba las restricciones en el campo option.
-
     :param es_float: indica si el tipo de dato es un float
     :param precision: precisión de la parte entera del número
     :param scale: número de decimales
+
     :param options: restricciones. Ej: {'check': {'gt': ['Id', 50]}} o
                                        {'check': {'and': [{'gte': ['Id', 50]}, {'lt': ['ID', 100]}]} o
                                       {'option': ['unique', 'not null', {'check': {'gte': ['Id', 50]}}}
     :return: un entero aleatorio o un string definiendo el error
     """
-
     check = [d['check'] for d in options if 'check' in d]
 
     if not isinstance(options, list):  # Si solo hay una opción
         options = [options]
-
     if "null" in options:
         return None
     if "not null" in options and len(options) == 1:
