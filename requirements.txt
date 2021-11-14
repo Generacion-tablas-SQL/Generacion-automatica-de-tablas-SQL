@@ -1,2 +1,6 @@
-setuptools==57.4.0
-pip==21.3.1
+mo-dots==7.4.21313
+mo-future==6.2.21303
+mo-imports==7.3.21313
+mo-parsing==8.1.21317
+mo-sql-parsing==8.2.21318
+pkg_resources==0.0.0
