@@ -223,17 +223,16 @@ def main(sentencia):
             print("Ha habido un error en la clasificación de tipo de datos.")
 
 
-if __name__ == '__main__':
-    main({'create table': {
-            'name': 'Persona',
-            'columns': [
-                {'name': 'id',
-                 'type': {'number': [4, 2]},
-                 'option': ['unique', 'not null',
-                            {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
-                {'name': 'nombre',
-                 'type': {'number': [8, 2]},
-                 'option': ['unique', 'not null']
-                 }
-            ],
-            'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
+main({'create table': {
+        'name': 'Persona',
+        'columns': [
+            {'name': 'id',
+             'type': {'number': [4, 2]},
+             'option': ['unique', 'not null',
+                        {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
+            {'name': 'nombre',
+             'type': {'number': [8, 2]},
+             'option': ['unique', 'not null']
+             }
+        ],
+        'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
