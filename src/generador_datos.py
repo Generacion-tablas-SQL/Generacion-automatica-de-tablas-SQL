@@ -90,17 +90,18 @@ def option_check(check, es_float, precision, scale):
         comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
     for comparison in comparisons:
         comparison_key = list(comparison.keys())
-        if comparison_key[0] == "eq":
+        if comparison_key[0] == "eq" or comparison_key[1] == "eq":
             return comparison.get("eq")
-        elif comparison_key[0] == "neq":
+        elif comparison_key[0] == "neq" or comparison_key[1] == "neq":
             _neq = comparison.get("neq")
-        elif comparison_key[0] == "gt":
-            _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
-        elif comparison_key[0] == "gte":
+        elif comparison_key[0] == "gt" or comparison_key[1] == "gt":
+            if(comparison_key[0] == "gt"): _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
+            else: _min = max(_min, comparison.get("gt")[0] + 1)
+        elif comparison_key[0] == "gte" or comparison_key[1] == "gte":
             _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
-        elif comparison_key[0] == "lt":
+        elif comparison_key[0] == "lt" or comparison_key[1] == "lt":
             _max = min(_max, comparison.get("lt")[1] - 1)  # (id < 36) and (id < 38) --> _min = 35;
-        elif comparison_key[0] == "lte":
+        elif comparison_key[0] == "lte" or comparison_key[1] == "lte":
             _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
         else:
             return "ERROR: Comparador no implementado"
