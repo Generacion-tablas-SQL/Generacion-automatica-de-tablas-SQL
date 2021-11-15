@@ -1,5 +1,8 @@
 import constantes
 import random
+import datetime
+import time
+import datetime
 from decimal import Decimal
 from mo_sql_parsing import parse
 from mo_sql_parsing import format
@@ -68,25 +71,15 @@ def generate_number(es_float, _min, _max, _neq, scale):
                 generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
     return generated_number
 
-def check_fecha(check, esDate, not_null, secPrecision):
-
-
-
-
-
-    return 0
-
 def option_check(check, es_float, not_null, precision, scale):
     """Comprueba las restricciones CHECK
 
-    :param check: campo check de la sentencia parseada
-    :param es_float: indica si el tipo de dato es un float
-    :param not_null: indica si la sentencia contiene la opción NOT NULL
-    :param precision: precisión de la parte entera del número
-    :param scale: número de decimales
-    :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
-    """
-
+        :param check: campo check de la sentencia parseada
+        :param esDate: indica si el tipo de dato es DATE o TIMESTAMP
+        :param not_null: indica si la sentencia contiene la opción NOT NULL
+        :param secPrecision: precisión de la parte fraccional de los segundos (TIMESTAMP)
+        :return: fecha aleatoria teniendo en cuenta las restricciones del campo option y del tipo de datos
+        """
     _max = max_number(es_float, precision, scale)
     _min = -_max
     _neq = None
@@ -140,7 +133,26 @@ def option_check(check, es_float, not_null, precision, scale):
     if not_null is True:
         while number is None:
             number = generate_number(es_float, _min, _max, False, scale)
+
     return number
+
+
+def check_fecha(check, esDate, not_null, secPrecision):
+    """Comprueba las restricciones CHECK
+
+    :param check: campo check de la sentencia parseada
+    :param es_float: indica si el tipo de dato es un float
+    :param not_null: indica si la sentencia contiene la opción NOT NULL
+    :param precision: precisión de la parte entera del número
+    :param scale: número de decimales
+    :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
+    """
+
+    """ POSIBLES RESTRICCIONES EN FECHAS: -BETWEEN:    order_date BETWEEN TO_DATE ('2014/02/01', 'yyyy/mm/dd') AND TO_DATE ('2014/02/28', 'yyyy/mm/dd');         
+                                          -OPERADORES: order_date >= TO_DATE('2014/02/01', 'yyyy/mm/dd') AND order_date <= TO_DATE('2014/02/28','yyyy/mm/dd');
+    """
+    
+    return 0
 
 def restrictions_Fecha(esDate, secPrecision, column):
     """Comprueba las restricciones en el campo option.
@@ -269,7 +281,7 @@ def generate_fecha(data_type, parameters, column, constraint):
 
     # date [{}] {'name': 'fech1', 'type': {'date': {}}, 'unique': True, 'nullable': False}
     # timestamp [2] {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
-    #print(data_type, parameters, column)
+    print(data_type, parameters, column)
 
     return restrictions_Fecha(esDate, secPrecision, column)
 
@@ -326,11 +338,10 @@ sentencia_tablas5 = """CREATE TABLE Persona (
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT id <= 0 AND id < 20 AND id != 0),
   string VARCHAR(15) UNIQUE NULL CHECK (LEN(ID) > 5),
   CONSTRAINT NombreLargo CHECK (LENGTH(Nombre) > 5), 
-  fech1 DATE UNIQUE NOT NULL,
-  fech2 TIMESTAMP(2) UNIQUE NULL
-  
-  
+  fech1 DATE UNIQUE NOT NULL CHECK (fech1 >= TO_DATE('2014/02/01', 'yyyy/mm/dd') AND fech1 <= TO_DATE('2014/02/28','yyyy/mm/dd')),
+  fech2 TIMESTAMP(2) UNIQUE NULL 
 );"""
+
 # print(parse(sentencia_tablas5))
 clasificar_tipo(parse(sentencia_tablas5))
 
@@ -354,14 +365,12 @@ aux = {'create table': {
              'type': {'date': ''},
              'option': ['unique', 'null']
                         #,{'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}
-
              },
 
             {'name': 'fech2',
              'type': {'timestap': 2},
              'option': ['unique', 'null']
                         #,{'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}
-
              }
         ],
         'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}}
