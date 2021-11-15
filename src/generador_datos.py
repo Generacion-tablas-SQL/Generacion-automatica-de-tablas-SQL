@@ -216,6 +216,27 @@ def generate_real(data_type, parameters, column, constraint):
             scale = parameters[0][1]
     return option_restrictions(es_float, precision, scale, column)
 
+def generate_fecha(data_type, parameters, option, constraint):
+    """Genera una fecha aleatoria que cumpla con las especificaciones de los parámetros y las opciones CHECK.
+
+                :param data_type: tipo de dato de la columna (DATE O TIMESTAMP)
+                :param parameters: parámetros del tipo de dato
+                :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
+                                Ej: ['not null', {'check': {'gte': ['Id', 50]}}]
+                                    'unique'
+                                    {'check': {'gte': ['Id', 50]}}
+                :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
+                :return: una fecha aleatoria
+                """
+    esDate = False;
+    if data_type == "date":  # DATE 'YYYY-MM-DD'
+        esDate = True
+    else:                    #TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'  secPrecision = 2 (.FF)
+        secPrecision = parameters[0]
+
+    print(data_type, parameters, option)
+
+
 
 def generate_string(data_type, parameters, option, constraint):
     """Genera una cadena de caracteres aleatoria que cumpla con las especificaciones de los parámetros
@@ -230,7 +251,7 @@ def generate_string(data_type, parameters, option, constraint):
         :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
         :return: un entero aleatorio
         """
-    print(data_type, parameters, option)
+    #print(data_type, parameters, option)
 
 
 def clasificar_tipo(sentencia):
@@ -258,16 +279,20 @@ def clasificar_tipo(sentencia):
             # print("Datos de tipo cadena de caracteres aun sin implementar.")
             print(generate_string(key, parameters, column, constraint))
         elif key in constantes.FECHA:
-            print("Datos de tipo fecha aun sin implementar")
+            print(generate_fecha(key, parameters, column, constraint))
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
 
 
 sentencia_tablas5 = """CREATE TABLE Persona (
-Id NUMBER(5) UNIQUE NOT NULL CHECK (NOT 0 <= ID AND ID < 100 AND ID != 80) ,
+    Id NUMBER(5) UNIQUE NOT NULL CHECK (NOT 0 <= ID AND ID < 100 AND ID != 80) ,
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT id <= 0 AND id < 20 AND id != 0),
   string VARCHAR(15) UNIQUE NULL CHECK (LEN(ID) > 5),
-  CONSTRAINT NombreLargo CHECK (LENGTH(Nombre) > 5)
+  CONSTRAINT NombreLargo CHECK (LENGTH(Nombre) > 5), 
+  fech1 DATE UNIQUE NOT NULL,
+  fech2 TIMESTAMP(2) UNIQUE NULL
+  
+  
 );"""
 # print(parse(sentencia_tablas5))
 clasificar_tipo(parse(sentencia_tablas5))
@@ -286,7 +311,20 @@ aux = {'create table': {
             {'name': 'string',
              'type': {'char': 4},
              'option': ['unique', 'null',
-                        {'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]
+                        {'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]},
+
+            {'name': 'fech1',
+             'type': {'date': ''},
+             'option': ['unique', 'null']
+                        #,{'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}
+
+             },
+
+            {'name': 'fech2',
+             'type': {'timestap': 2},
+             'option': ['unique', 'null']
+                        #,{'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}
+
              }
         ],
         'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}}
