@@ -43,7 +43,6 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
                 max_num /= 10 ** scale
     else:                                     # Float(n),  digits = (n / 3) + 1  ó  digits = ceil(bits / log(2,10)
         pass  # SIN IMPLEMENTAR TIPO FLOAT
-    print(max_num)
     return max_num
 
 
@@ -82,6 +81,8 @@ def option_check(check, es_float, not_null, precision, scale):
     _max = max_number(es_float, precision, scale)
     _min = -_max
     _neq = None
+    _not = None
+    index = None
     if len(check) != 0:  # hay campo check
         operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
         if operator == "and" or operator == "or":
@@ -90,24 +91,43 @@ def option_check(check, es_float, not_null, precision, scale):
             comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
         for comparison in comparisons:
             comparison_key = list(comparison.keys())
+            if comparison_key[0] == "not":
+                _not = list(comparison.get("not").keys())[0]
+                print(_not)
             if comparison_key[0] == "eq":
                 return comparison.get("eq")
             elif comparison_key[0] == "neq":
                 _neq = comparison.get("neq")
             elif comparison_key[0] == "gt":
-                if isinstance(comparison.get("gt")[1], int):
-                    _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
+                index = 1 if isinstance(comparison.get("gt")[1], int) else 0
+                if _not and _not == "gt":
+                    _max = min(_max, comparison.get("gt")[index] - 1)
                 else:
-                    _min = max(_min, comparison.get("gt")[0] + 1)
+                    _min = max(_min, comparison.get("gt")[1] + 1)
+                # if isinstance(comparison.get("gt")[1], int):
+                #    _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
+                # else:
+                #    _min = max(_min, comparison.get("gt")[0] + 1)
             elif comparison_key[0] == "gte":
-                _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
+                index = 1 if isinstance(comparison.get("gte")[1], int) else 0
+                if _not and _not == "gte":
+                    _max = min(_max, comparison.get("gte")[index])
+                else:
+                    _min = max(_min, comparison.get("gte")[index])
+                # _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
             elif comparison_key[0] == "lt":
-                _max = min(_max, comparison.get("lt")[1] - 1)  # (id < 36) and (id < 38) --> _min = 35;
+                _max = min(_max, comparison.get("lt")[index] - 1)  # (id < 36) and (id < 38) --> _min = 35;
             elif comparison_key[0] == "lte":
-                _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
+                index = 1 if isinstance(comparison.get("lte")[index], int) else 0
+                if _not and _not == "lte":
+                    print("He entrado")
+                    _min = max(_min, comparison.get("lte")[index] + 1)
+                else:
+                    _max = min(_max, comparison.get("lte")[index] - 1)
+                # _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
             else:
                 return "ERROR: Comparador no implementado"
-
+            _not = None
     number = generate_number(es_float, _min, _max, _neq, scale)
     if not_null is True:
         while number is None:
@@ -239,12 +259,12 @@ main({'create table': {
         'columns': [
             {'name': 'id',
              'type': {'number': 5},
-             'option': ['unique', 'not null',
+             'option': ['unique', 'not null',  # de -50 hasta 99
                         {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
             {'name': 'real',
              'type': {'number': [4, 2]},
-             'option': ['unique', 'null',
-                        {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
+             'option': ['unique', 'null',  # de -49.99 hasta 99.99
+                        {'check': {'and': [{'not': {'lte': [-50, 'ID']}}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
             {'name': 'real2',
              'type': {'number': [2, 4]},
 
