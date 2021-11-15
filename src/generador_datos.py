@@ -1,6 +1,8 @@
 import constantes
 import random
 from decimal import Decimal
+from mo_sql_parsing import parse
+from mo_sql_parsing import format
 
 
 def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
@@ -82,7 +84,6 @@ def option_check(check, es_float, not_null, precision, scale):
     _min = -_max
     _neq = None
     _not = None
-    index = None
     if len(check) != 0:  # hay campo check
         operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
         if operator == "and" or operator == "or":
@@ -103,11 +104,7 @@ def option_check(check, es_float, not_null, precision, scale):
                     _max = min(_max, comparison.get("gt")[index] - 1)
                 else:
                     index = 1 if isinstance(comparison.get("gt")[1], int) else 0
-                    _min = max(_min, comparison.get("gt")[1] + 1)
-                # if isinstance(comparison.get("gt")[1], int):
-                #    _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
-                # else:
-                #    _min = max(_min, comparison.get("gt")[0] + 1)
+                    _min = max(_min, comparison.get("gt")[index] + 1)  # (id > 38) and (id > 36) --> _min = 39;
             elif comparison_key[0] == "gte" or _not == "gte":
                 if _not == "gte":
                     index = 1 if isinstance(comparison.get("not").get("gte")[1], int) else 0
@@ -128,8 +125,7 @@ def option_check(check, es_float, not_null, precision, scale):
                     _min = max(_min, comparison.get("not").get("lte")[index] + 1)
                 else:
                     index = 1 if isinstance(comparison.get("lte")[1], int) else 0
-                    _max = min(_max, comparison.get("lte")[index] - 1)
-                # _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
+                    _max = min(_max, comparison.get("lte")[index] - 1)  # (id <= 36) and (id <= 38) --> _min = 36;
             else:
                 return "ERROR: Comparador no implementado"
             _not = None
@@ -140,7 +136,7 @@ def option_check(check, es_float, not_null, precision, scale):
     return number
 
 
-def option_restrictions(es_float, precision, scale, options):
+def option_restrictions(es_float, precision, scale, column):
     """Comprueba las restricciones en el campo option.
 
     :param es_float: indica si el tipo de dato es un float
@@ -152,24 +148,21 @@ def option_restrictions(es_float, precision, scale, options):
     :return: un entero aleatorio o un string definiendo el error
     """
 
-    check = [d['check'] for d in options if 'check' in d]
-    not_null = False
-
-    if not isinstance(options, list):  # Si solo hay una opción
-        options = [options]
-
-    if "null" in options:  # No afecta
+    # check = [d['check'] for d in column if 'check' in d]
+    nullable = True
+    # if not isinstance(options, list):  # Si solo hay una opción
+    #    options = [options]
+    #    print(options)
+    if "nullable" in column:  # No afecta
+        nullable = column.get("nullable")
+    if "unique" in column:  # De momento no afecta
         pass
-    if "not null" in options:
-        not_null = True
-    if "unique" in options:  # De momento no afecta
+    if "primary key" in column:  # De momento no afecta
         pass
-    if "primary key" in options:  # De momento no afecta
-        pass
-    if len(check) == 0:
-        return option_check([], es_float, not_null, precision, scale)
+    if "check" not in column:
+        return option_check([], es_float, nullable, precision, scale)
     else:
-        return option_check(check[0], es_float, not_null, precision, scale)
+        return option_check(column.get("check"), es_float, nullable, precision, scale)
 
 
 def generate_int(parameters, option, constraint):
@@ -190,7 +183,7 @@ def generate_int(parameters, option, constraint):
         return option_restrictions(False, parameters[0], 0, option)
 
 
-def generate_real(data_type, parameters, option, constraint):
+def generate_real(data_type, parameters, column, constraint):
     """Genera un número real aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
 
             :param data_type: tipo de dato de la columna
@@ -221,19 +214,29 @@ def generate_real(data_type, parameters, option, constraint):
         else:
             precision = parameters[0][0]
             scale = parameters[0][1]
-    return option_restrictions(es_float, precision, scale, option)
+    return option_restrictions(es_float, precision, scale, column)
 
 
-def main(sentencia):
+def generate_string(data_type, parameters, option, constraint):
+    """Genera una cadena de caracteres aleatoria que cumpla con las especificaciones de los parámetros
+    y las opciones CHECK.
+
+        :param data_type: tipo de dato de la columna
+        :param parameters: parámetros del tipo de dato
+        :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
+                        Ej: ['not null', {'check': {'gte': ['Id', 50]}}]
+                            'unique'
+                            {'check': {'gte': ['Id', 50]}}
+        :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
+        :return: un entero aleatorio
+        """
+    print(data_type, parameters, option)
+
+
+def clasificar_tipo(sentencia):
     """Detecta el tipo de datos y delega la generación del tipo de dato detectado.
 
     :param sentencia:
-    {'create table':
-        {'name': 'Persona',
-        'columns':
-            [{'name': 'id', 'type': {'number': 5}, 'option': ['null', {'check': {'gte': ['Id', 50]}}]},
-            {'name': 'nombre', 'type': {'varchar': 30}}],
-        'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}}
     :return:
     """
     constraint = sentencia.get("create table").get("constraint")  # constraint compartido por todas las columnas
@@ -248,18 +251,28 @@ def main(sentencia):
             option = column.get("option")
 
         if key in constantes.ENTEROS:
-            print(generate_int(parameters, option, constraint))
+            print(generate_int(parameters, column, constraint))
         elif key in constantes.REALES:
-            print(generate_real(key, parameters, option, constraint))
+            print(generate_real(key, parameters, column, constraint))
         elif key in constantes.STRINGS:
-            print("Datos de tipo cadena de caracteres aun sin implementar.")
+            # print("Datos de tipo cadena de caracteres aun sin implementar.")
+            print(generate_string(key, parameters, column, constraint))
         elif key in constantes.FECHA:
             print("Datos de tipo fecha aun sin implementar")
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
 
 
-main({'create table': {
+sentencia_tablas5 = """CREATE TABLE Persona (
+Id NUMBER(5) UNIQUE NOT NULL CHECK (NOT 0 <= ID AND ID < 100 AND ID != 80) ,
+  real NUMBER(4,2) UNIQUE NULL CHECK (NOT id <= 0 AND id < 20 AND id != 0),
+  string VARCHAR(15) UNIQUE NULL CHECK (LEN(ID) > 5),
+  CONSTRAINT NombreLargo CHECK (LENGTH(Nombre) > 5)
+);"""
+# print(parse(sentencia_tablas5))
+clasificar_tipo(parse(sentencia_tablas5))
+
+aux = {'create table': {
         'name': 'Persona',
         'columns': [
             {'name': 'id',
@@ -270,9 +283,11 @@ main({'create table': {
              'type': {'number': [4, 2]},
              'option': ['unique', 'null',  # de -49.99 hasta 19.99
                         {'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]},
-            {'name': 'real2',
-             'type': {'number': [2, 4]},
-
+            {'name': 'string',
+             'type': {'char': 4},
+             'option': ['unique', 'null',
+                        {'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]
              }
         ],
-        'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
+        'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}}
+
