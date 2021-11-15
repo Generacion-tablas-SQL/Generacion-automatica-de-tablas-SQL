@@ -68,6 +68,13 @@ def generate_number(es_float, _min, _max, _neq, scale):
                 generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
     return generated_number
 
+def check_fecha(check, esDate, not_null, secPrecision):
+
+
+
+
+
+    return 0
 
 def option_check(check, es_float, not_null, precision, scale):
     """Comprueba las restricciones CHECK
@@ -135,6 +142,31 @@ def option_check(check, es_float, not_null, precision, scale):
             number = generate_number(es_float, _min, _max, False, scale)
     return number
 
+def restrictions_Fecha(esDate, secPrecision, column):
+    """Comprueba las restricciones en el campo option.
+
+        :param esDate: indica si el tipo de dato es DATE o TIMESTAMP
+        :param secprecision: precisión de la parte fraccional de los segundos (TIMESTAMP)
+        :param column: restricciones. Ej: {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
+        :return: una fecha aleatoria o un string definiendo el error
+        """
+    # check = [d['check'] for d in column if 'check' in d]
+    nullable = True
+    # if not isinstance(options, list):  # Si solo hay una opción
+    #    options = [options]
+    #    print(options)
+
+    if "nullable" in column:  # No afecta
+        nullable = column.get("nullable")
+    if "unique" in column:  # De momento no afecta
+        pass
+    if "primary key" in column:  # De momento no afecta
+        pass
+    if "check" not in column:
+        return check_fecha([], esDate, nullable, secPrecision)
+    else:
+        return check_fecha(column.get("check"), esDate, nullable, secPrecision)
+
 
 def option_restrictions(es_float, precision, scale, column):
     """Comprueba las restricciones en el campo option.
@@ -197,7 +229,7 @@ def generate_real(data_type, parameters, column, constraint):
             """
     es_float = False
     if data_type == "float":  # float-point
-        precision = 126 if parameters[0] == "{}" else parameters[0]
+        precision = 126 if parameters[0][0] == "{}" else parameters[0]
         scale = None
         es_float = True
     elif data_type == "real":  # float-point
@@ -216,7 +248,7 @@ def generate_real(data_type, parameters, column, constraint):
             scale = parameters[0][1]
     return option_restrictions(es_float, precision, scale, column)
 
-def generate_fecha(data_type, parameters, option, constraint):
+def generate_fecha(data_type, parameters, column, constraint):
     """Genera una fecha aleatoria que cumpla con las especificaciones de los parámetros y las opciones CHECK.
 
                 :param data_type: tipo de dato de la columna (DATE O TIMESTAMP)
@@ -228,13 +260,18 @@ def generate_fecha(data_type, parameters, option, constraint):
                 :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
                 :return: una fecha aleatoria
                 """
+    secPrecision = 0
     esDate = False;
     if data_type == "date":  # DATE 'YYYY-MM-DD'
         esDate = True
     else:                    #TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'  secPrecision = 2 (.FF)
         secPrecision = parameters[0]
 
-    print(data_type, parameters, option)
+    # date [{}] {'name': 'fech1', 'type': {'date': {}}, 'unique': True, 'nullable': False}
+    # timestamp [2] {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
+    #print(data_type, parameters, column)
+
+    return restrictions_Fecha(esDate, secPrecision, column)
 
 
 
