@@ -7,7 +7,6 @@ def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
     """Devuelve el número máximo que se puede generar con la precisión indicada.
         Ejemplo: si precision == 3, max_num = 999
                  si precision == 5 y precision == 2,  max_num = 999.99
-
     :param es_float: indica si se trata de un float
     :param precision: número de dígitos que contiene un número como máximo
     :param scale: número máximo de dígitos decimales
@@ -69,7 +68,6 @@ def generate_number(es_float, _min, _max, _neq, scale):
 
 def option_check(check, es_float, not_null, precision, scale):
     """Comprueba las restricciones CHECK
-
     :param check: campo check de la sentencia parseada
     :param es_float: indica si el tipo de dato es un float
     :param not_null: indica si la sentencia contiene la opción NOT NULL
@@ -135,9 +133,16 @@ def option_check(check, es_float, not_null, precision, scale):
     return number
 
 
+def option_restrictionsFecha(esDate, secPrecision, options):
+
+
+
+
+
+    return
+
 def option_restrictions(es_float, precision, scale, options):
     """Comprueba las restricciones en el campo option.
-
     :param es_float: indica si el tipo de dato es un float
     :param precision: precisión de la parte entera del número
     :param scale: número de decimales
@@ -169,7 +174,6 @@ def option_restrictions(es_float, precision, scale, options):
 
 def generate_int(parameters, option, constraint):
     """Genera un número entero aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
-
         :param parameters: parámetros del tipo de dato
         :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
                         Ej: ['not null', {'check': {'gte': ['Id', 50]}}]
@@ -184,10 +188,31 @@ def generate_int(parameters, option, constraint):
     else:
         return option_restrictions(False, parameters[0], 0, option)
 
+def generate_fecha(data_type, parameters, option, constraint):
+    """Genera una fecha aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
+                :param data_type: tipo de dato de la columna: DATE ó TIMESTAMP
+                :param parameters: parámetros del tipo de dato
+                :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
+                                Ej: ['not null', {'check': {'gte': ['Id', 50]}}]
+                                    'unique'
+                                    {'check': {'gte': ['Id', 50]}}
+                :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
+                :return: una fecha aleatoria
+                """
+    esDate = False;
+
+    if data_type == "date":  # TIPO DATE 'YYYY-MM-DD'
+        esDate = True;
+
+    else:  # TIPO TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF' con seconds precision = 2 (.FF)
+        secPrecision = parameters[0]
+
+    return option_restrictionsFecha(esDate, secPrecision, option )
+
+
 
 def generate_real(data_type, parameters, option, constraint):
     """Genera un número real aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
-
             :param data_type: tipo de dato de la columna
             :param parameters: parámetros del tipo de dato
             :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK).
@@ -221,7 +246,6 @@ def generate_real(data_type, parameters, option, constraint):
 
 def main(sentencia):
     """Detecta el tipo de datos y delega la generación del tipo de dato detectado.
-
     :param sentencia:
     {'create table':
         {'name': 'Persona',
@@ -249,7 +273,7 @@ def main(sentencia):
         elif key in constantes.STRINGS:
             print("Datos de tipo cadena de caracteres aun sin implementar.")
         elif key in constantes.FECHA:
-            print("Datos de tipo fecha aun sin implementar")
+            print(generate_fecha(key, parameters, option, constraint))
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
 
@@ -266,8 +290,18 @@ main({'create table': {
              'option': ['unique', 'null',  # de -49.99 hasta 99.99
                         {'check': {'and': [{'not': {'lte': [-50, 'ID']}}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
             {'name': 'real2',
-             'type': {'number': [2, 4]},
+             'type': {'number': [2, 4]}},
 
-             }
+            {'name': 'fech',
+             'type': {'date': ''},
+             'option': ['unique', 'null']},
+                         # ,{'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}
+
+            {'name': 'fech2',
+             'type': {'timestamp': 2},
+             'option': ['unique', 'not null' ]}
+                        # ,{'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}
+
+
         ],
         'constraint': {'name': 'NombreLargo', 'check': {'gt': [{'length': 'Nombre'}, 5]}}}})
