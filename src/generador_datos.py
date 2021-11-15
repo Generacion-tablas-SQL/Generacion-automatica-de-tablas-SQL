@@ -269,7 +269,7 @@ main({'create table': {
             {'name': 'real',
              'type': {'number': [4, 2]},
              'option': ['unique', 'null',  # de -49.99 hasta 19.99
-                        {'check': {'and': [{'not': {'lte': [-50, 'ID']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]},
+                        {'check': {'and': [{'not': {'lte': [0, 'id']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]},
             {'name': 'real2',
              'type': {'number': [2, 4]},
 
