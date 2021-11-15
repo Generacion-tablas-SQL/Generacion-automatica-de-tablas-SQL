@@ -93,36 +93,41 @@ def option_check(check, es_float, not_null, precision, scale):
             comparison_key = list(comparison.keys())
             if comparison_key[0] == "not":
                 _not = list(comparison.get("not").keys())[0]
-                print(_not)
             if comparison_key[0] == "eq":
                 return comparison.get("eq")
             elif comparison_key[0] == "neq":
                 _neq = comparison.get("neq")
-            elif comparison_key[0] == "gt":
-                index = 1 if isinstance(comparison.get("gt")[1], int) else 0
-                if _not and _not == "gt":
+            elif comparison_key[0] == "gt" or _not == "gt":
+                if _not == "gt":
+                    index = 1 if isinstance(comparison.get("not").get("gt")[1], int) else 0
                     _max = min(_max, comparison.get("gt")[index] - 1)
                 else:
+                    index = 1 if isinstance(comparison.get("gt")[1], int) else 0
                     _min = max(_min, comparison.get("gt")[1] + 1)
                 # if isinstance(comparison.get("gt")[1], int):
                 #    _min = max(_min, comparison.get("gt")[1] + 1)  # (id > 38) and (id > 36) --> _min = 39;
                 # else:
                 #    _min = max(_min, comparison.get("gt")[0] + 1)
-            elif comparison_key[0] == "gte":
-                index = 1 if isinstance(comparison.get("gte")[1], int) else 0
-                if _not and _not == "gte":
+            elif comparison_key[0] == "gte" or _not == "gte":
+                if _not == "gte":
+                    index = 1 if isinstance(comparison.get("not").get("gte")[1], int) else 0
                     _max = min(_max, comparison.get("gte")[index])
                 else:
-                    _min = max(_min, comparison.get("gte")[index])
-                # _min = max(_min, comparison.get("gte")[1])  # (id >= 38) and (id >= 36) --> _min = 38;
-            elif comparison_key[0] == "lt":
-                _max = min(_max, comparison.get("lt")[index] - 1)  # (id < 36) and (id < 38) --> _min = 35;
-            elif comparison_key[0] == "lte":
-                index = 1 if isinstance(comparison.get("lte")[index], int) else 0
-                if _not and _not == "lte":
-                    print("He entrado")
-                    _min = max(_min, comparison.get("lte")[index] + 1)
+                    index = 1 if isinstance(comparison.get("gte")[1], int) else 0
+                    _min = max(_min, comparison.get("gte")[index])  # (id >= 38) and (id >= 36) --> _min = 38;
+            elif comparison_key[0] == "lt" or _not == "lt":
+                if _not == "lt":
+                    index = 1 if isinstance(comparison.get("not").get("lt")[1], int) else 0
+                    _min = max(_min, comparison.get("not").get("lt")[index] + 1)
                 else:
+                    index = 1 if isinstance(comparison.get("lt")[1], int) else 0
+                    _max = min(_max, comparison.get("lt")[index] - 1)  # (id < 36) and (id < 38) --> _min = 35;
+            elif comparison_key[0] == "lte" or _not == "lte":
+                if _not == "lte":
+                    index = 1 if isinstance(comparison.get("not").get("lte")[1], int) else 0
+                    _min = max(_min, comparison.get("not").get("lte")[index] + 1)
+                else:
+                    index = 1 if isinstance(comparison.get("lte")[1], int) else 0
                     _max = min(_max, comparison.get("lte")[index] - 1)
                 # _max = min(_max, comparison.get("lte")[1])  # (id <= 36) and (id <= 38) --> _min = 36;
             else:
@@ -263,8 +268,8 @@ main({'create table': {
                         {'check': {'and': [{'gte': ['Id', -50]}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
             {'name': 'real',
              'type': {'number': [4, 2]},
-             'option': ['unique', 'null',  # de -49.99 hasta 99.99
-                        {'check': {'and': [{'not': {'lte': [-50, 'ID']}}, {'lt': ['ID', 100]}, {'neq': ['ID', 80]}]}}]},
+             'option': ['unique', 'null',  # de -49.99 hasta 19.99
+                        {'check': {'and': [{'not': {'lte': [-50, 'ID']}}, {'lt': ['ID', 20]}, {'neq': ['ID', 0]}]}}]},
             {'name': 'real2',
              'type': {'number': [2, 4]},
 
