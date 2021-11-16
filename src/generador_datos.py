@@ -1,11 +1,11 @@
 import constantes
-import random
-import datetime
-import time
-import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from mo_sql_parsing import parse
 from mo_sql_parsing import format
+import random
+import datetime
+import time
 
 
 def max_number(es_float, precision, scale):  # Ej: precision 3 --> max_num = 999
@@ -75,10 +75,11 @@ def option_check(check, es_float, not_null, precision, scale):
     """Comprueba las restricciones CHECK
 
         :param check: campo check de la sentencia parseada
-        :param esDate: indica si el tipo de dato es DATE o TIMESTAMP
+        :param es_float: indica si el tipo de dato es un float
         :param not_null: indica si la sentencia contiene la opción NOT NULL
-        :param secPrecision: precisión de la parte fraccional de los segundos (TIMESTAMP)
-        :return: fecha aleatoria teniendo en cuenta las restricciones del campo option y del tipo de datos
+        :param precision: precisión de la parte entera del número
+        :param scale: número de decimales
+        :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
         """
     _max = max_number(es_float, precision, scale)
     _min = -_max
@@ -137,24 +138,96 @@ def option_check(check, es_float, not_null, precision, scale):
     return number
 
 
-def check_fecha(check, esDate, not_null, secPrecision):
+def gen_fecha(es_date, inicio, final, formato, sec_precision):
+
+    if es_date:  # Generar fecha de tipo DATE
+        minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
+        maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
+        fecha = minimo + (maximo - minimo) * random.random()
+        print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
+
+        return time.strftime("%d/%m/%Y", time.localtime(fecha))
+
+    else:  # Generar fecha de tipo TIMESTAMP
+        minimo = datetime.datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+        maximo = datetime.datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
+        fecha = minimo + (maximo - minimo) * random.random()
+        if sec_precision == 6 or sec_precision == 0:
+            print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
+            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
+        else:
+            sec_precision = 6 - sec_precision
+            print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
+            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
+
+
+def check_fecha(check, es_date, not_null, sec_precision):
     """Comprueba las restricciones CHECK
 
-    :param check: campo check de la sentencia parseada
-    :param es_float: indica si el tipo de dato es un float
-    :param not_null: indica si la sentencia contiene la opción NOT NULL
-    :param precision: precisión de la parte entera del número
-    :param scale: número de decimales
-    :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
-    """
-
-    """ POSIBLES RESTRICCIONES EN FECHAS: -BETWEEN:    order_date BETWEEN TO_DATE ('2014/02/01', 'yyyy/mm/dd') AND TO_DATE ('2014/02/28', 'yyyy/mm/dd');         
-                                          -OPERADORES: order_date >= TO_DATE('2014/02/01', 'yyyy/mm/dd') AND order_date <= TO_DATE('2014/02/28','yyyy/mm/dd');
-    """
+            :param check: campo check de la sentencia parseada
+            :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
+            :param not_null: indica si la sentencia contiene la opción NOT NULL
+            :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
+            :return: fecha aleatoria teniendo en cuenta las restricciones del campo option y del tipo de datos
+            """
+    """ POSIBLES RESTRICCIONES EN FECHAS: -OPERADORES: order_date >= TO_DATE('2014/02/01', 'yyyy/mm/dd') AND order_date <= TO_DATE('2014/02/28','yyyy/mm/dd');
+        En oracle se pueden utilizar funciones para hacer una conversión de string a fecha y viceversa:
+            - TO_CHAR(<date>, '<format>')
+            - TO_DATE(<string>, '<format>')
     
-    return 0
+    """
+    # date [{}] {'name': 'fech1', 'type': {'date': {}}, 'unique': True, 'nullable': False,
 
-def restrictions_Fecha(esDate, secPrecision, column):
+    # 'check': {'and': [{'gte': ['fech1', {'to_date': [{'literal': '2014/02/01'}, {'literal': 'yyyy/mm/dd'}]}]},
+    #                   {'lte': ['fech1', {'to_date': [{'literal': '2014/02/28'}, {'literal': 'yyyy/mm/dd'}]}]}]}}
+
+    _neq = None
+    _not = None
+    if len(check) != 0:  # hay campo check
+        operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
+        #print (list(check.keys()))
+        if operator == "and" or operator == "or":
+            comparisons = check.get(operator)  # lista de comparaciones
+        else:
+            comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
+        lista = []
+        for comparison in comparisons:
+            comparison_key = list(comparison.keys())
+            #print(list(comparison.keys()))
+            f = comparison.get(comparison_key[0])                            # ['fech1', {'to_date': [{'literal': '01/02/2014'}, {'literal': 'yyyy/mm/dd'}]}]
+            s1 = f[1]                                                        # {'to_date': [{'literal': '01/02/2014'}, {'literal': 'yyyy/mm/dd'}]}
+            key = list(s1.keys())
+            if key == ['to_date']:     #TIPO to_date
+
+                s2 = list(s1.values())                                       # [[{'literal': '01/02/2014'}, {'literal': 'yyyy/mm/dd'}]]
+                s3 = s2[0][0]                                                # {'literal': '01/02/2014'}
+                s4 = str(list(s3.values())[0])                               # Cadena string con la fecha: 01/02/2014
+                fecha = datetime.datetime.strptime(s4,'%d/%m/%Y').date()     # Objeto fecha 2014-02-01 para poder compararlas
+                lista.append(fecha)  # Guarda las fechas
+                #print(f)
+                #print(key)
+                #print(s2)
+                #print(s3)
+                #print(s4)
+                #print(fecha)
+
+
+
+
+
+            if key == ['to_char']:     #TIPO to_char
+                pass                   #SIN IMPLEMENTAR AUN
+
+        #print(lista)
+        #if (lista[0] < lista[1]): print("Si")
+
+
+
+
+
+
+
+def restrictions_fecha(esDate, secPrecision, column):
     """Comprueba las restricciones en el campo option.
 
         :param esDate: indica si el tipo de dato es DATE o TIMESTAMP
@@ -272,18 +345,14 @@ def generate_fecha(data_type, parameters, column, constraint):
                 :param constraint: restricciones definidas después de las columnas **SIN IMPLEMENTAR**
                 :return: una fecha aleatoria
                 """
-    secPrecision = 0
-    esDate = False;
+    sec_precision = 0
+    es_date = False
     if data_type == "date":  # DATE 'YYYY-MM-DD'
-        esDate = True
-    else:                    #TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'  secPrecision = 2 (.FF)
-        secPrecision = parameters[0]
+        es_date = True
+    else:                    #TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'  sec_precision = 2 (.FF)
+        sec_precision = parameters[0]
 
-    # date [{}] {'name': 'fech1', 'type': {'date': {}}, 'unique': True, 'nullable': False}
-    # timestamp [2] {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
-    print(data_type, parameters, column)
-
-    return restrictions_Fecha(esDate, secPrecision, column)
+    return restrictions_fecha(es_date, sec_precision, column)
 
 
 
@@ -338,7 +407,7 @@ sentencia_tablas5 = """CREATE TABLE Persona (
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT id <= 0 AND id < 20 AND id != 0),
   string VARCHAR(15) UNIQUE NULL CHECK (LEN(ID) > 5),
   CONSTRAINT NombreLargo CHECK (LENGTH(Nombre) > 5), 
-  fech1 DATE UNIQUE NOT NULL CHECK (fech1 >= TO_DATE('2014/02/01', 'yyyy/mm/dd') AND fech1 <= TO_DATE('2014/02/28','yyyy/mm/dd')),
+  fech1 DATE UNIQUE NOT NULL CHECK (fech1 >= TO_DATE('01/02/2014', 'yyyy/mm/dd') AND fech1 <= TO_DATE('28/02/2014','yyyy/mm/dd')),
   fech2 TIMESTAMP(2) UNIQUE NULL 
 );"""
 
