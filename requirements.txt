@@ -1,6 +1,10 @@
+Faker==9.8.2
 mo-dots==7.4.21313
 mo-future==6.2.21303
 mo-imports==7.3.21313
 mo-parsing==8.1.21317
 mo-sql-parsing==8.2.21318
 pkg_resources==0.0.0
+python-dateutil==2.8.2
+six==1.16.0
+text-unidecode==1.3
