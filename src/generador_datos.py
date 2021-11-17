@@ -259,7 +259,8 @@ def check_fecha(check, es_date, sec_precision):
     # date [{}] {'name': 'fech1', 'type': {'date': {}}, 'unique': True, 'nullable': False,
 
     # 'check': {'and': [{'gte': ['fech1', {'to_date': [{'literal': '2014/02/01'}, {'literal': 'yyyy/mm/dd'}]}]},
-    #                   {'lte': ['fech1', {'to_date': [{'literal': '2014/02/28'}, {'literal': 'yyyy/mm/dd'}]}]}]}}
+    #                   {'lte': ['fech1', {'to_date': [{'literal': '28-jan-2014'}, {'literal': 'dd-mon-yyyy'}]}]}]}}
+    #                   {'lte': ['fech1', {'to_date': [{'literal': '28-Feb-03'}, {'literal': 'dd-mon-rr'}]}]}]}}
 
     _neq = None
     _not = None
