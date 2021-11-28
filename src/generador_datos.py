@@ -49,10 +49,23 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     return max_num
 
 
-def generate_random_string(_min, _max, _neq):
+def generate_random_string(_min, _max, _neq, _like):
     fake = Faker(['en_US'])
-    b = random.randint(_min, _max)
-    generated_string = fake.text()[0:b]
+    generated_string = ""
+    if _like is not None:
+        max_percentage_chars = _like.count('%') + _max - len(_like)
+        for char in _like:
+            if char == '_':
+                generated_string += random.choice('abcdefghijklmnopqrstuvwxyz')
+            elif char == '%':
+                b = random.randint(0, max_percentage_chars)  # El % puede no ser ningún caracter
+                generated_string += fake.text()[0:b]
+                max_percentage_chars -= b
+            else:
+                generated_string += char
+    else:
+        b = random.randint(_min, _max)
+        generated_string = fake.text()[0:b]
     return generated_string
 
 
@@ -75,6 +88,7 @@ def generate_number(_min, _max, _neq, scale):
 def option_check_string(column_name, check, varying, size):
     _min = 1 if varying is True else size
     _max = size
+    _like = None
     _not = None
     _neq = None
     if len(check) != 0:
@@ -120,14 +134,16 @@ def option_check_string(column_name, check, varying, size):
                 else:
                     index = 1 if isinstance(comparison.get("lte")[1], int) else 0
                     _max = min(_max, comparison.get("lte")[index] - 1)
+            elif comparison_key[0] == "like":
+                _like = comparison.get("like")[1].get("literal")
             else:
                 tries = 20
-                string = generate_random_string(_min, _max, _neq)
+                string = generate_random_string(_min, _max, _neq, _like)
                 check = format(check).lower()
                 check = check.replace(column_name, string)
                 check = check.replace("<>", "!=")
                 while not eval(check) and tries > 0:
-                    new_string = generate_random_string(_min, _max, _neq)
+                    new_string = generate_random_string(_min, _max, _neq, _like)
                     check = check.replace(string, new_string)
                     string = new_string
                     tries -= 1
@@ -136,7 +152,7 @@ def option_check_string(column_name, check, varying, size):
                 else:
                     return "No se ha encontrado un dato que satisfaga las restricciones"
             _not = None
-    return generate_random_string(_min, _max, _neq)
+    return generate_random_string(_min, _max, _neq, _like)
 
 
 def option_check(column_name, check, precision, scale):
@@ -475,12 +491,12 @@ def poblador_tablas(sentencias_create_table, sentencias_select):
 
 create_table = """CREATE TABLE Persona (
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT reAl <= 0 AND REAL < 20 AND real != 10),
-  string VARCHAR(15) UNIQUE NULL CHECK (LENGTH(string) > 5 and LENGTH(string) < 10),
+  string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),
   fech1 DATE UNIQUE NOT NULL CHECK (fech1 >= TO_DATE('01/02/2014', 'yyyy/mm/dd') AND fech1 <= TO_DATE('28/02/2014','yyyy/mm/dd')),
   fech2 TIMESTAMP(2) UNIQUE NULL,
   CONSTRAINT NombreLargo CHECK (LEN(Nombre) > 5)
 );"""
-# print(parse(sentencia_tablas5))
+print(parse(create_table))
 select = """SELECT real, string FROM Persona WHERE real > 20; 
                         SELECT real string FROM Persona WHERE string LIKE %Co%"""
 # print(parse(sentencias_select))

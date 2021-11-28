@@ -16,5 +16,7 @@ ya que la librería de parsing utilizada, mo-sql-parsing, no lo soporta.
 por tamaño en bytes debido a que mo-sql-parsing no lo soporta.
 
 
-- Comparaciones de strings: se tiene en cuenta la función LEN
+- Comparaciones de strings: 
+  - Función LEN
+  - Restricción LIKE;
 
