@@ -18,5 +18,6 @@ por tamaño en bytes debido a que mo-sql-parsing no lo soporta.
 
 - Comparaciones de strings: 
   - Función LEN
-  - Restricción LIKE;
+  - Restricción LIKE
+    - No tiene en cuenta el parámetro ESCAPE
 
