@@ -109,37 +109,35 @@ def clasificar_tipo1(sentencias):
     :return:
     """
 
-    # tablas = {tabla1: [col1: {tipo: int, restricciones: [{min:0, max:10, 'primary key': true, neq: 5}]},
-    #                    col2: {tipo: varchar, restricciones: [{min: 5, max:10, like: '___-_%'}]}]}
+    # tablas = {tabla1: [{col1: ["nullable", "unique", {min:0, max:10, eq: None, neq: 5, scale: 0, tipo: int}]},
+    #                    {col2: ["primary key", {min: 5, max:10, eq: None, neq: None, like: '___-_%', tipo: varchar}]}]}
     tablas = {}
 
-    # columnas_tabla = {[{nombre: "", tipo:  "", restricciones: []}]}
-
-    # nombre_tablas = []
-    # columnas_tabla = []
     sentencias_list = sentencias.split(';')
     for sentencia in sentencias_list:
-        print(sentencia)
         sentencia_d = parse(sentencia)
         nombre_tabla = sentencia_d.get("create table").get("name")
         tablas.update({nombre_tabla: []})
+
         for column in sentencia_d.get("create table").get("columns"):
-            nombre_col = column.get("name")
+            col_name = column.get("name")
             data_type = list(column.get("type").keys())[0].lower()  # number
             parameters = list(column.get("type").values())  # [[5, 0]]
+
             if data_type in constantes.ENTEROS:
                 data_type_param = []
                 data_type_param.append(38) if parameters[0] == {} else data_type_param.append(parameters[0])
                 data_type_param.append(0)
+
                 restricciones = restricciones_sql(data_type_param, column)
+                restricciones[-1].update({"tipo": data_type})
+
+                col_dict = {col_name: restricciones}
+                tablas.get(nombre_tabla).append(col_dict)
+
                 print(gd.generate_number1(restricciones))
-                print(restricciones)
-                # col_dict = {}
-                # col_dict.update({nombre_col: comprobar_restricciones_ent(parameters, column)})
             elif data_type in constantes.REALES:
                 # print(gd.generate_real(data_type, parameters, column))
-                # es_float, _min, _max, _neq, scale = generate_real(key, parameters, column, constraint)
-                # print(generate_number(es_float, _min, _max, _neq, scale))
                 pass
             elif data_type in constantes.STRINGS:
                 # print(gd.string_restrictions(data_type, parameters, column))
