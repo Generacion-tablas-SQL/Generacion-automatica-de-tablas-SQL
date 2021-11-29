@@ -233,20 +233,31 @@ def option_check(column_name, check, precision, scale):
     return number
     # return es_float, _min, _max, _neq, scale
 
+#DATE 'YYYY-MM-DD'
+#TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+# Devuelve una fecha del tipo específico(DATE o TIMESTAMP) en formato string.
+def gen_fecha(es_date, sec_precision):
+    """Comprueba las restricciones en el campo option.
+            :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
+            :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
+            :return: una fecha aleatoria en formato string o un string definiendo el error
+            """
+    # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
+    # del formato específico en el que lo mostramos.
+    inicio = "01/01/1971"
+    final = "12/12/2021"   #Se podria poner como final la fecha actual del sistema
+    formato = "%d/%m/%Y"   #Formato establecido por defecto
 
-def gen_fecha(es_date, inicio, final, formato, sec_precision):
-
-    if es_date:  # Generar fecha de tipo DATE
-        minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
-        maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
+    if es_date:                                               #Generar fecha de tipo DATE
+        minimo = time.mktime(time.strptime(inicio, formato))  #Fecha mínima en formato DATE
+        maximo = time.mktime(time.strptime(final, formato))   #Fecha máxima en formato DATE
         fecha = minimo + (maximo - minimo) * random.random()
         print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
-
         return time.strftime("%d/%m/%Y", time.localtime(fecha))
 
-    else:  # Generar fecha de tipo TIMESTAMP
-        minimo = datetime.datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-        maximo = datetime.datetime.strptime(final, formato)   # Fecha máxima en formato TIMESTAMP
+    else:                                                        #Generar fecha de tipo TIMESTAMP
+        minimo = datetime.datetime.strptime(inicio, formato)     # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+        maximo = datetime.datetime.strptime(final, formato)      # Fecha máxima en formato TIMESTAMP
         fecha = minimo + (maximo - minimo) * random.random()
         if sec_precision == 6 or sec_precision == 0:
             print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
@@ -257,64 +268,8 @@ def gen_fecha(es_date, inicio, final, formato, sec_precision):
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
 
-def check_fecha(check, es_date, sec_precision):
-    """Comprueba las restricciones CHECK
-
-            :param check: campo check de la sentencia parseada
-            :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
-            :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
-            :return: fecha aleatoria teniendo en cuenta las restricciones del campo option y del tipo de datos
-
-    POSIBLES RESTRICCIONES EN FECHAS:
-        - OPERADORES: order_date >= TO_DATE('2014/02/01', 'yyyy/mm/dd')
-            AND order_date <= TO_DATE('2014/02/28','yyyy/mm/dd');
-    En oracle se pueden utilizar funciones para hacer una conversión de string a fecha y viceversa:
-        - TO_CHAR(<date>, '<format>')
-        - TO_DATE(<string>, '<format>')
-    """
-    # date [{}] {'name': 'fech1', 'type': {'date': {}}, 'unique': True, 'nullable': False,
-
-    # 'check': {'and': [{'gte': ['fech1', {'to_date': [{'literal': '2014/02/01'}, {'literal': 'yyyy/mm/dd'}]}]},
-    #                   {'lte': ['fech1', {'to_date': [{'literal': '28-jan-2014'}, {'literal': 'dd-mon-yyyy'}]}]}]}}
-    #                   {'lte': ['fech1', {'to_date': [{'literal': '28-Feb-03'}, {'literal': 'dd-mon-rr'}]}]}]}}
-
-    _neq = None
-    _not = None
-    if len(check) != 0:  # hay campo check
-        operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
-        # print (list(check.keys()))
-        if operator == "and" or operator == "or":
-            comparisons = check.get(operator)  # lista de comparaciones
-        else:
-            comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
-        lista = []
-        for comparison in comparisons:
-            comparison_key = list(comparison.keys())
-            # print(list(comparison.keys()))
-            f = comparison.get(comparison_key[0])  # ['fech1', {'to_date': [{'literal': '01/02/2014'}, {'literal': 'yyyy/mm/dd'}]}]
-            s1 = f[1]                              # {'to_date': [{'literal': '01/02/2014'}, {'literal': 'yyyy/mm/dd'}]}
-            key = list(s1.keys())
-            if key == ['to_date']:     # TIPO to_date
-
-                s2 = list(s1.values())                                       # [[{'literal': '01/02/2014'}, {'literal': 'yyyy/mm/dd'}]]
-                s3 = s2[0][0]                                                # {'literal': '01/02/2014'}
-                s4 = str(list(s3.values())[0])                               # Cadena string con la fecha: 01/02/2014
-                fecha = datetime.datetime.strptime(s4, '%d/%m/%Y').date()    # Objeto fecha 2014-02-01 para poder compararlas
-                lista.append(fecha)  # Guarda las fechas
-                # print(f)
-                # print(key)
-                # print(s2)
-                # print(s3)
-                # print(s4)
-                # print(fecha)
-
-            if key == ['to_char']:     # TIPO to_char
-                pass                   # SIN IMPLEMENTAR AUN
-
-        # print(lista)
-        # if (lista[0] < lista[1]): print("Si")
-
-
+"""No se realiza la implementación de restricciones de tipo check en las fechas, únicamente se 
+generan valores del tipo esepcificado: DATE o TIMESTAMP(scale) y se devuelve un objeto del tipo to_date()"""
 def restrictions_fecha(es_date, sec_precision, column):
     """Comprueba las restricciones en el campo option.
 
@@ -334,10 +289,12 @@ def restrictions_fecha(es_date, sec_precision, column):
         pass
     if "primary key" in column:  # De momento no afecta
         pass
-    if "check" not in column:
-        return check_fecha([], es_date, sec_precision)
+    if "check" not in column: # No hay restricciones CHECK
+        return gen_fecha(es_date, sec_precision)
+        #return check_fecha([], es_date, sec_precision)
     else:
-        return check_fecha(column.get("check"), es_date, sec_precision)
+        pass
+        #return check_fecha(column.get("check"), es_date, sec_precision)
 
 
 def option_restrictions(precision, scale, column):
@@ -489,11 +446,13 @@ def poblador_tablas(sentencias_create_table, sentencias_select):
     clasificar_tipo(parse(sentencias_create_table))
 
 
+
+
 create_table = """CREATE TABLE Persona (
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT reAl <= 0 AND REAL < 20 AND real != 10),
   string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),
-  fech1 DATE UNIQUE NOT NULL CHECK (fech1 >= TO_DATE('01/02/2014', 'yyyy/mm/dd') AND fech1 <= TO_DATE('28/02/2014','yyyy/mm/dd')),
-  fech2 TIMESTAMP(2) UNIQUE NULL,
+  fech1 DATE UNIQUE NOT NULL ),
+  fech2 TIMESTAMP(2) UNIQUE NULL),
   CONSTRAINT NombreLargo CHECK (LEN(Nombre) > 5)
 );"""
 print(parse(create_table))
