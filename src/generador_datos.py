@@ -49,6 +49,11 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     return max_num
 
 
+def generate_null_value():
+    if random.random() < constantes.NULL_PROBABILITY:
+        return "NULL"
+    return ""
+
 def generate_random_string(_min, _max, _neq, _like):
     fake = Faker(['en_US'])
     generated_string = ""
@@ -68,6 +73,36 @@ def generate_random_string(_min, _max, _neq, _like):
         generated_string = fake.text()[0:b]
     return generated_string
 
+
+def generate_number1(restricciones):
+    # PRUEBA!!
+    dict_restr = restricciones[-1]
+    scale = dict_restr.get("scale")
+    _min = dict_restr.get("min")
+    _max = dict_restr.get("max")
+    _eq = dict_restr.get("eq")
+    _neq = dict_restr.get("neq")
+
+    if "nullable" in restricciones:
+        if generate_null_value() == "NULL":
+            return None
+
+    if _eq is not None:
+        return _eq
+
+    if scale == 0:
+        generated_number = random.randint(_min, _max)  # Genera un número entero
+        if _neq is not None and generated_number == _neq:
+            generated_number += 1
+    else:
+        # Genera un número real
+        generated_number = Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale)
+        if _neq is not None and generated_number == _neq:
+            if scale < 0:
+                generated_number += 1
+            else:
+                generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
+    return generated_number
 
 def generate_number(_min, _max, _neq, scale):
     if scale == 0:
@@ -490,13 +525,13 @@ def poblador_tablas(sentencias_create_table, sentencias_select):
 
 create_table = """CREATE TABLE Persona (
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT reAl <= 0 AND REAL < 20 AND real != 10),
-  string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),
+  string VARCHAR(15) UNIQUE NULL DEFAULT 'sandnes' CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),
   fech1 DATE UNIQUE NOT NULL CHECK (fech1 >= TO_DATE('01/02/2014', 'yyyy/mm/dd') AND fech1 <= TO_DATE('28/02/2014','yyyy/mm/dd')),
   fech2 TIMESTAMP(2) UNIQUE NULL,
   CONSTRAINT NombreLargo CHECK (LEN(Nombre) > 5)
 );"""
-print(parse(create_table))
+# print(parse(create_table))
 select = """SELECT real, string FROM Persona WHERE real > 20; 
                         SELECT real string FROM Persona WHERE string LIKE %Co%"""
 # print(parse(sentencias_select))
-poblador_tablas(create_table, select)
+# poblador_tablas(create_table, select)
