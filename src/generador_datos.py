@@ -252,7 +252,7 @@ def gen_fecha(es_date, sec_precision):
         minimo = time.mktime(time.strptime(inicio, formato))  #Fecha mínima en formato DATE
         maximo = time.mktime(time.strptime(final, formato))   #Fecha máxima en formato DATE
         fecha = minimo + (maximo - minimo) * random.random()
-        print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
+        #print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
         return time.strftime("%d/%m/%Y", time.localtime(fecha))
 
     else:                                                        #Generar fecha de tipo TIMESTAMP
@@ -260,11 +260,11 @@ def gen_fecha(es_date, sec_precision):
         maximo = datetime.datetime.strptime(final, formato)      # Fecha máxima en formato TIMESTAMP
         fecha = minimo + (maximo - minimo) * random.random()
         if sec_precision == 6 or sec_precision == 0:
-            print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
+            #print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
         else:
             sec_precision = 6 - sec_precision
-            print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
+            #print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
 
@@ -451,8 +451,8 @@ def poblador_tablas(sentencias_create_table, sentencias_select):
 create_table = """CREATE TABLE Persona (
   real NUMBER(4,2) UNIQUE NULL CHECK (NOT reAl <= 0 AND REAL < 20 AND real != 10),
   string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),
-  fech1 DATE UNIQUE NOT NULL ),
-  fech2 TIMESTAMP(2) UNIQUE NULL),
+  fech1 DATE UNIQUE NOT NULL,
+  fech2 TIMESTAMP(2) UNIQUE NULL,
   CONSTRAINT NombreLargo CHECK (LEN(Nombre) > 5)
 );"""
 print(parse(create_table))
