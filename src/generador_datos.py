@@ -8,7 +8,7 @@ import random
 import datetime
 import time
 
-
+# <---- GENERADOR DE UN NUMERO MÁXIMO ---->
 def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     """Devuelve el número máximo que se puede generar con la precisión indicada.
         Ejemplo: si precision == 3, max_num = 999
@@ -49,11 +49,13 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     return max_num
 
 
+# <---- GENERADOR DE VALORES NULOS ---->
 def generate_null_value():
     if random.random() < constantes.NULL_PROBABILITY:
         return "NULL"
     return ""
 
+# <---- GENERADOR DE STRINGS ---->
 def generate_random_string(_min, _max, _neq, _like):
     fake = Faker(['en_US'])
     generated_string = ""
@@ -72,6 +74,62 @@ def generate_random_string(_min, _max, _neq, _like):
         b = random.randint(_min, _max)
         generated_string = fake.text()[0:b]
     return generated_string
+
+
+# <---- GENERADOR DE NUMEROS ---->
+def generate_number(_min, _max, _neq, scale):
+    if scale == 0:
+        generated_number = random.randint(_min, _max)  # Genera un número entero
+        if not _neq and generated_number == _neq:
+            generated_number += 1
+    else:
+        generated_number = random.uniform(_min, _max)  # Genera un número real. No tiene en cuenta la escala
+        generated_number = Decimal(str(generated_number)).quantize(Decimal(10) ** -scale)
+        if not _neq and generated_number == _neq:
+            if scale < 0:
+                generated_number += 1
+            else:
+                generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
+    return generated_number
+
+
+# <---- GENERADOR DE FECHAS ---->
+def gen_fecha(es_date, sec_precision):
+    """Comprueba las restricciones en el campo option.
+            :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
+            :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
+            :return: una una fecha aleatoria del tipo específico(DATE o TIMESTAMP) en formato string
+            """
+    # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
+    # del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
+
+    inicio = "01/01/1971"
+    final = "12/12/2021"  # Se podria poner como final la fecha actual del sistema
+    formato = "%d/%m/%Y"  # Formato establecido por defecto
+
+    if es_date:  # Generar fecha de tipo DATE
+        minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
+        maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
+        fecha = minimo + (maximo - minimo) * random.random()
+        # print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
+        return time.strftime("%d/%m/%Y", time.localtime(fecha))
+
+    else:  # Generar fecha de tipo TIMESTAMP
+        minimo = datetime.datetime.strptime(inicio,
+                                            formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+        maximo = datetime.datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
+        fecha = minimo + (maximo - minimo) * random.random()
+        if sec_precision == 6 or sec_precision == 0:
+            # print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
+            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
+        else:
+            sec_precision = 6 - sec_precision
+            # print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
+            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
+
+
+
+# _______________________________________________________________________________________________________________________________________________________________________________________________________
 
 
 def generate_number1(restricciones):
@@ -104,20 +162,7 @@ def generate_number1(restricciones):
                 generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
     return generated_number
 
-def generate_number(_min, _max, _neq, scale):
-    if scale == 0:
-        generated_number = random.randint(_min, _max)  # Genera un número entero
-        if not _neq and generated_number == _neq:
-            generated_number += 1
-    else:
-        generated_number = random.uniform(_min, _max)  # Genera un número real. No tiene en cuenta la escala
-        generated_number = Decimal(str(generated_number)).quantize(Decimal(10) ** -scale)
-        if not _neq and generated_number == _neq:
-            if scale < 0:
-                generated_number += 1
-            else:
-                generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
-    return generated_number
+
 
 
 def option_check_string(column_name, check, varying, size):
@@ -268,50 +313,17 @@ def option_check(column_name, check, precision, scale):
     return number
     # return es_float, _min, _max, _neq, scale
 
-#DATE 'YYYY-MM-DD'
-#TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-# Devuelve una fecha del tipo específico(DATE o TIMESTAMP) en formato string.
-def gen_fecha(es_date, sec_precision):
-    """Comprueba las restricciones en el campo option.
-            :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
-            :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
-            :return: una fecha aleatoria en formato string o un string definiendo el error
-            """
-    # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
-    # del formato específico en el que lo mostramos.
-    inicio = "01/01/1971"
-    final = "12/12/2021"   #Se podria poner como final la fecha actual del sistema
-    formato = "%d/%m/%Y"   #Formato establecido por defecto
-
-    if es_date:                                               #Generar fecha de tipo DATE
-        minimo = time.mktime(time.strptime(inicio, formato))  #Fecha mínima en formato DATE
-        maximo = time.mktime(time.strptime(final, formato))   #Fecha máxima en formato DATE
-        fecha = minimo + (maximo - minimo) * random.random()
-        #print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
-        return time.strftime("%d/%m/%Y", time.localtime(fecha))
-
-    else:                                                        #Generar fecha de tipo TIMESTAMP
-        minimo = datetime.datetime.strptime(inicio, formato)     # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-        maximo = datetime.datetime.strptime(final, formato)      # Fecha máxima en formato TIMESTAMP
-        fecha = minimo + (maximo - minimo) * random.random()
-        if sec_precision == 6 or sec_precision == 0:
-            #print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
-            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
-        else:
-            sec_precision = 6 - sec_precision
-            #print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
-            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
 
 """No se realiza la implementación de restricciones de tipo check en las fechas, únicamente se 
-generan valores del tipo esepcificado: DATE o TIMESTAMP(scale) y se devuelve un objeto del tipo to_date()"""
+generan valores del tipo esepcificado: DATE o TIMESTAMP(scale)"""
 def restrictions_fecha(es_date, sec_precision, column):
     """Comprueba las restricciones en el campo option.
 
         :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
         :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
         :param column: restricciones. Ej: {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
-        :return: una fecha aleatoria o un string definiendo el error
+        :return: una fecha aleatoria
         """
     # check = [d['check'] for d in column if 'check' in d]
     # if not isinstance(options, list):  # Si solo hay una opción
