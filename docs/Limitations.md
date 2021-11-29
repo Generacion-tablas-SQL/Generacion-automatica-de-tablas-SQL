@@ -14,6 +14,7 @@ ya que la librería de parsing utilizada, mo-sql-parsing, no soporta este tipo d
 ya que la librería de parsing utilizada, mo-sql-parsing, no lo soporta.
 - Se supone que los datos de tipo cadena de caracteres solo se podrá especificar el tamaño en número de caracteres y no
 por tamaño en bytes debido a que mo-sql-parsing no lo soporta.
+- De cara a la generación de los datos de tipo FECHA (DATE, TIMESTAMP), no se realiza la implementación de las restricciones de tipo CHECK.
 
 
 - Comparaciones de strings: 
