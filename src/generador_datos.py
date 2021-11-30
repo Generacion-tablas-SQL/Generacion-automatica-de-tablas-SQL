@@ -124,8 +124,10 @@ def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones
     # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
     # del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
 
-    sec_precision = restricciones[0]
-    es_date = restricciones[1]
+    dict_restr = restricciones[-1]
+    es_date = dict_restr.get("es_date")
+    sec_precision = dict_restr.get("sec_precision")
+
     inicio = "01/01/1971"
     final = "12/12/2021"  # Se podria poner como final la fecha actual del sistema
     formato = "%d/%m/%Y"  # Formato establecido por defecto
@@ -134,7 +136,7 @@ def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones
         minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
         maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
         fecha = minimo + (maximo - minimo) * random.random()
-        # print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
+        #print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
         return time.strftime("%d/%m/%Y", time.localtime(fecha))
 
     else:  # TIMESTAMP
@@ -142,11 +144,11 @@ def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones
         maximo = datetime.datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
         fecha = minimo + (maximo - minimo) * random.random()
         if sec_precision == 6 or sec_precision == 0:
-            # print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
+            #print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f"))
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
         else:
             sec_precision = 6 - sec_precision
-            # print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
+            #print(fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision])
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
 

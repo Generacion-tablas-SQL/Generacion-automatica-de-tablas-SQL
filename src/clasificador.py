@@ -165,13 +165,13 @@ def clasificar_tipo(columnas):
 
         elif data_type in constantes.FECHA:
 
-            es_date = 1 if data_type[0] == "date" else 0
+            es_date = 1 if data_type == "date" else 0
             sec_precision = 0 if parameters[0] == {} else parameters[0]
 
             data_type_param = ["Fecha", sec_precision, es_date]
-            restricciones = restricciones_sql(data_type_param, column)
+            restricciones = restricciones_sql(data_type_param, column) # restricciones = ['unique', {'sec_precision': 2, 'es_date': 0}]
             restricciones[-1].update({"tipo": data_type})
-            col_restrictions.update({col_name: restricciones})
+            col_restrictions.update({col_name: restricciones})         # 'fec2': ['unique', {'sec_precision': 2, 'es_date': 0, 'tipo': 'timestamp'}]
 
             fechas = []
             for i in range(10):
