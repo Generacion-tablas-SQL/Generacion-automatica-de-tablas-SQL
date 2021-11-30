@@ -56,7 +56,14 @@ def generate_null_value():
     return ""
 
 # <---- GENERADOR DE STRINGS ---->
-def generate_string(_min, _max, _neq, _like):
+def generate_string(restricciones):
+    dict_restr = restricciones[-1]
+    _min = dict_restr.get("min")
+    _max = dict_restr.get("max")
+    _neq = dict_restr.get("neq")
+    _eq = dict_restr.get("eq")
+    _like = dict_restr.get("like")
+
     fake = Faker(['en_US'])
     generated_string = ""
     if _like is not None:
@@ -144,154 +151,37 @@ def gen_fecha(es_date, sec_precision):
 
 # ______________________________________________________________________________________________________________________
 
+    # else:
+    #     tries = 20
+    #     string = generate_string(_min, _max, _neq, _like)
+    #     check = format(check).lower()
+    #     check = check.replace(column_name, string)
+    #     check = check.replace("<>", "!=")
+    #     while not eval(check) and tries > 0:
+    #         new_string = generate_string(_min, _max, _neq, _like)
+    #         check = check.replace(string, new_string)
+    #         string = new_string
+    #         tries -= 1
+    #     if tries > 0:
+    #         return string
+    #     else:
+    #         return "No se ha encontrado un dato que satisfaga las restricciones"
 
-def option_check_string(column_name, check, varying, size):
-    _min = 1 if varying is True else size
-    _max = size
-    _like = None
-    _not = None
-    _neq = None
-    if len(check) != 0:
-        operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
-        if operator == "and" or operator == "or":
-            comparisons = check.get(operator)  # lista de comparaciones
-        else:
-            comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
-        for comparison in comparisons:
-            comparison_key = list(comparison.keys())
-            if comparison_key[0] == "not":
-                _not = list(comparison.get("not").keys())[0]
-            if comparison_key[0] == "eq":
-                _max = comparison.get("eq")
-                _min = _max
-            elif comparison_key[0] == "neq":
-                _neq = comparison.get("neq")
-            elif comparison_key[0] == "gt" or _not == "gt":
-                if _not == "gt":
-                    index = 1 if isinstance(comparison.get("not").get("gt")[1], int) else 0
-                    _max = min(_max, comparison.get("gt")[index] - 1)
-                else:
-                    index = 1 if isinstance(comparison.get("gt")[1], int) else 0
-                    _min = max(_min, comparison.get("gt")[index] + 1)
-            elif comparison_key[0] == "gte" or _not == "gte":
-                if _not == "gte":
-                    index = 1 if isinstance(comparison.get("not").get("gte")[1], int) else 0
-                    _max = min(_max, comparison.get("gte")[index])
-                else:
-                    index = 1 if isinstance(comparison.get("gte")[1], int) else 0
-                    _min = max(_min, comparison.get("gte")[index])
-            elif comparison_key[0] == "lt" or _not == "lt":
-                if _not == "lt":
-                    index = 1 if isinstance(comparison.get("not").get("lt")[1], int) else 0
-                    _min = max(_min, comparison.get("not").get("lt")[index] + 1)
-                else:
-                    index = 1 if isinstance(comparison.get("lt")[1], int) else 0
-                    _max = min(_max, comparison.get("lt")[index] - 1)
-            elif comparison_key[0] == "lte" or _not == "lte":
-                if _not == "lte":
-                    index = 1 if isinstance(comparison.get("not").get("lte")[1], int) else 0
-                    _min = max(_min, comparison.get("not").get("lte")[index] + 1)
-                else:
-                    index = 1 if isinstance(comparison.get("lte")[1], int) else 0
-                    _max = min(_max, comparison.get("lte")[index] - 1)
-            elif comparison_key[0] == "like":
-                _like = comparison.get("like")[1].get("literal")
-            else:
-                tries = 20
-                string = generate_string(_min, _max, _neq, _like)
-                check = format(check).lower()
-                check = check.replace(column_name, string)
-                check = check.replace("<>", "!=")
-                while not eval(check) and tries > 0:
-                    new_string = generate_string(_min, _max, _neq, _like)
-                    check = check.replace(string, new_string)
-                    string = new_string
-                    tries -= 1
-                if tries > 0:
-                    return string
-                else:
-                    return "No se ha encontrado un dato que satisfaga las restricciones"
-            _not = None
-    return generate_string(_min, _max, _neq, _like)
-
-
-def option_check(column_name, check, precision, scale):
-    """Comprueba las restricciones CHECK
-
-    :param column_name: nombre de la columna
-    :param check: campo check de la sentencia parseada
-    :param precision: precisión de la parte entera del número
-    :param scale: número de decimales
-    :return: número aleatorio teniendo en cuenta las restricciones del campo option y del tipo de datos
-    """
-
-    _max = max_number(precision, scale)
-    _min = -_max
-    _neq = None
-    _not = None
-    if len(check) != 0:  # hay campo check
-        operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
-        if operator == "and" or operator == "or":
-            comparisons = check.get(operator)  # lista de comparaciones
-        else:
-            comparisons = [check]  # Convierte el diccionario que contiene la comparación a una lista de un elemento
-        for comparison in comparisons:
-            comparison_key = list(comparison.keys())
-            if comparison_key[0] == "not":
-                _not = list(comparison.get("not").keys())[0]
-            if comparison_key[0] == "eq":
-                index = 1 if isinstance(comparison.get("eq")[1], int) else 0
-                return comparison.get("eq")[index]
-            elif comparison_key[0] == "neq":
-                index = 1 if isinstance(comparison.get("neq")[1], int) else 0
-                _neq = comparison.get("neq")[index]
-            elif comparison_key[0] == "gt" or _not == "gt":
-                if _not == "gt":
-                    index = 1 if isinstance(comparison.get("not").get("gt")[1], int) else 0
-                    _max = min(_max, comparison.get("gt")[index] - 1)
-                else:
-                    index = 1 if isinstance(comparison.get("gt")[1], int) else 0
-                    _min = max(_min, comparison.get("gt")[index] + 1)  # (id > 38) and (id > 36) --> _min = 39;
-            elif comparison_key[0] == "gte" or _not == "gte":
-                if _not == "gte":
-                    index = 1 if isinstance(comparison.get("not").get("gte")[1], int) else 0
-                    _max = min(_max, comparison.get("gte")[index])
-                else:
-                    index = 1 if isinstance(comparison.get("gte")[1], int) else 0
-                    _min = max(_min, comparison.get("gte")[index])  # (id >= 38) and (id >= 36) --> _min = 38;
-            elif comparison_key[0] == "lt" or _not == "lt":
-                if _not == "lt":
-                    index = 1 if isinstance(comparison.get("not").get("lt")[1], int) else 0
-                    _min = max(_min, comparison.get("not").get("lt")[index] + 1)
-                else:
-                    index = 1 if isinstance(comparison.get("lt")[1], int) else 0
-                    _max = min(_max, comparison.get("lt")[index] - 1)  # (id < 36) and (id < 38) --> _min = 35;
-            elif comparison_key[0] == "lte" or _not == "lte":
-                if _not == "lte":
-                    index = 1 if isinstance(comparison.get("not").get("lte")[1], int) else 0
-                    _min = max(_min, comparison.get("not").get("lte")[index] + 1)
-                else:
-                    index = 1 if isinstance(comparison.get("lte")[1], int) else 0
-                    _max = min(_max, comparison.get("lte")[index] - 1)  # (id <= 36) and (id <= 38) --> _min = 36;
-            # else:
-            #     tries = 20
-            #     number = generate_number(_min, _max, _neq, scale)
-            #     check = format(check).lower()
-            #     check = check.replace(column_name, str(number))
-            #     check = check.replace("<>", "!=")
-            #     while not eval(check) and tries > 0:
-            #         new_number = generate_number(_min, _max, _neq, scale)
-            #         check = check.replace(str(number), str(new_number))
-            #         number = new_number
-            #         tries -= 1
-            #     if tries > 0:
-            #         return number
-            #     else:
-            #         return "No se ha encontrado un dato que satisfaga las restricciones"
-            _not = None
-    # number = generate_number(_min, _max, _neq, scale)
-    number = ""
-    return number
+    # else:
+    #     tries = 20
+    #     number = generate_number(_min, _max, _neq, scale)
+    #     check = format(check).lower()
+    #     check = check.replace(column_name, str(number))
+    #     check = check.replace("<>", "!=")
+    #     while not eval(check) and tries > 0:
+    #         new_number = generate_number(_min, _max, _neq, scale)
+    #         check = check.replace(str(number), str(new_number))
+    #         number = new_number
+    #         tries -= 1
+    #     if tries > 0:
+    #         return number
+    #     else:
+    #         return "No se ha encontrado un dato que satisfaga las restricciones"
 
 
 """No se realiza la implementación de restricciones de tipo check en las fechas, únicamente se 

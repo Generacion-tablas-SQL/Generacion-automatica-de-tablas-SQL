@@ -1,4 +1,3 @@
-from mo_sql_parsing import parse
 import constantes
 import generador_datos as gd
 
@@ -25,11 +24,8 @@ def restricciones_sql(parameters, column):
         restricciones_list.append({"default", column.get("default").get("literal")})
 
     restricciones_list.append({})
-    if parameters[0] == "Number":
-        restricciones_list[-1].update(comprobar_restricciones_check_num(parameters, check))
-    elif parameters[0] == "String":
-        # restricciones_list.append(comprobar_restricciones_check_str(parameters, check))
-        pass
+    if parameters[0] == "Number" or parameters[0] == "String":
+        restricciones_list[-1].update(comprobar_restricciones_check(parameters, check))
     else:
         # restricciones_list.append(comprobar_restricciones_check_date(parameters, check))
         pass
@@ -41,23 +37,28 @@ def get_index(comparison, comparison_key, _not):
         1 if _not is not None and isinstance(comparison.get(comparison_key).get(_not)[1], int) else 0)
 
 
+def comparadores():
+    pass
+
 # <----NÚMEROS---->
-def comprobar_restricciones_check_num(parameters, check):
+def comprobar_restricciones_check(parameters, check):
     """Comprueba las restricciones CHECK
 
-        :param parameters: precision(parameters[0]) y escala (parámetros[1])
+        :param parameters: tipo de dato Number: ["Number", precision, escala]
+                           tipo de dato String: ["String", varying, max_size]
         :param check: campo check de la sentencia parseada
         :return: diccionario con el número máximo, mínimo equal y not equal si se específica
         """
 
-    _max = gd.max_number(parameters[1], parameters[2])
-    _min = -_max
+    _max = gd.max_number(parameters[1], parameters[2]) if parameters[0] == "Number" else parameters[2]
+    _min = -_max if parameters[0] == "Number" else (1 if parameters[1] is True else parameters[2])
     _eq = None
     _neq = None
     _not = None
+    _like = None
 
     if check == {}:
-        return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "scale": parameters[1]}
+        return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": parameters[2]}
 
     operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
 
@@ -99,12 +100,11 @@ def comprobar_restricciones_check_num(parameters, check):
                 _min = max(_min, comparison.get("not").get("lte")[get_index(comparison, comparison_key, _not)] + 1)
             else:
                 _max = min(_max, comparison.get("lte")[get_index(comparison, comparison_key, None)] - 1)
+        elif comparison_key == "like":
+            _like = comparison.get("like")[1].get("literal")
         _not = None
 
-    return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "scale": parameters[1]}
-
-
-# <----CADENAS DE CARACTERES---->
+    return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": parameters[2]}
 
 # <----FECHAS---->
 
@@ -122,7 +122,7 @@ def clasificar_tipo(columnas):
     col_restrictions = {}
 
     for column in columnas:
-        col_name = column.get("name")
+        col_name = column.get("name").lower()
         data_type = list(column.get("type").keys())[0].lower()  # number
         parameters = list(column.get("type").values())  # [[5, 0]]
 
@@ -161,14 +161,11 @@ def clasificar_tipo(columnas):
 
             data = []
             for i in range(10):
-                # data.append(gd.generate_string(restricciones))
-                pass
+                data.append(gd.generate_string(restricciones))
             col_data.update({col_name: data})
-            # print(string_restrictions(key, parameters, column))
 
         elif data_type in constantes.FECHA:
             pass
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
     return col_data, col_restrictions
-

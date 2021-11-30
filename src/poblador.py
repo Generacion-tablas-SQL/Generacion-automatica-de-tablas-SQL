@@ -4,10 +4,10 @@ from mo_sql_parsing import parse
 
 create_table = "CREATE TABLE Persona (" \
                "real NUMBER(4,2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
-                "ent INT CHECK (ent = 12)," \
-               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10)"\
+                "ent INT CHECK (ent > 12 AND ENT < 20)," \
+               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%-' and LENGTH(string) > 5 and LENGTH(string) < 10)"\
                ")"
-select = "SELECT real FROM Persona"
+select = "SELECT ENT FROM Persona"
 
 def poblador_tablas(sentencias_create, sentencias_select):
     """Dada una o varias tablas y una o varias sentencias select, ...
@@ -25,7 +25,7 @@ def poblador_tablas(sentencias_create, sentencias_select):
 
     for sentencia in create_s:
         sentencia_p = parse(sentencia)
-        nombre_tabla = sentencia_p.get("create table").get("name")
+        nombre_tabla = sentencia_p.get("create table").get("name").lower()
         tablas_restricciones.update({nombre_tabla: {}})
         tablas_datos.update({nombre_tabla: {}})
 
@@ -38,8 +38,8 @@ def poblador_tablas(sentencias_create, sentencias_select):
 
     for sentencia in select_s:
         sentencia_p = parse(sentencia)
-        nombre_col = sentencia_p.get("select").get("value")
-        nombre_tabla = sentencia_p.get("from")
+        nombre_col = sentencia_p.get("select").get("value").lower()
+        nombre_tabla = sentencia_p.get("from").lower()
         print(tablas_datos.get(nombre_tabla).get(nombre_col))
 
     print(tablas_datos)
