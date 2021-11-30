@@ -108,7 +108,7 @@ def generate_number(restricciones):
 
 
 # <---- GENERADOR DE FECHAS ---->
-def gen_fecha(es_date, sec_precision):
+def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones[1]= es_date
     """Comprueba las restricciones en el campo option.
             :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
             :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
@@ -117,20 +117,21 @@ def gen_fecha(es_date, sec_precision):
     # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
     # del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
 
+    sec_precision = restricciones[0]
+    es_date = restricciones[1]
     inicio = "01/01/1971"
     final = "12/12/2021"  # Se podria poner como final la fecha actual del sistema
     formato = "%d/%m/%Y"  # Formato establecido por defecto
 
-    if es_date:  # Generar fecha de tipo DATE
+    if es_date:  # DATE
         minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
         maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
         fecha = minimo + (maximo - minimo) * random.random()
         # print(time.strftime("%d/%m/%Y", time.localtime(fecha)))
         return time.strftime("%d/%m/%Y", time.localtime(fecha))
 
-    else:  # Generar fecha de tipo TIMESTAMP
-        minimo = datetime.datetime.strptime(inicio,
-                                            formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+    else:  # TIMESTAMP
+        minimo = datetime.datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
         maximo = datetime.datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
         fecha = minimo + (maximo - minimo) * random.random()
         if sec_precision == 6 or sec_precision == 0:
@@ -294,46 +295,5 @@ def option_check(column_name, check, precision, scale):
     return number
 
 
-"""No se realiza la implementación de restricciones de tipo check en las fechas, únicamente se 
-generan valores del tipo especificado: DATE o TIMESTAMP(scale)"""
-def restrictions_fecha(es_date, sec_precision, column):
-    """Comprueba las restricciones en el campo option.
 
-        :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
-        :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
-        :param column: restricciones. Ej: {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
-        :return: una fecha aleatoria
-        """
-
-    if ("nullable" in column and column.get("nullable")) or "nullable" not in column:  # No afecta
-        if random.random() < constantes.NULL_PROBABILITY:
-            return None
-    if "unique" in column:  # De momento no afecta
-        pass
-    if "primary key" in column:  # De momento no afecta
-        pass
-    if "check" not in column:  # No hay restricciones CHECK
-        return gen_fecha(es_date, sec_precision)
-    else:
-        pass
-        # return check_fecha(column.get("check"), es_date, sec_precision)
-
-
-def generate_fecha(data_type, parameters, column):
-    """Genera una fecha aleatoria que cumpla con las especificaciones de los parámetros y las opciones CHECK.
-
-        :param data_type: tipo de dato de la columna (DATE O TIMESTAMP)
-        :param parameters: parámetros del tipo de dato
-        :param column: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK) contenidas en
-                    el campo column de la sentencia.
-        :return: una fecha aleatoria
-        """
-    sec_precision = 0
-    es_date = False
-    if data_type == "date":  # DATE 'YYYY-MM-DD'
-        es_date = True
-    else:                    # TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'  sec_precision = 2 (.FF)
-        sec_precision = parameters[0]
-
-    return restrictions_fecha(es_date, sec_precision, column)
 
