@@ -25,10 +25,12 @@ def restricciones_sql(parameters, column):
 
     restricciones_list.append({})
     if parameters[0] == "Number" or parameters[0] == "String":
-        restricciones_list[-1].update(comprobar_restricciones_check(parameters, check))
-    else:
+        restricciones_list[-1].update(comprobar_restricciones_check_num(parameters, check))
+    else:  # parameters[0] == "Fecha"
+        # POR EL MOMENTO LAS FECHAS NO POSEEN RESTRICCIONES CHECK
         # restricciones_list.append(comprobar_restricciones_check_date(parameters, check))
-        pass
+        restricciones_list[-1].update({"sec_precision": parameters[1], "es_date": parameters[2]})
+
     return restricciones_list
 
 
@@ -36,9 +38,6 @@ def get_index(comparison, comparison_key, _not):
     return 1 if _not is None and isinstance(comparison.get(comparison_key)[1], int) else (
         1 if _not is not None and isinstance(comparison.get(comparison_key).get(_not)[1], int) else 0)
 
-
-def comparadores():
-    pass
 
 # <----NÚMEROS---->
 def comprobar_restricciones_check(parameters, check):
@@ -106,7 +105,7 @@ def comprobar_restricciones_check(parameters, check):
 
     return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": parameters[2]}
 
-# <----FECHAS---->
+# <----FECHAS----> DE MOMENTO NO TIENEN RESTRICCIONES CHECK
 
 
 # <----INICIO---->
@@ -165,7 +164,19 @@ def clasificar_tipo(columnas):
             col_data.update({col_name: data})
 
         elif data_type in constantes.FECHA:
-            pass
+
+            es_date = 1 if data_type[0] == "date" else 0
+            sec_precision = 0 if parameters[0] == {} else parameters[0]
+
+            data_type_param = ["Fecha", sec_precision, es_date]
+            restricciones = restricciones_sql(data_type_param, column)
+            restricciones[-1].update({"tipo": data_type})
+            col_restrictions.update({col_name: restricciones})
+
+            fechas = []
+            for i in range(10):
+                fechas.append(gd.gen_fecha(restricciones))   # restricciones[-1] = data_type , restricciones[0] = sec_precision ,restricciones[1]= es_date
+            col_data.update({col_name: fechas})
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
     return col_data, col_restrictions
