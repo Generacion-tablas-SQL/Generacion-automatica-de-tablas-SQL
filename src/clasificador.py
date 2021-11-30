@@ -102,67 +102,53 @@ def comprobar_restricciones_check_num(parameters, check):
 # <----FECHAS---->
 
 
-def clasificar_tipo1(sentencias):
-    """Detecta el tipo de datos y delega la generación del tipo de dato detectado.
+# <----INICIO---->
+def clasificar_tipo1(columnas):
+    """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
 
-    :param sentencias:
-    :return:
+    :param columnas: columnas pertenecientes a una tabla
+    :return: diccionario con los datos generados de cada columna y un diccionario con las restricciones de cada columna.
     """
 
-    # tablas = {tabla1: [{col1: ["nullable", "unique", {min:0, max:10, eq: None, neq: 5, scale: 0, tipo: int}]},
-    #                    {col2: ["primary key", {min: 5, max:10, eq: None, neq: None, like: '___-_%', tipo: varchar}]}]}
-    tablas = {}
+    col_data = {}
+    col_restrictions = {}
 
-    sentencias_list = sentencias.split(';')
-    for sentencia in sentencias_list:
-        sentencia_d = parse(sentencia)
-        nombre_tabla = sentencia_d.get("create table").get("name")
-        tablas.update({nombre_tabla: []})
+    for column in columnas:
+        col_name = column.get("name")
+        data_type = list(column.get("type").keys())[0].lower()  # number
+        parameters = list(column.get("type").values())  # [[5, 0]]
 
-        for column in sentencia_d.get("create table").get("columns"):
-            col_name = column.get("name")
-            data_type = list(column.get("type").keys())[0].lower()  # number
-            parameters = list(column.get("type").values())  # [[5, 0]]
-
+        if data_type in constantes.ENTEROS or data_type in constantes.REALES:
+            data_type_param = []
             if data_type in constantes.ENTEROS:
-                data_type_param = []
                 data_type_param.append(38) if parameters[0] == {} else data_type_param.append(parameters[0])
                 data_type_param.append(0)
-
-                restricciones = restricciones_sql(data_type_param, column)
-                restricciones[-1].update({"tipo": data_type})
-
-                col_dict = {col_name: restricciones}
-                tablas.get(nombre_tabla).append(col_dict)
-
-                print(gd.generate_number1(restricciones))
-            elif data_type in constantes.REALES:
+            else:
                 data_type_param = [10, 4] if data_type == "float" or data_type == "real" else (
-                    [38, 127] if parameters[0] == {} else(
-                        [parameters[0], 0] if isinstance(parameters[0], int) else(
+                    [38, 127] if parameters[0] == {} else (
+                        [parameters[0], 0] if isinstance(parameters[0], int) else (
                             [parameters[0][0], parameters[0][1]]
                         )
                     )
                 )
-                print(data_type_param)
-                restricciones = restricciones_sql(data_type_param, column)
-                restricciones[-1].update({"tipo": data_type})
+            restricciones = restricciones_sql(data_type_param, column)
+            restricciones[-1].update({"tipo": data_type})
+            col_restrictions.update({col_name: restricciones})
 
-                col_dict = {col_name: restricciones}
-                tablas.get(nombre_tabla).append(col_dict)
-
-                print(gd.generate_number1(restricciones))
-            elif data_type in constantes.STRINGS:
-                # print(gd.string_restrictions(data_type, parameters, column))
-                pass
-            elif data_type in constantes.FECHA:
-                # print(gd.generate_fecha(data_type, parameters, column))
-                pass
-            else:
-                print("Ha habido un error en la clasificación de tipo de datos.")
+            numbers = []
+            for i in range(10):
+                numbers.append(gd.generate_number1(restricciones))
+            col_data.update({col_name: numbers})
+        elif data_type in constantes.STRINGS:
+            pass
+        elif data_type in constantes.FECHA:
+            pass
+        else:
+            print("Ha habido un error en la clasificación de tipo de datos.")
+        return col_data, col_restrictions
 
 
 create_table = "CREATE TABLE Persona (real NUMBER(4, 2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
                "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10));"
 
-clasificar_tipo1(create_table)
+# clasificar_tipo1(create_table)
