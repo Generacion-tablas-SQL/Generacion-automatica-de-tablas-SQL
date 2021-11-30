@@ -4,10 +4,10 @@ from mo_sql_parsing import parse
 
 create_table = "CREATE TABLE Persona (" \
                "real NUMBER(4,2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
-                "ent INT," \
-               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10)" \
+                "ent INT CHECK (ent = 12)," \
+               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10)"\
                ")"
-select = "SELECT ent FROM Persona"
+select = "SELECT real FROM Persona"
 
 def poblador_tablas(sentencias_create, sentencias_select):
     """Dada una o varias tablas y una o varias sentencias select, ...
@@ -31,7 +31,7 @@ def poblador_tablas(sentencias_create, sentencias_select):
 
         # datos: diccionario con un array de datos generados aleatoriamente asociado a cada columna
         # restricciones: diccionario con un array de restricciones asociado a cada columna
-        datos, restricciones = c.clasificar_tipo1(sentencia_p.get("create table").get("columns"))
+        datos, restricciones = c.clasificar_tipo(sentencia_p.get("create table").get("columns"))
 
         tablas_restricciones.get(nombre_tabla).update(restricciones)
         tablas_datos.get(nombre_tabla).update(datos)
@@ -41,6 +41,9 @@ def poblador_tablas(sentencias_create, sentencias_select):
         nombre_col = sentencia_p.get("select").get("value")
         nombre_tabla = sentencia_p.get("from")
         print(tablas_datos.get(nombre_tabla).get(nombre_col))
+
+    print(tablas_datos)
+    print(tablas_restricciones)
 
 
 poblador_tablas(create_table, select)

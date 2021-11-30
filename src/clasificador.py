@@ -12,6 +12,7 @@ def restricciones_sql(parameters, column):
     """
 
     restricciones_list = []
+    check = column.get("check") if "check" in column else {}
     if ("nullable" in column and column.get("nullable")) or "nullable" not in column:  # No afecta
         restricciones_list.append("nullable")
     if "unique" in column:  # De momento no afecta
@@ -22,10 +23,16 @@ def restricciones_sql(parameters, column):
         restricciones_list.append("foreign key")
     if "default" in column:  # De momento no afecta
         restricciones_list.append({"default", column.get("default").get("literal")})
-    if "check" in column:
-        restricciones_list.append(comprobar_restricciones_check_num(parameters, column.get("check")))
+
+    restricciones_list.append({})
+    if parameters[0] == "Number":
+        restricciones_list[-1].update(comprobar_restricciones_check_num(parameters, check))
+    elif parameters[0] == "String":
+        # restricciones_list.append(comprobar_restricciones_check_str(parameters, check))
+        pass
     else:
-        restricciones_list.append(comprobar_restricciones_check_num(parameters, {}))
+        # restricciones_list.append(comprobar_restricciones_check_date(parameters, check))
+        pass
     return restricciones_list
 
 
@@ -43,7 +50,7 @@ def comprobar_restricciones_check_num(parameters, check):
         :return: diccionario con el número máximo, mínimo equal y not equal si se específica
         """
 
-    _max = gd.max_number(parameters[0], parameters[1])
+    _max = gd.max_number(parameters[1], parameters[2])
     _min = -_max
     _eq = None
     _neq = None
@@ -92,13 +99,10 @@ def comprobar_restricciones_check_num(parameters, check):
                 _min = max(_min, comparison.get("not").get("lte")[get_index(comparison, comparison_key, _not)] + 1)
             else:
                 _max = min(_max, comparison.get("lte")[get_index(comparison, comparison_key, None)] - 1)
+        _not = None
 
     return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "scale": parameters[1]}
 
-
-# <----ENTEROS---->
-
-# <----DECIMALES---->
 
 # <----CADENAS DE CARACTERES---->
 
@@ -106,11 +110,12 @@ def comprobar_restricciones_check_num(parameters, check):
 
 
 # <----INICIO---->
-def clasificar_tipo1(columnas):
+def clasificar_tipo(columnas):
     """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
 
-    :param columnas: columnas pertenecientes a una tabla
-    :return: diccionario con los datos generados de cada columna y un diccionario con las restricciones de cada columna.
+    :param columnas: columnas de una tabla
+    :return: col_data: diccionario con los datos generados de cada columna
+             col_restrictions: diccionario con las restricciones de cada columna.
     """
 
     col_data = {}
@@ -134,24 +139,36 @@ def clasificar_tipo1(columnas):
                         )
                     )
                 )
+            data_type_param.insert(0, "Number")
             restricciones = restricciones_sql(data_type_param, column)
             restricciones[-1].update({"tipo": data_type})
             col_restrictions.update({col_name: restricciones})
 
             numbers = []
             for i in range(10):
-                numbers.append(gd.generate_number1(restricciones))
+                numbers.append(gd.generate_number(restricciones))
             col_data.update({col_name: numbers})
+
         elif data_type in constantes.STRINGS:
-            pass
+            # char y nchar tienen un tamaño por defecto de 1
+            max_size = 1 if parameters[0] == {} else parameters[0]
+            varying = False if data_type == "char" or data_type == "nchar" else True
+
+            data_type_param = ["String", varying, max_size]
+            restricciones = restricciones_sql(data_type_param, column)
+            restricciones[-1].update({"tipo": data_type})
+            col_restrictions.update({col_name: restricciones})
+
+            data = []
+            for i in range(10):
+                # data.append(gd.generate_string(restricciones))
+                pass
+            col_data.update({col_name: data})
+            # print(string_restrictions(key, parameters, column))
+
         elif data_type in constantes.FECHA:
             pass
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
     return col_data, col_restrictions
 
-
-create_table = "CREATE TABLE Persona (real NUMBER(4, 2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
-               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10));"
-
-# clasificar_tipo1(create_table)

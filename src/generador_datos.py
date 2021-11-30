@@ -56,7 +56,7 @@ def generate_null_value():
     return ""
 
 # <---- GENERADOR DE STRINGS ---->
-def generate_random_string(_min, _max, _neq, _like):
+def generate_string(_min, _max, _neq, _like):
     fake = Faker(['en_US'])
     generated_string = ""
     if _like is not None:
@@ -76,16 +76,30 @@ def generate_random_string(_min, _max, _neq, _like):
     return generated_string
 
 
-# <---- GENERADOR DE NUMEROS ---->
-def generate_number(_min, _max, _neq, scale):
+# <---- GENERADOR DE NÚMEROS ---->
+def generate_number(restricciones):
+    dict_restr = restricciones[-1]
+    scale = dict_restr.get("scale")
+    _min = dict_restr.get("min")
+    _max = dict_restr.get("max")
+    _eq = dict_restr.get("eq")
+    _neq = dict_restr.get("neq")
+
+    if "nullable" in restricciones:
+        if generate_null_value() == "NULL":
+            return None
+
+    if _eq is not None:
+        return _eq
+
     if scale == 0:
         generated_number = random.randint(_min, _max)  # Genera un número entero
-        if not _neq and generated_number == _neq:
+        if _neq is not None and generated_number == _neq:
             generated_number += 1
     else:
-        generated_number = random.uniform(_min, _max)  # Genera un número real. No tiene en cuenta la escala
-        generated_number = Decimal(str(generated_number)).quantize(Decimal(10) ** -scale)
-        if not _neq and generated_number == _neq:
+        # Genera un número real
+        generated_number = Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale)
+        if _neq is not None and generated_number == _neq:
             if scale < 0:
                 generated_number += 1
             else:
@@ -128,39 +142,7 @@ def gen_fecha(es_date, sec_precision):
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
 
-
-# _______________________________________________________________________________________________________________________________________________________________________________________________________
-
-
-def generate_number1(restricciones):
-    # PRUEBA!!
-    dict_restr = restricciones[-1]
-    scale = dict_restr.get("scale")
-    _min = dict_restr.get("min")
-    _max = dict_restr.get("max")
-    _eq = dict_restr.get("eq")
-    _neq = dict_restr.get("neq")
-
-    if "nullable" in restricciones:
-        if generate_null_value() == "NULL":
-            return None
-
-    if _eq is not None:
-        return _eq
-
-    if scale == 0:
-        generated_number = random.randint(_min, _max)  # Genera un número entero
-        if _neq is not None and generated_number == _neq:
-            generated_number += 1
-    else:
-        # Genera un número real
-        generated_number = Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale)
-        if _neq is not None and generated_number == _neq:
-            if scale < 0:
-                generated_number += 1
-            else:
-                generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
-    return generated_number
+# ______________________________________________________________________________________________________________________
 
 
 def option_check_string(column_name, check, varying, size):
@@ -216,12 +198,12 @@ def option_check_string(column_name, check, varying, size):
                 _like = comparison.get("like")[1].get("literal")
             else:
                 tries = 20
-                string = generate_random_string(_min, _max, _neq, _like)
+                string = generate_string(_min, _max, _neq, _like)
                 check = format(check).lower()
                 check = check.replace(column_name, string)
                 check = check.replace("<>", "!=")
                 while not eval(check) and tries > 0:
-                    new_string = generate_random_string(_min, _max, _neq, _like)
+                    new_string = generate_string(_min, _max, _neq, _like)
                     check = check.replace(string, new_string)
                     string = new_string
                     tries -= 1
@@ -230,7 +212,7 @@ def option_check_string(column_name, check, varying, size):
                 else:
                     return "No se ha encontrado un dato que satisfaga las restricciones"
             _not = None
-    return generate_random_string(_min, _max, _neq, _like)
+    return generate_string(_min, _max, _neq, _like)
 
 
 def option_check(column_name, check, precision, scale):
@@ -291,30 +273,29 @@ def option_check(column_name, check, precision, scale):
                 else:
                     index = 1 if isinstance(comparison.get("lte")[1], int) else 0
                     _max = min(_max, comparison.get("lte")[index] - 1)  # (id <= 36) and (id <= 38) --> _min = 36;
-            else:
-                tries = 20
-                number = generate_number(_min, _max, _neq, scale)
-                check = format(check).lower()
-                check = check.replace(column_name, str(number))
-                check = check.replace("<>", "!=")
-                while not eval(check) and tries > 0:
-                    new_number = generate_number(_min, _max, _neq, scale)
-                    check = check.replace(str(number), str(new_number))
-                    number = new_number
-                    tries -= 1
-                if tries > 0:
-                    return number
-                else:
-                    return "No se ha encontrado un dato que satisfaga las restricciones"
+            # else:
+            #     tries = 20
+            #     number = generate_number(_min, _max, _neq, scale)
+            #     check = format(check).lower()
+            #     check = check.replace(column_name, str(number))
+            #     check = check.replace("<>", "!=")
+            #     while not eval(check) and tries > 0:
+            #         new_number = generate_number(_min, _max, _neq, scale)
+            #         check = check.replace(str(number), str(new_number))
+            #         number = new_number
+            #         tries -= 1
+            #     if tries > 0:
+            #         return number
+            #     else:
+            #         return "No se ha encontrado un dato que satisfaga las restricciones"
             _not = None
-    number = generate_number(_min, _max, _neq, scale)
+    # number = generate_number(_min, _max, _neq, scale)
+    number = ""
     return number
-    # return es_float, _min, _max, _neq, scale
-
 
 
 """No se realiza la implementación de restricciones de tipo check en las fechas, únicamente se 
-generan valores del tipo esepcificado: DATE o TIMESTAMP(scale)"""
+generan valores del tipo especificado: DATE o TIMESTAMP(scale)"""
 def restrictions_fecha(es_date, sec_precision, column):
     """Comprueba las restricciones en el campo option.
 
@@ -323,9 +304,6 @@ def restrictions_fecha(es_date, sec_precision, column):
         :param column: restricciones. Ej: {'name': 'fech2', 'type': {'timestamp': 2}, 'unique': True, 'nullable': True}
         :return: una fecha aleatoria
         """
-    # check = [d['check'] for d in column if 'check' in d]
-    # if not isinstance(options, list):  # Si solo hay una opción
-    #    options = [options]
 
     if ("nullable" in column and column.get("nullable")) or "nullable" not in column:  # No afecta
         if random.random() < constantes.NULL_PROBABILITY:
@@ -334,78 +312,11 @@ def restrictions_fecha(es_date, sec_precision, column):
         pass
     if "primary key" in column:  # De momento no afecta
         pass
-    if "check" not in column: # No hay restricciones CHECK
+    if "check" not in column:  # No hay restricciones CHECK
         return gen_fecha(es_date, sec_precision)
-        #return check_fecha([], es_date, sec_precision)
     else:
         pass
-        #return check_fecha(column.get("check"), es_date, sec_precision)
-
-
-def option_restrictions(precision, scale, column):
-    """Comprueba las restricciones en el campo option.
-
-    :param precision: precisión de la parte entera del número
-    :param scale: número de decimales
-    :param column: restricciones de la columna.
-    :return: un entero aleatorio o un string definiendo el error
-    """
-
-    # check = [d['check'] for d in column if 'check' in d]
-    # if not isinstance(options, list):  # Si solo hay una opción
-    #    options = [options]
-    if ("nullable" in column and column.get("nullable")) or "nullable" not in column:  # No afecta
-        if random.random() < constantes.NULL_PROBABILITY:
-            return None
-    if "unique" in column:  # De momento no afecta
-        pass
-    if "primary key" in column:  # De momento no afecta
-        pass
-    if "check" not in column:
-        return option_check(column.get("name"), [], precision, scale)
-    else:
-        return option_check(column.get("name"), column.get("check"), precision, scale)
-
-
-def generate_int(parameters, option):
-    """Genera un número entero aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
-
-        :param parameters: parámetros del tipo de dato
-        :param option: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK...).
-        :return: un entero aleatorio
-        """
-    if parameters[0] == {}:
-        # int, integer y smallint tienen una precision de 38
-        return option_restrictions(38, 0, option)
-    else:
-        return option_restrictions(parameters[0], 0, option)
-
-
-def generate_real(data_type, parameters, column):
-    """Genera un número real aleatorio que cumpla con las especificaciones de los parámetros y las opciones CHECK.
-
-            :param data_type: tipo de dato de la columna
-            :param parameters: parámetros del tipo de dato
-            :param column: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK) contenidas en
-                            el campo column de la sentencia.
-            :return: un entero aleatorio
-            """
-
-    # Por simplicidad, fijamos precision y scale en números de punto flotante y los tratamos como number
-    if data_type == "float" or data_type == "real":  # float-point
-        precision = 10
-        scale = 4
-    else:  # fixed-point
-        if parameters[0] == "{}":
-            precision = 38
-            scale = 127
-        elif isinstance(parameters[0], int):
-            precision = parameters[0]
-            scale = 0
-        else:
-            precision = parameters[0][0]
-            scale = parameters[0][1]
-    return option_restrictions(precision, scale, column)
+        # return check_fecha(column.get("check"), es_date, sec_precision)
 
 
 def generate_fecha(data_type, parameters, column):
@@ -426,80 +337,3 @@ def generate_fecha(data_type, parameters, column):
 
     return restrictions_fecha(es_date, sec_precision, column)
 
-
-def string_restrictions(data_type, parameters, column):
-    """Genera una cadena de caracteres aleatoria que cumpla con las especificaciones de los parámetros
-    y las opciones CHECK.
-
-        :param data_type: tipo de dato de la columna
-        :param parameters: parámetros del tipo de dato
-        :param column: opciones adicionales definidas por el usuario (NULL, NOT NULL, UNIQUE, CHECK) contenidas en
-                        el campo column de la sentencia.
-        :return: un entero aleatorio
-        """
-
-    varying = False if data_type == "char" or data_type == "nchar" else True
-    # char y nchar tienen un tamaño por defecto de 1
-    max_size = 1 if parameters[0] == {} else parameters[0]
-    if ("nullable" in column and column.get("nullable")) or "nullable" not in column:  # No afecta
-        if random.random() < constantes.NULL_PROBABILITY:
-            return None
-    if "unique" in column:  # De momento no afecta
-        pass
-    if "primary key" in column:  # De momento no afecta
-        pass
-    if "check" not in column:
-        return option_check_string(column.get("name"), [], varying, max_size)
-    else:
-        return option_check_string(column.get("name"), column.get("check"), varying, max_size)
-
-
-def clasificar_tipo(sentencia):
-    """Detecta el tipo de datos y delega la generación del tipo de dato detectado.
-
-    :param sentencia:
-    :return:
-    """
-    # constraint = sentencia.get("create table").get("constraint")  # constraint compartido por todas las columnas
-    for column in sentencia.get("create table").get("columns"):
-        data_type = column.get("type")  # {'NUmbEr': [5, 0]}
-        key_list = list(data_type.keys())  # ['NUmbEr']
-        key = key_list[0].lower()  # number
-        parameters = list(data_type.values())  # [[5, 0]]
-        # option = ""
-
-        # if "option" in column:
-        #     option = column.get("option")
-
-        if key in constantes.ENTEROS:
-            print(generate_int(parameters, column))
-            # es_float, _min, _max, _neq, scale = generate_int(parameters, column, constraint)
-            # print(generate_number(es_float, _min, _max, _neq, scale))
-        elif key in constantes.REALES:
-            print(generate_real(key, parameters, column))
-            # es_float, _min, _max, _neq, scale = generate_real(key, parameters, column, constraint)
-            # print(generate_number(es_float, _min, _max, _neq, scale))
-        elif key in constantes.STRINGS:
-            print(string_restrictions(key, parameters, column))
-        elif key in constantes.FECHA:
-            print(generate_fecha(key, parameters, column))
-        else:
-            print("Ha habido un error en la clasificación de tipo de datos.")
-
-
-def poblador_tablas(sentencias_create_table, sentencias_select):
-    clasificar_tipo(parse(sentencias_create_table))
-
-
-create_table = """CREATE TABLE Persona (
-  real NUMBER(4,2) UNIQUE NULL CHECK (NOT reAl <= 0 AND REAL < 20 AND real != 10),
-  string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),
-  fech1 DATE UNIQUE NOT NULL,
-  fech2 TIMESTAMP(2) UNIQUE NULL,
-  CONSTRAINT NombreLargo CHECK (LEN(Nombre) > 5)
-);"""
-# print(parse(create_table))
-select = """SELECT real, string FROM Persona WHERE real > 20; 
-                        SELECT real string FROM Persona WHERE string LIKE %Co%"""
-# print(parse(sentencias_select))
-# poblador_tablas(create_table, select)
