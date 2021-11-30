@@ -137,8 +137,21 @@ def clasificar_tipo1(sentencias):
 
                 print(gd.generate_number1(restricciones))
             elif data_type in constantes.REALES:
-                # print(gd.generate_real(data_type, parameters, column))
-                pass
+                data_type_param = [10, 4] if data_type == "float" or data_type == "real" else (
+                    [38, 127] if parameters[0] == {} else(
+                        [parameters[0], 0] if isinstance(parameters[0], int) else(
+                            [parameters[0][0], parameters[0][1]]
+                        )
+                    )
+                )
+                print(data_type_param)
+                restricciones = restricciones_sql(data_type_param, column)
+                restricciones[-1].update({"tipo": data_type})
+
+                col_dict = {col_name: restricciones}
+                tablas.get(nombre_tabla).append(col_dict)
+
+                print(gd.generate_number1(restricciones))
             elif data_type in constantes.STRINGS:
                 # print(gd.string_restrictions(data_type, parameters, column))
                 pass
@@ -149,7 +162,7 @@ def clasificar_tipo1(sentencias):
                 print("Ha habido un error en la clasificación de tipo de datos.")
 
 
-create_table = "CREATE TABLE Persona (ent INT(4) UNIQUE NULL CHECK (NOT enT <= 0 AND ENT < 20 AND ent != 10)," \
+create_table = "CREATE TABLE Persona (real NUMBER(4, 2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
                "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10));"
 
 clasificar_tipo1(create_table)

@@ -29,6 +29,8 @@ esta última es específica para el tipo de dato que se va a generar
   - Acortar If, else sencillos
   - Función generar_tablas
 - Constraint
+- Errores:
+  -  Los parámetros [38, 127] de NUMBER dan error en generate_number por la clase Decimal
 
 ###Cambios
 - Eliminar campo option. Se ha actualizado la versión de mo-sql-parsing y ya

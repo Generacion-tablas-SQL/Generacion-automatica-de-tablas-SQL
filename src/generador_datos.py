@@ -163,8 +163,6 @@ def generate_number1(restricciones):
     return generated_number
 
 
-
-
 def option_check_string(column_name, check, varying, size):
     _min = 1 if varying is True else size
     _max = size
