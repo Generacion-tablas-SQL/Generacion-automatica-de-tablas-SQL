@@ -4,7 +4,7 @@ from mo_sql_parsing import parse
 
 create_table = "CREATE TABLE Persona (" \
                "real NUMBER(4,2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
-                "ent INT CHECK (ent = 12)," \
+                "ent INT CHECK (ent > 12 and ent < 50)," \
                "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10), " \
                "fec1 DATE UNIQUE NOT NULL, " \
                "fec2 TIMESTAMP(2) UNIQUE NOT NULL)"

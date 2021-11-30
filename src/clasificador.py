@@ -25,7 +25,7 @@ def restricciones_sql(parameters, column):
 
     restricciones_list.append({})
     if parameters[0] == "Number" or parameters[0] == "String":
-        restricciones_list[-1].update(comprobar_restricciones_check_num(parameters, check))
+        restricciones_list[-1].update(comprobar_restricciones_check(parameters, check))
     else:  # parameters[0] == "Fecha"
         # POR EL MOMENTO LAS FECHAS NO POSEEN RESTRICCIONES CHECK
         # restricciones_list.append(comprobar_restricciones_check_date(parameters, check))
