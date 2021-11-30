@@ -25,7 +25,7 @@ def restricciones_sql(parameters, column):
     if "check" in column:
         restricciones_list.append(comprobar_restricciones_check_num(parameters, column.get("check")))
     else:
-        restricciones_list.append({"scale": parameters[1]})
+        restricciones_list.append(comprobar_restricciones_check_num(parameters, {}))
     return restricciones_list
 
 
@@ -48,6 +48,9 @@ def comprobar_restricciones_check_num(parameters, check):
     _eq = None
     _neq = None
     _not = None
+
+    if check == {}:
+        return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "scale": parameters[1]}
 
     operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
 
@@ -145,7 +148,7 @@ def clasificar_tipo1(columnas):
             pass
         else:
             print("Ha habido un error en la clasificación de tipo de datos.")
-        return col_data, col_restrictions
+    return col_data, col_restrictions
 
 
 create_table = "CREATE TABLE Persona (real NUMBER(4, 2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
