@@ -124,6 +124,7 @@ def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones
     # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
     # del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
 
+
     dict_restr = restricciones[-1]
     es_date = dict_restr.get("es_date")
     sec_precision = dict_restr.get("sec_precision")
