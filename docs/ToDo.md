@@ -17,25 +17,24 @@ posición un diccionario con los valores min, max, eq, neq y la escala, en el ca
 esta última es específica para el tipo de dato que se va a generar
 
 ###Por hacer
-- check nombre like '...' (genchar())  --> Hecho con caracteres aleatorios y Faker mezclado
+- check nombre like '...' (genchar())  --> HECHO con caracteres aleatorios y Faker mezclado
 - Meter Excepciones
 - Fechas con to_date() y sin restricciones de momento. Devolver un TO_DATE('2012-006-05', 'YYYY-MM-DD')
-- SELECT ... FROM tabla
+- SELECT ... FROM tabla ⇾ HECHO
 - Unit test
-- Probar tablas muy sencillas
 - Refactorizar código:
-  - Añadir clases
-  - No repetir tanto código
-  - Acortar If, else sencillos
-  - Función generar_tablas
+  - Añadir clases ⇾ HECHO
+  - No repetir tanto código ⇾ HECHO
+  - Acortar If, else sencillos ⇾ HECHO
+  - Función generar_tablas ⇾ HECHO sencillo
 - Constraint
 - Errores:
   -  Los parámetros [38, 127] de NUMBER dan error en generate_number por la clase Decimal
+- eval en clasificador
 
 ###Cambios
-- Eliminar campo option. Se ha actualizado la versión de mo-sql-parsing y ya
+- Se ha actualizado la versión de mo-sql-parsing y ya
 no clasifica las restricciones dentro de un campo option.
 
 ###Preguntas
-- Create table y select. ¿Mezclamos las restricciones?
 
