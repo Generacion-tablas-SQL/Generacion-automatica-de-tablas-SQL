@@ -7,7 +7,7 @@ create_table = "CREATE TABLE Persona (" \
                 "ent INT CHECK (ent > 12 and ent < 50)," \
                "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10), " \
                "fec1 DATE UNIQUE NOT NULL, " \
-               "fec2 TIMESTAMP(2) UNIQUE NOT NULL)"
+               "fec2 TIMESTAMP(7) UNIQUE NOT NULL)"
 
 select = "SELECT real FROM Persona"
 
