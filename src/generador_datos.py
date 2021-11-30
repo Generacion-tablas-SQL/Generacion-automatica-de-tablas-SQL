@@ -1,12 +1,9 @@
 import constantes
 from datetime import datetime
 from decimal import Decimal
-from mo_sql_parsing import parse
-from mo_sql_parsing import format
+import time
 from faker import Faker
 import random
-import datetime
-import time
 
 # <---- GENERADOR DE UN NUMERO MÁXIMO ---->
 def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
@@ -16,7 +13,7 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
 
     :param precision: número de dígitos que contiene un número como máximo
     :param scale: número máximo de dígitos decimales
-    :return: número máximo que se puede generar con la precisión indicada
+    :return: número máximo que se puede generar con la precisión y escala indicada
     """
 
     max_num = 9
@@ -51,18 +48,25 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
 
 # <---- GENERADOR DE VALORES NULOS ---->
 def generate_null_value():
+    """Genera valores nulos con una probabilidad preestablecida
+    :return: valor nulo
+    """
     if random.random() < constantes.NULL_PROBABILITY:
         return "NULL"
     return ""
 
 # <---- GENERADOR DE STRINGS ---->
 def generate_string(restricciones):
-    dict_restr = restricciones[-1]
-    _min = dict_restr.get("min")
-    _max = dict_restr.get("max")
-    _neq = dict_restr.get("neq")
-    _eq = dict_restr.get("eq")
-    _like = dict_restr.get("like")
+    """Genera cadenas de caracteres aleatorias que cumplen una serie de restricciones
+
+    :param restricciones: diccionario con restricciones
+    :return: cadena de caracteres aleatoria
+    """
+    _min = restricciones.get("min")
+    _max = restricciones.get("max")
+    _neq = restricciones.get("neq")
+    _eq = restricciones.get("eq")
+    _like = restricciones.get("like")
 
     fake = Faker(['en_US'])
     generated_string = ""
@@ -85,12 +89,16 @@ def generate_string(restricciones):
 
 # <---- GENERADOR DE NÚMEROS ---->
 def generate_number(restricciones):
-    dict_restr = restricciones[-1]
-    scale = dict_restr.get("scale")
-    _min = dict_restr.get("min")
-    _max = dict_restr.get("max")
-    _eq = dict_restr.get("eq")
-    _neq = dict_restr.get("neq")
+    """Genera números aleatorios que cumplen una serie de restricciones
+
+    :param restricciones: diccionario con restricciones
+    :return: números aleatorios
+    """
+    scale = restricciones.get("scale")
+    _min = restricciones.get("min")
+    _max = restricciones.get("max")
+    _eq = restricciones.get("eq")
+    _neq = restricciones.get("neq")
 
     if "nullable" in restricciones:
         if generate_null_value() == "NULL":
@@ -115,14 +123,14 @@ def generate_number(restricciones):
 
 
 # <---- GENERADOR DE FECHAS ---->
-def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones[1]= es_date
-    """Comprueba las restricciones en el campo option.
-            :param es_date: indica si el tipo de dato es DATE o TIMESTAMP
-            :param sec_precision: precisión de la parte fraccional de los segundos (TIMESTAMP)
+def gen_fecha(restricciones):
+    """Genera fechas aleatorias que cumplen una serie de restricciones
+            :param restricciones: [sec_precision, es_date, data_type]
             :return: una una fecha aleatoria del tipo específico(DATE o TIMESTAMP) en formato string
-            """
-    # Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
-    # del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
+
+        Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
+        del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
+    """
 
     dict_restr = restricciones[-1]
     es_date = dict_restr.get("es_date")
@@ -138,8 +146,8 @@ def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones
         return time.strftime("%d/%m/%Y", time.localtime(fecha))
 
     else:  # TIMESTAMP
-        minimo = datetime.datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-        maximo = datetime.datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
+        minimo = datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+        maximo = datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
         fecha = minimo + (maximo - minimo) * random.random()
         if sec_precision >= 6:
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
@@ -149,45 +157,20 @@ def gen_fecha(restricciones): # restricciones[0] = sec_precision , restricciones
             sec_precision = 6 - sec_precision
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
-
-
-
-
-
 # ______________________________________________________________________________________________________________________
 
     # else:
     #     tries = 20
-    #     string = generate_string(_min, _max, _neq, _like)
+    #     string = generate_string(_min, _max, _neq, _like) || number = generate_number(_min, _max, _neq, scale)
     #     check = format(check).lower()
-    #     check = check.replace(column_name, string)
+    #     check = check.replace(column_name, string) || check = check.replace(column_name, str(number))
     #     check = check.replace("<>", "!=")
     #     while not eval(check) and tries > 0:
-    #         new_string = generate_string(_min, _max, _neq, _like)
-    #         check = check.replace(string, new_string)
-    #         string = new_string
+    #         new_string = generate_string(_min, _max, _neq, _like) || new_number = generate_number(_min, _max, _neq, scale)
+    #         check = check.replace(string, new_string) || check = check.replace(str(number), str(new_number))
+    #         string = new_string || number = new_number
     #         tries -= 1
     #     if tries > 0:
-    #         return string
+    #         return string || return number
     #     else:
     #         return "No se ha encontrado un dato que satisfaga las restricciones"
-
-    # else:
-    #     tries = 20
-    #     number = generate_number(_min, _max, _neq, scale)
-    #     check = format(check).lower()
-    #     check = check.replace(column_name, str(number))
-    #     check = check.replace("<>", "!=")
-    #     while not eval(check) and tries > 0:
-    #         new_number = generate_number(_min, _max, _neq, scale)
-    #         check = check.replace(str(number), str(new_number))
-    #         number = new_number
-    #         tries -= 1
-    #     if tries > 0:
-    #         return number
-    #     else:
-    #         return "No se ha encontrado un dato que satisfaga las restricciones"
-
-
-
-
