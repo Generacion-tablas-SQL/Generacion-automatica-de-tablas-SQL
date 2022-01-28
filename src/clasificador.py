@@ -1,24 +1,25 @@
 import constantes
 import generador_datos as gd
 
+
 # <----GENERAL---->
 def restricciones_sql(parameters, column):
     """Comprueba las restricciones SQL.
 
-    :param parameters: parámetros del tipo de dato.
-    :param column: restricciones de la columna.
+    :param parameters: lista con parámetros del tipo de dato.
+    :param column: diccionario con restricciones de la columna.
     :return: lista con las restricciones. El último elemento de la lista es un diccionario con las restricciones check.
     """
 
     restricciones_list = []
-    check = column.get("check") if "check" in column else {}
+    check = column.get("check", None)
     if ("nullable" in column and column.get("nullable")) or "nullable" not in column:
         restricciones_list.append("nullable")
-    if "unique" in column:  # De momento no afecta
+    if "unique" in column and column.get("unique"):  # De momento no afecta
         restricciones_list.append("unique")
-    if "primary key" in column:  # De momento no afecta
+    if "primary key" in column and column.get("primary key"):  # De momento no afecta
         restricciones_list.append("primary key")
-    if "foreign key" in column:  # De momento no afecta
+    if "foreign key" in column and column.get("foreign key"):  # De momento no afecta
         restricciones_list.append("foreign key")
     if "default" in column:  # De momento no afecta
         restricciones_list.append({"default", column.get("default").get("literal")})
@@ -33,15 +34,14 @@ def restricciones_sql(parameters, column):
     return restricciones_list
 
 
-def get_index(comparison, comparison_key, _not):
+def get_index(comparison, _not):
     """
     :param comparison: diccionario con la comparación
-    :param comparison_key: palabra clave de la comparación
-    :param _not: palabra clave de la comparación asociada al not
+    :param _not: operación de la comparación asociada al not
     :return: indice que indica en que posición se sitúa el número a comparar
     """
-    return 1 if _not is None and isinstance(comparison.get(comparison_key)[1], int) else (
-        1 if _not is not None and isinstance(comparison.get(comparison_key).get(_not)[1], int) else 0)
+    return 1 if _not is None and isinstance(comparison.get("args")[1], int) else (
+        1 if _not is not None and isinstance(comparison.get("args")[0].get("args")[1], int) else 0)
 
 
 # <----RESTRICCIONES CHECK---->
@@ -62,51 +62,55 @@ def comprobar_restricciones_check(parameters, check):
     _like = None
     _scale = None if parameters[0] == "String" else parameters[2]
 
-    if check == {}:
+    if check is None:
         return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale}
 
-    operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
+    # operator = list(check.keys())[0].lower()  # primer operador que aparece en el check
 
     # Crea una lista con la/las comparación/comparaciones
-    if operator == "and" or operator == "or":
-        comparisons = check.get(operator)
-    else:
-        comparisons = [check]
+    # if operator == "and" or operator == "or":
+    #    comparisons = check.get(operator)
+    # else:
+    #    comparisons = [check]
+
+    comparisons = check.get("args")
 
     for comparison in comparisons:
 
-        comparison_key = list(comparison.keys())[0]
-        if comparison_key == "not":
-            _not = list(comparison.get("not").keys())[0]  # _not contiene: "lte", "gt"...
-
-        if comparison_key == "eq":
-            _eq = comparison.get("eq")[get_index(comparison, comparison_key, None)]
-        elif comparison_key == "neq":
-            _neq = comparison.get("neq")[get_index(comparison, comparison_key, None)]
-        elif comparison_key == "gt" or _not == "gt":
+        # comparison_op = list(comparison.keys())[0]
+        comparison_op = comparison.get("op")
+        if comparison_op == "not":
+            # _not = list(comparison.get("not").keys())[0]  # _not contiene: "lte", "gt"...
+            _not = comparison.get("args")[0].get("op")  # _not contiene: "lte", "gt"...
+        if comparison_op == "eq":
+            _eq = comparison.get("args")[get_index(comparison, None)]
+        elif comparison_op == "neq":
+            _neq = comparison.get("args")[get_index(comparison, None)]
+        elif comparison_op == "gt" or _not == "gt":
             if _not == "gt":
                 # mínimo entre _max y el contenido del comparador
-                _max = min(_max, comparison.get("gt")[get_index(comparison, comparison_key, _not)] - 1)
+                _max = min(_max, comparison.get("args")[0].get("args")[get_index(comparison, _not)])
             else:
                 # máximo entre _min y el contenido del comparador
-                _min = max(_min, comparison.get("gt")[get_index(comparison, comparison_key, None)] + 1)
-        elif comparison_key == "gte" or _not == "gte":
+                # +1 para simplificar, si es de tipo numero decimal, debería sumarse el decimal más pequeño
+                _min = max(_min, comparison.get("args")[get_index(comparison, None)] + 1)
+        elif comparison_op == "gte" or _not == "gte":
             if _not == "gte":
-                _max = min(_max, comparison.get("gte")[get_index(comparison, comparison_key, _not)])
+                _max = min(_max, comparison.get("args")[0].get("args")[get_index(comparison, _not)] - 1)
             else:
-                _min = max(_min, comparison.get("gte")[get_index(comparison, comparison_key, None)])
-        elif comparison_key == "lt" or _not == "lt":
+                _min = max(_min, comparison.get("args")[get_index(comparison, None)])
+        elif comparison_op == "lt" or _not == "lt":
             if _not == "lt":
-                _min = max(_min, comparison.get("not").get("lt")[get_index(comparison, comparison_key, _not)] + 1)
+                _min = max(_min, comparison.get("args")[0].get("args")[get_index(comparison, _not)])
             else:
-                _max = min(_max, comparison.get("lt")[get_index(comparison, comparison_key, None)] - 1)
-        elif comparison_key == "lte" or _not == "lte":
+                _max = min(_max, comparison.get("args")[get_index(comparison, None)] - 1)
+        elif comparison_op == "lte" or _not == "lte":
             if _not == "lte":
-                _min = max(_min, comparison.get("not").get("lte")[get_index(comparison, comparison_key, _not)] + 1)
+                _min = max(_min, comparison.get("args")[0].get("args")[get_index(comparison, _not)] + 1)
             else:
-                _max = min(_max, comparison.get("lte")[get_index(comparison, comparison_key, None)] - 1)
-        elif comparison_key == "like":
-            _like = comparison.get("like")[1].get("literal")
+                _max = min(_max, comparison.get("args")[get_index(comparison, None)])
+        elif comparison_op == "like":
+            _like = comparison.get("args")[1].get("literal")
         _not = None
 
     return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale}
@@ -116,7 +120,7 @@ def comprobar_restricciones_check(parameters, check):
 def clasificar_tipo(columnas):
     """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
 
-    :param columnas: columnas de una tabla
+    :param columnas: array con las columnas de una tabla
     :return: col_data: diccionario con los datos generados de cada columna
              col_restrictions: diccionario con las restricciones de cada columna.
     """
@@ -126,22 +130,23 @@ def clasificar_tipo(columnas):
 
     for column in columnas:
         col_name = column.get("name").lower()
-        data_type = list(column.get("type").keys())[0].lower()  # number
-        parameters = list(column.get("type").values())  # [[5, 0]]
+        # data_type = list(column.get("type").keys())[0].lower()  # number
+        data_type = column.get("type").get("op").lower()  # number
+        # parameters = list(column.get("type").values())  # [5, 0], [4]
+        parameters = column.get("type").get("args", None)  # [5, 0], [4]
 
         if data_type in constantes.ENTEROS or data_type in constantes.REALES:
-            data_type_param = []
+            data_type_param = list()
             if data_type in constantes.ENTEROS:
-                data_type_param.append(38) if parameters[0] == {} else data_type_param.append(parameters[0])
-                data_type_param.append(0)
+                data_type_param.append(38) if parameters is None else parameters
+                data_type_param.append(0)  # Escala = 0
             else:
                 data_type_param = [10, 4] if data_type == "float" or data_type == "real" else (
-                    [38, 127] if parameters[0] == {} else (
-                        [parameters[0], 0] if isinstance(parameters[0], int) else (
-                            [parameters[0][0], parameters[0][1]]
-                        )
-                    )
-                )
+                    [38, 127] if parameters is None else parameters)
+
+                if len(data_type_param) == 1:
+                    data_type_param.append(0)
+
             data_type_param.insert(0, "Number")
             restricciones = restricciones_sql(data_type_param, column)
             restricciones[-1].update({"tipo": data_type})
@@ -154,7 +159,7 @@ def clasificar_tipo(columnas):
 
         elif data_type in constantes.STRINGS:
             # char y nchar tienen un tamaño por defecto de 1
-            max_size = 1 if parameters[0] == {} else parameters[0]
+            max_size = 1 if parameters is None else parameters[0]
             varying = False if data_type == "char" or data_type == "nchar" else True
 
             data_type_param = ["String", varying, max_size]
@@ -170,7 +175,7 @@ def clasificar_tipo(columnas):
         elif data_type in constantes.FECHA:
 
             es_date = 1 if data_type == "date" else 0
-            sec_precision = 0 if parameters[0] == {} else parameters[0]
+            sec_precision = 0 if parameters is None else parameters[0]
 
             data_type_param = ["Fecha", sec_precision, es_date]
 

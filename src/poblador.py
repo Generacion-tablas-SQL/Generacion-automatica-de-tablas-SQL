@@ -1,9 +1,9 @@
 import clasificador as c
-from mo_sql_parsing import parse
+from mo_sql_parsing import parse, normal_op
 
 
 create_table = "CREATE TABLE Persona (" \
-               "real NUMBER UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
+               "real NUMBER(4) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
                "ent INT CHECK (ent > 12 and ent < 50)," \
               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),"\
                " fec1 DATE UNIQUE NOT NULL, " \
@@ -28,7 +28,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
     create_s = sentencias_create.split(";")
 
     for sentencia in create_s:
-        sentencia_p = parse(sentencia)
+        sentencia_p = parse(sentencia, calls=normal_op)
         nombre_tabla = sentencia_p.get("create table").get("name").lower()
         tablas_restricciones.update({nombre_tabla: {}})
         tablas_datos.update({nombre_tabla: {}})
