@@ -29,8 +29,45 @@ class MyTestCase(unittest.TestCase):
                         self.assertEqual(str(result)[0], "0")
                         self.assertEqual(str(result)[2:], "9" * j)
 
-    def test_string(self):
-        pass
+    def test_max_num(self):
+        self.assertEqual(gd.max_number(6, 2), 9999.99)
+        self.assertEqual(gd.max_number(6, 0), 999999)
+        self.assertEqual(gd.max_number(6, -2), 999900)
+        self.assertEqual(gd.max_number(6, -6), 9000000)
+
+        self.assertEqual(gd.max_number(6, 6), 0.999999)
+        self.assertEqual(gd.max_number(2, 6), 0.999999)
+
+    def test_string_gen(self):
+        # 1
+        self.assertGreaterEqual(len(gd.generate_string({"min": 5, "max": 10, "eq": None, "neq": None, "like": "C%",
+                                                        "scale": None, "tipo": "varchar"})), 5)
+        self.assertLessEqual(len(gd.generate_string({"min": 5, "max": 10, "eq": None, "neq": None, "like": "C%",
+                                                     "scale": None, "tipo": "varchar"})), 10)
+        self.assertRegex(gd.generate_string({"min": 5, "max": 10, "eq": None, "neq": None, "like": "C%", "scale": None,
+                                             "tipo": "varchar"}), "^C\D")
+
+        # 2
+        self.assertGreaterEqual(len(gd.generate_string({"min": 10, "max": 20, "eq": "hola que tal", "neq": None,
+                                                        "like": None, "scale": None, "tipo": "varchar"})), 10)
+        self.assertLessEqual(len(gd.generate_string({"min": 10, "max": 20, "eq": "hola que tal", "neq": None,
+                                                     "like": None, "scale": None, "tipo": "varchar"})), 20)
+        self.assertRegex(gd.generate_string({"min": 10, "max": 20, "eq": None, "neq": None, "like": "hola que tal",
+                                                        "scale": None, "tipo": "varchar"}), "hola que tal")
+
+    def test_num_gen(self):
+        # 1
+        self.assertGreaterEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None, "scale": 0,
+                                             "tipo": "int"}), -10)
+        self.assertLessEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None, "scale": 0,
+                                "tipo": "varchar"}), 900)
+        # 2
+        self.assertGreaterEqual(gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
+                                "tipo": "int"}), -99953.56)
+        self.assertLessEqual(
+            gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
+                                "tipo": "int"}), -672.78)
+
 
 if __name__ == '__main__':
     path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
