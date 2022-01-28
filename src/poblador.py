@@ -1,4 +1,5 @@
 import clasificador as c
+import mo_parsing
 from mo_sql_parsing import parse, normal_op
 #import exceptionsDef
 
@@ -51,16 +52,23 @@ def poblador_tablas(sentencias_create, sentencia_select):
         print(tablas_datos)
         print(tablas_restricciones)
 
-    except IndentationError:
-        print("Error, indexacion incorrecta.\n")
-    except AttributeError:
-        print("Error, referencia al valor de atributo incorrecta.\n")
-    except KeyError:
-        print("Error en el acceso a diccionario, la clave no está definida.\n")
-    except TypeError:
-        print("Error, dato de tipo inapropiado.\n")
-    except IndexError:
-        print("Error, el índice no existe.\n")
+    except IndentationError as err:
+        print("Error, indexacion incorrecta:\n", err)
+
+    except mo_parsing.exceptions.ParseException as err:
+        print("Error en el parse:\n", err)
+
+    except AttributeError as err:
+        print("Error, referencia al valor de atributo incorrecta:\n", err)
+
+    except KeyError as err:
+        print("Error en el acceso a diccionario, la clave no está definida:\n", err)
+
+    except TypeError as err:
+        print("Error, dato de tipo inapropiado:\n", err)
+
+    except IndexError as err:
+        print("Error, el índice no existe:\n", err)
 
     finally:
         print("Fin de la ejecucion.\n")

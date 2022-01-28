@@ -22,3 +22,12 @@ Ocurre cuando falla la importación de un módulo.
 Clase base para errores de sintaxis relacionados con sangría incorrecta.
 - AttributeError:
 Se genera cuando se produce un error en una referencia de atributo o la asignación falla. 
+
+###Propias del modulo mo_sql_parsing:
+
+- mo_parsing.exceptions.ParseException: Excepcion lanzada cuando se produce un error en el parseamiento de la sentencia.
+
+###Creadas de manera específica:
+
+- 
+
