@@ -3,7 +3,7 @@ from mo_sql_parsing import parse
 
 
 create_table = "CREATE TABLE Persona (" \
-               "real NUMBER(4,2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
+               "real NUMBER UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
                "ent INT CHECK (ent > 12 and ent < 50)," \
               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),"\
                " fec1 DATE UNIQUE NOT NULL, " \
@@ -11,11 +11,12 @@ create_table = "CREATE TABLE Persona (" \
 
 select = "SELECT ent FROM Persona"
 
-def poblador_tablas(sentencias_create, sentencias_select):
+
+def poblador_tablas(sentencias_create, sentencia_select):
     """Dada una o varias tablas y una o varias sentencias select, ...
 
     :param sentencias_create: conjunto de sentencias create table
-    :param sentencias_select: conjunto de sentencias select
+    :param sentencia_select: una sentencia select
     :return:
     """
     # tablas_restricciones = {tabla1: [
@@ -25,7 +26,6 @@ def poblador_tablas(sentencias_create, sentencias_select):
     tablas_restricciones = {}
     tablas_datos = {}
     create_s = sentencias_create.split(";")
-    select_s = sentencias_select.split(";")
 
     for sentencia in create_s:
         sentencia_p = parse(sentencia)
@@ -40,11 +40,10 @@ def poblador_tablas(sentencias_create, sentencias_select):
         tablas_restricciones.get(nombre_tabla).update(restricciones)
         tablas_datos.get(nombre_tabla).update(datos)
 
-    for sentencia in select_s:
-        sentencia_p = parse(sentencia)
-        nombre_col = sentencia_p.get("select").get("value").lower()
-        nombre_tabla = sentencia_p.get("from").lower()
-        print(tablas_datos.get(nombre_tabla).get(nombre_col))
+    sentencia_p = parse(sentencia_select)
+    nombre_col = sentencia_p.get("select").get("value").lower()
+    nombre_tabla = sentencia_p.get("from").lower()
+    print(tablas_datos.get(nombre_tabla).get(nombre_col))
 
     print(tablas_datos)
     print(tablas_restricciones)
