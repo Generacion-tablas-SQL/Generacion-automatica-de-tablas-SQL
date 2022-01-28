@@ -6,7 +6,10 @@
 - Errores:
   - Los parámetros [38, 127] de NUMBER dan error en generate_number por la clase Decimal
   - Los decimales devuelven números en este formato "Decimal(14.32)", solo queremos el número.
-- Restricciones WHERE en sentencias SELECT
+- SELECT varias columnas FROM tabla
+- SELECT ent from persona where ent = 15; Generar valores iguales y diferentes a una igualdad
+- parse con check is NULL
+- WHERE incompatible con la columna
 
 ###A medias
 - eval en clasificador
