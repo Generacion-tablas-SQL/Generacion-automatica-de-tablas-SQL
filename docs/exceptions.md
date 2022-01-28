@@ -18,5 +18,7 @@ Ocurre cuando se intenta acceder a un diccionario con una clave que no existe.
 Ocurre cuando se intenta acceder a un fichero que no existe en la ruta indicada.
 - ImportError : 
 Ocurre cuando falla la importación de un módulo.
-
-###Implementadas para el proyecto:
+- IndentationError:
+Clase base para errores de sintaxis relacionados con sangría incorrecta.
+- AttributeError:
+Se genera cuando se produce un error en una referencia de atributo o la asignación falla. 

@@ -51,11 +51,10 @@ def poblador_tablas(sentencias_create, sentencia_select):
         print(tablas_datos)
         print(tablas_restricciones)
 
-
     except IndentationError:
         print("Error, indexacion incorrecta.\n")
     except AttributeError:
-        print("Error, valor de atributo incorrecto.\n")
+        print("Error, referencia al valor de atributo incorrecta.\n")
     except KeyError:
         print("Error en el acceso a diccionario, la clave no está definida.\n")
     except TypeError:
