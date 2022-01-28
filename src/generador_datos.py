@@ -37,13 +37,14 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
                     max_num += aux
                 max_num *= 10 ** abs(scale)  # Añade los dígitos redondeados a 0
 
-        elif scale in range(1, 128):       # Se trata de un scale positivo
+        elif scale in range(1, 128):           # Se trata de un scale positivo
             num_nueves = precision if precision > scale else scale
             while num_nueves > 1:
                 num_nueves -= 1
                 aux *= 10
                 max_num += aux
             max_num /= 10 ** scale
+
     return max_num
 
 

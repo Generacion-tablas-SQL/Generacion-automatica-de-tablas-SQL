@@ -1,15 +1,16 @@
 import clasificador as c
 from mo_sql_parsing import parse, normal_op
+#import exceptionsDef
 
 
 create_table = "CREATE TABLE Persona (" \
                "real NUMBER(4) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
                "ent INT CHECK (ent > 12 and ent < 50)," \
-              "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),"\
-               " fec1 DATE UNIQUE NOT NULL, " \
-               "fec2 TIMESTAMP(7) UNIQUE NOT NULL)"
+               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),"\
+               "fec1 DATE UNIQUE NOT NULL, " \
+               "fec2 TIMESTAMP(2) UNIQUE NOT NULL)"
 
-select = "SELECT ent FROM Persona"
+select = "SELECT ent FROM Persona" # WHERE ENT = 15
 
 
 def poblador_tablas(sentencias_create, sentencia_select):
@@ -27,26 +28,43 @@ def poblador_tablas(sentencias_create, sentencia_select):
     tablas_datos = {}
     create_s = sentencias_create.split(";")
 
-    for sentencia in create_s:
-        sentencia_p = parse(sentencia, calls=normal_op)
-        nombre_tabla = sentencia_p.get("create table").get("name").lower()
-        tablas_restricciones.update({nombre_tabla: {}})
-        tablas_datos.update({nombre_tabla: {}})
+    try:
+        for sentencia in create_s:
+            sentencia_p = parse(sentencia, calls=normal_op)
+            nombre_tabla = sentencia_p.get("create table").get("name").lower()
+            tablas_restricciones.update({nombre_tabla: {}})
+            tablas_datos.update({nombre_tabla: {}})
 
-        # datos: diccionario con un array de datos generados aleatoriamente asociado a cada columna
-        # restricciones: diccionario con un array de restricciones asociado a cada columna
-        datos, restricciones = c.clasificar_tipo(sentencia_p.get("create table").get("columns"))
+            # datos: diccionario con un array de datos generados aleatoriamente asociado a cada columna
+            # restricciones: diccionario con un array de restricciones asociado a cada columna
+            datos, restricciones = c.clasificar_tipo(sentencia_p.get("create table").get("columns"))
 
-        tablas_restricciones.get(nombre_tabla).update(restricciones)
-        tablas_datos.get(nombre_tabla).update(datos)
+            tablas_restricciones.get(nombre_tabla).update(restricciones)
+            tablas_datos.get(nombre_tabla).update(datos)
 
-    sentencia_p = parse(sentencia_select)
-    nombre_col = sentencia_p.get("select").get("value").lower()
-    nombre_tabla = sentencia_p.get("from").lower()
-    print(tablas_datos.get(nombre_tabla).get(nombre_col))
+        sentencia_p = parse(sentencia_select)
+        nombre_col = sentencia_p.get("select").get("value").lower()
+        nombre_tabla = sentencia_p.get("from").lower()
 
-    print(tablas_datos)
-    print(tablas_restricciones)
+        print(tablas_datos.get(nombre_tabla).get(nombre_col))
+
+        print(tablas_datos)
+        print(tablas_restricciones)
+
+
+    except IndentationError:
+        print("Error, indexacion incorrecta.\n")
+    except AttributeError:
+        print("Error, valor de atributo incorrecto.\n")
+    except KeyError:
+        print("Error en el acceso a diccionario, la clave no está definida.\n")
+    except TypeError:
+        print("Error, dato de tipo inapropiado.\n")
+    except IndexError:
+        print("Error, el índice no existe.\n")
+
+    finally:
+        print("Fin de la ejecucion.\n")
 
 
 poblador_tablas(create_table, select)
