@@ -83,6 +83,9 @@ def generate_string(restricciones):
                 max_percentage_chars -= b
             else:
                 generated_string += char
+        if len(generated_string) < _min:
+            # Añade el resto de caracteres hasta el mínimo solicitado
+            generated_string += fake.text()[0:(_min - len(generated_string))]
     else:
         b = random.randint(_min, _max)
         generated_string = fake.text()[0:b]
@@ -115,7 +118,7 @@ def generate_number(restricciones):
             generated_number += 1
     else:
         # Genera un número real
-        generated_number = Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale)
+        generated_number = float(Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale))
         if _neq is not None and generated_number == _neq:
             if scale < 0:
                 generated_number += 1
