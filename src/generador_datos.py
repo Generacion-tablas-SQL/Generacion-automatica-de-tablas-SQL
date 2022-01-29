@@ -4,6 +4,7 @@ from decimal import Decimal
 import time
 from faker import Faker
 import random
+from mo_sql_parsing import format
 
 # <---- GENERADOR DE UN NUMERO MÁXIMO ---->
 def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
@@ -85,7 +86,8 @@ def generate_string(restricciones):
                 generated_string += char
         if len(generated_string) < _min:
             # Añade el resto de caracteres hasta el mínimo solicitado
-            generated_string += fake.text()[0:(_min - len(generated_string))]
+            b = _min - len(generated_string)
+            generated_string += fake.text()[0:int(b)]
     else:
         b = random.randint(_min, _max)
         generated_string = fake.text()[0:b]
@@ -141,7 +143,7 @@ def gen_fecha(restricciones):
     es_date = dict_restr.get("es_date")
     sec_precision = dict_restr.get("sec_precision")
     inicio = "01/01/1971"
-    final = "12/12/2021"  # Se podria poner como final la fecha actual del sistema
+    final = "12/12/2022"  # Se podria poner como final la fecha actual del sistema
     formato = "%d/%m/%Y"  # Formato establecido por defecto
 
     if es_date:  # DATE
@@ -162,20 +164,20 @@ def gen_fecha(restricciones):
             sec_precision = 6 - sec_precision
             return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
-# ______________________________________________________________________________________________________________________
+def generate_random(data_type, column_name, restricciones, check):
+    tries = 20
+    value = generate_string(restricciones) if data_type == "String" else generate_number(restricciones)
+    check = format(check).lower()
+    check = check.replace(column_name, str(value))
+    check = check.replace("<>", "!=")
 
-    # else:
-    #     tries = 20
-    #     string = generate_string(_min, _max, _neq, _like) || number = generate_number(_min, _max, _neq, scale)
-    #     check = format(check).lower()
-    #     check = check.replace(column_name, string) || check = check.replace(column_name, str(number))
-    #     check = check.replace("<>", "!=")
-    #     while not eval(check) and tries > 0:
-    #         new_string = generate_string(_min, _max, _neq, _like) || new_number = generate_number(_min, _max, _neq, scale)
-    #         check = check.replace(string, new_string) || check = check.replace(str(number), str(new_number))
-    #         string = new_string || number = new_number
-    #         tries -= 1
-    #     if tries > 0:
-    #         return string || return number
-    #     else:
-    #         return "No se ha encontrado un dato que satisfaga las restricciones"
+    while not eval(check) and tries > 0:
+        new_value = generate_string(restricciones) if data_type == "String" else generate_number(restricciones)
+        check = check.replace(str(value), str(new_value))
+        value = new_value
+        tries -= 1
+        if tries > 0:
+            return value
+        else:
+            # return "No se ha encontrado un dato que satisfaga las restricciones"
+            raise ValueError
