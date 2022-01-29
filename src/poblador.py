@@ -1,7 +1,7 @@
 import clasificador as c
 import mo_parsing
 from mo_sql_parsing import parse, normal_op
-#import exceptionsDef
+# import exceptionsDef
 
 
 create_table = "CREATE TABLE Persona (" \
@@ -11,7 +11,16 @@ create_table = "CREATE TABLE Persona (" \
                "fec1 DATE UNIQUE NOT NULL, " \
                "fec2 TIMESTAMP(2) UNIQUE NOT NULL)"
 
-select = "SELECT ent FROM Persona" # WHERE ENT = 15
+select1 = "SELECT ent FROM Persona"  # WHERE ENT = 15
+select2 = "SELECT ent, real FROM Persona"
+
+def get_columnas(sentencia_parsed):
+    nombre_cols = list()
+    cols = sentencia_parsed.get("select")
+    for col in cols:
+        nombre_cols.append(col.get("value").lower())
+
+    return nombre_cols
 
 
 def poblador_tablas(sentencias_create, sentencia_select):
@@ -43,17 +52,19 @@ def poblador_tablas(sentencias_create, sentencia_select):
             tablas_restricciones.get(nombre_tabla).update(restricciones)
             tablas_datos.get(nombre_tabla).update(datos)
 
-        sentencia_p = parse(sentencia_select)
-        nombre_col = sentencia_p.get("select").get("value").lower()
-        nombre_tabla = sentencia_p.get("from").lower()
+        sentencia_p = parse(sentencia_select)  # Parsea la consulta select
+        nombre_cols = get_columnas(sentencia_p)  # Agrega a una lista todas las columnas de la consulta
 
-        print(tablas_datos.get(nombre_tabla).get(nombre_col))
+        nombre_tabla = sentencia_p.get("from").lower()  # Identifica la tabla consultada
+
+        for col in nombre_cols:
+            print(col, ": ", tablas_datos.get(nombre_tabla).get(col), sep="")
 
         print(tablas_datos)
         print(tablas_restricciones)
 
     except IndentationError as err:
-        print("Error, indexacion incorrecta:\n", err)
+        print("Error, indexación incorrecta:\n", err)
 
     except mo_parsing.exceptions.ParseException as err:
         print("Error en el parse:\n", err)
@@ -71,7 +82,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
         print("Error, el índice no existe:\n", err)
 
     finally:
-        print("Fin de la ejecucion.\n")
+        print("Fin de la ejecución.\n")
 
 
-poblador_tablas(create_table, select)
+poblador_tablas(create_table, select2)
