@@ -81,8 +81,12 @@ def poblador_tablas(sentencias_create, sentencia_select):
     except IndexError as err:
         print("Error, el índice no existe:\n", err)
 
+    except NameError as err:
+        print("Error, el nombre local o global no esta definido:\n", err)
+
     finally:
-        print("Fin de la ejecución.\n")
+        pass
+        #print("Fin de la ejecución.\n")
 
 
 poblador_tablas(create_table, select2)
