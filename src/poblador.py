@@ -84,6 +84,9 @@ def poblador_tablas(sentencias_create, sentencia_select):
     except NameError as err:
         print("Error, el nombre local o global no esta definido:\n", err)
 
+    except  ValueError as err:
+        print("Error, funcuion/operacion con valor inapropiado:\n", err)
+
     finally:
         pass
         #print("Fin de la ejecución.\n")

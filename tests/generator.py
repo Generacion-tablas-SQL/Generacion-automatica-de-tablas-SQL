@@ -68,9 +68,32 @@ class MyTestCase(unittest.TestCase):
             gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
                                 "tipo": "int"}), -672.78)
 
+    def test_date_gen(self):
+
+        # 1 DATE
+        a = "01/01/1971"
+        b = "12/12/2022"
+        self.assertGreaterEqual(
+            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 0,
+                                "tipo": "varchar"}), a)
+        self.assertLessEqual(
+            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 0,
+                                "tipo": "varchar"}), b)
+        # 2 TIMESTAMP
+        a = "01/01/1971 00:00:00.00"
+        b = "12/12/2022 23:59:59.59"
+        self.assertGreaterEqual(
+            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 2,
+                                "tipo": "varchar"}), a)
+        self.assertLessEqual(
+            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 2,
+                                "tipo": "varchar"}), b)
+
+
 
 if __name__ == '__main__':
-    path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
+   # path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
+    path = 'C:\\Users\\alvar\\PycharmProjects\\TFG_FASE2\\TiposDatos_Generadores-main\\TiposDatos_Generadores\\src'
     sys.path.insert(0, path)
     import src.generador_datos as gd
     unittest.main()
