@@ -24,6 +24,8 @@ Clase base para errores de sintaxis relacionados con sangría incorrecta.
 Se genera cuando se produce un error en una referencia de atributo o la asignación falla. 
 - NameError:
 Se genera cuando no se encuentra un nombre local o global. 
+- ValueError:
+Se genera cuando una operación o función recibe un argumento que tiene el tipo correcto pero un valor inapropiado.
 
 ###Propias del modulo mo_sql_parsing:
 

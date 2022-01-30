@@ -138,31 +138,34 @@ def gen_fecha(restricciones):
         Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
         del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
     """
+    try:
+        dict_restr = restricciones[-1]
+        es_date = dict_restr.get("es_date")
+        sec_precision = dict_restr.get("sec_precision")
+        inicio = "01/01/1971"
+        final = "12/12/2022"  # Se podria poner como final la fecha actual del sistema
+        formato = "%d/%m/%Y"  # Formato establecido por defecto
 
-    dict_restr = restricciones[-1]
-    es_date = dict_restr.get("es_date")
-    sec_precision = dict_restr.get("sec_precision")
-    inicio = "01/01/1971"
-    final = "12/12/2022"  # Se podria poner como final la fecha actual del sistema
-    formato = "%d/%m/%Y"  # Formato establecido por defecto
+        if es_date:  # DATE
+            minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
+            maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
+            fecha = minimo + (maximo - minimo) * random.random()
+            return time.strftime("%d/%m/%Y", time.localtime(fecha))
 
-    if es_date:  # DATE
-        minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
-        maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
-        fecha = minimo + (maximo - minimo) * random.random()
-        return time.strftime("%d/%m/%Y", time.localtime(fecha))
+        else:  # TIMESTAMP
+            minimo = datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+            maximo = datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
+            fecha = minimo + (maximo - minimo) * random.random()
+            if sec_precision >= 6:
+                return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
+            elif sec_precision == 0:
+                return fecha.strftime("%d/%m/%Y %H:%M:%S")
+            else:
+                sec_precision = 6 - sec_precision
+                return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
 
-    else:  # TIMESTAMP
-        minimo = datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-        maximo = datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
-        fecha = minimo + (maximo - minimo) * random.random()
-        if sec_precision >= 6:
-            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")
-        elif sec_precision == 0:
-            return fecha.strftime("%d/%m/%Y %H:%M:%S")
-        else:
-            sec_precision = 6 - sec_precision
-            return fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
+    except  ValueError as err:
+        print("Error, valor inapropiado:\n", err)
 
 def generate_random(data_type, column_name, restricciones, check):
     tries = 20
