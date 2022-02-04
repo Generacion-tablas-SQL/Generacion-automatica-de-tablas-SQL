@@ -11,12 +11,15 @@ create_table = "CREATE TABLE Persona (" \
                "fec1 DATE UNIQUE NOT NULL, " \
                "fec2 TIMESTAMP(2) UNIQUE NOT NULL)"
 
-select1 = "SELECT ent FROM Persona"  # WHERE ENT = 15
+select1 = "SELECT ent FROM Persona"
 select2 = "SELECT ent, real FROM Persona"
+select3 = "SELECT ent FROM Persona WHERE ENT = 15"
 
 def get_columnas(sentencia_parsed):
     nombre_cols = list()
     cols = sentencia_parsed.get("select")
+    if not isinstance(cols, list):
+        cols = [cols]
     for col in cols:
         nombre_cols.append(col.get("value").lower())
 
@@ -36,26 +39,28 @@ def poblador_tablas(sentencias_create, sentencia_select):
     #                    ]}
     tablas_restricciones = {}
     tablas_datos = {}
-    create_s = sentencias_create.split(";")
+    tablas = sentencias_create.split(";")
 
     try:
-        for sentencia in create_s:
-            sentencia_p = parse(sentencia, calls=normal_op)
-            nombre_tabla = sentencia_p.get("create table").get("name").lower()
+        select_parsed = parse(sentencia_select, calls=normal_op)  # Parsea la consulta select
+        where_restr = select_parsed.get("where")
+
+        for tabla in tablas:
+            tabla_parsed = parse(tabla, calls=normal_op)
+            nombre_tabla = tabla_parsed.get("create table").get("name").lower()
+
             tablas_restricciones.update({nombre_tabla: {}})
             tablas_datos.update({nombre_tabla: {}})
 
             # datos: diccionario con un array de datos generados aleatoriamente asociado a cada columna
             # restricciones: diccionario con un array de restricciones asociado a cada columna
-            datos, restricciones = c.clasificar_tipo(sentencia_p.get("create table").get("columns"))
+            datos, restricciones = c.clasificar_tipo(tabla_parsed.get("create table").get("columns"), where_restr)
 
             tablas_restricciones.get(nombre_tabla).update(restricciones)
             tablas_datos.get(nombre_tabla).update(datos)
 
-        sentencia_p = parse(sentencia_select)  # Parsea la consulta select
-        nombre_cols = get_columnas(sentencia_p)  # Agrega a una lista todas las columnas de la consulta
-
-        nombre_tabla = sentencia_p.get("from").lower()  # Identifica la tabla consultada
+        nombre_cols = get_columnas(select_parsed)  # Agrega a una lista todas las columnas de la consulta
+        nombre_tabla = select_parsed.get("from").lower()  # Identifica la tabla consultada
 
         for col in nombre_cols:
             print(col, ": ", tablas_datos.get(nombre_tabla).get(col), sep="")
@@ -92,4 +97,4 @@ def poblador_tablas(sentencias_create, sentencia_select):
         #print("Fin de la ejecución.\n")
 
 
-poblador_tablas(create_table, select2)
+poblador_tablas(create_table, select3)

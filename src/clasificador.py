@@ -43,6 +43,17 @@ def get_index(comparison, _not):
         1 if _not is not None and isinstance(comparison.get("args")[0].get("args")[1], int) else 0)
 
 
+# <----RESTRICCIONES WHERE---->
+def cumple_restricciones(restricciones, data):
+    if restricciones.get("tipo") == "Number":
+        if restricciones.get("min") > data or data > restricciones.get("max"):
+            return False
+        if restricciones.get("eq") is not None and restricciones.get("eq") != data:
+            return False
+        if restricciones.get("neq") is not None and restricciones.get("neq") == data:
+            return False
+    return True
+
 # <----RESTRICCIONES CHECK---->
 def comprobar_restricciones_check(parameters, check):
     """Comprueba las restricciones CHECK
@@ -108,11 +119,35 @@ def comprobar_restricciones_check(parameters, check):
     return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale, "other": _other}
 
 
+# <----RESTRICCIONES WHERE---->
+def restricciones_where(restricciones_tabla, sentencia_where):
+    """Comprueba las restricciones where y modifica la lista de restricciones de forma que se puedan generar los
+    datos consultados así como datos no consultados
+
+    :param restricciones_tabla: lista con restricciones de la tabla consultada
+    :param sentencia_where:
+    :return:
+    """
+    op = sentencia_where.get("op")
+    args = sentencia_where.get("args")
+    # col = args[0] if isinstance(args[0], int) else args[1]
+    num = args[1] if not isinstance(args[0], int) else args[0]
+    data = []
+
+    if op == "eq":
+        if cumple_restricciones(restricciones_tabla, num):
+            for i in range(-1, 2):
+                data.append(num + i)
+
+    return data
+
+
 # <----INICIO---->
-def clasificar_tipo(columnas):
+def clasificar_tipo(columnas, sentencia_where):
     """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
 
     :param columnas: array con las columnas de una tabla
+    :param sentencia_where:
     :return: col_data: diccionario con los datos generados de cada columna
              col_restrictions: diccionario con las restricciones de cada columna.
     """
@@ -127,8 +162,11 @@ def clasificar_tipo(columnas):
 
         if data_type in constantes.ENTEROS or data_type in constantes.REALES:
             data_type_param = list()
+            numbers = list()
+
             data_type_param.append("Number")
             data_type_param.append(col_name)
+
             if data_type in constantes.ENTEROS:
                 data_type_param.append(38) if parameters is None else data_type_param.append(parameters)
                 data_type_param.append(0)  # Escala = 0
@@ -140,10 +178,14 @@ def clasificar_tipo(columnas):
                     data_type_param.append(0)
 
             restricciones = restricciones_sql(data_type_param, column)
-            restricciones[-1].update({"tipo": data_type})
+            restricciones[-1].update({"tipo": "Number"})
             col_restrictions.update({col_name: restricciones})
 
-            numbers = []
+            args = sentencia_where.get("args")
+            col = args[1].lower() if isinstance(args[0], int) else args[0].lower()
+            if col_name == col:  # Si el where contiene a la columna, comprobamos las restricciones
+                numbers.extend(restricciones_where(restricciones[-1], sentencia_where))
+
             if restricciones[-1].get("other"):
                 for i in range(10):
                     numbers.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
@@ -161,18 +203,18 @@ def clasificar_tipo(columnas):
 
             data_type_param = ["String", col_name, varying, max_size]
             restricciones = restricciones_sql(data_type_param, column)
-            restricciones[-1].update({"tipo": data_type})
+            restricciones[-1].update({"tipo": "String"})
             col_restrictions.update({col_name: restricciones})
 
-            data = []
-            if restricciones[-1].get("other"):
-                for i in range(10):
-                    data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
-                                                   column.get("check")))
-            else:
-                for i in range(10):
-                    data.append(gd.generate_string(restricciones[-1]))
-            col_data.update({col_name: data})
+            # data = []
+            # if restricciones[-1].get("other"):
+            #     for i in range(10):
+            #         data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
+            #                                        column.get("check")))
+            # else:
+            #    for i in range(10):
+            #        data.append(gd.generate_string(restricciones[-1]))
+            # col_data.update({col_name: data})
 
         elif data_type in constantes.FECHA:
 
@@ -185,14 +227,14 @@ def clasificar_tipo(columnas):
             restricciones = restricciones_sql(data_type_param, column)
 
             # 'fec2': ['unique', {'sec_precision': 2, 'es_date': 0, 'tipo': 'timestamp'}]
-            restricciones[-1].update({"tipo": data_type})
+            restricciones[-1].update({"tipo": "Date"})
             col_restrictions.update({col_name: restricciones})
 
-            fechas = []
-            for i in range(10):
-                # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
-                fechas.append(gd.gen_fecha(restricciones))
-            col_data.update({col_name: fechas})
+            # fechas = []
+            # for i in range(10):
+            #    # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
+            #    fechas.append(gd.gen_fecha(restricciones))
+            # col_data.update({col_name: fechas})
         else:
             raise ValueError
     return col_data, col_restrictions
