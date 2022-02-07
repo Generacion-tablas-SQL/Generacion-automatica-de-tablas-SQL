@@ -1,3 +1,4 @@
+import random
 import constantes
 import generador_datos as gd
 
@@ -131,15 +132,26 @@ def restricciones_where(restricciones_tabla, sentencia_where):
     op = sentencia_where.get("op")
     args = sentencia_where.get("args")
     # col = args[0] if isinstance(args[0], int) else args[1]
-    num = args[1] if not isinstance(args[0], int) else args[0]
-    data = []
+    arg_data = args[1] if isinstance(args[0], str) else args[0]
+    if isinstance(arg_data, dict):
+        arg_data = arg_data.get("literal")
 
-    if op == "eq":
-        if cumple_restricciones(restricciones_tabla, num):
-            for i in range(-1, 2):
-                data.append(num + i)
+    gen_data = list()
 
-    return data
+    if restricciones_tabla.get("tipo") == "Number":
+        if op == "eq":
+            if cumple_restricciones(restricciones_tabla, arg_data):
+                for i in range(-1, 2):
+                    gen_data.append(arg_data + i)
+    elif restricciones_tabla.get("tipo") == "String":
+        if op == "eq":
+            if cumple_restricciones(restricciones_tabla, arg_data):
+                b = len(arg_data) - 1
+                gen_data.append(arg_data[:b])
+                gen_data.append(arg_data)
+                gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz'))
+
+    return gen_data
 
 
 # <----INICIO---->
@@ -160,9 +172,13 @@ def clasificar_tipo(columnas, sentencia_where):
         data_type = column.get("type").get("op").lower()  # number
         parameters = column.get("type").get("args", None)  # [5, 0], [4]
 
+        args = sentencia_where.get("args")
+        col_select = args[0].lower() if isinstance(args[0], str) else args[1].lower()
+
+        data = list()
+
         if data_type in constantes.ENTEROS or data_type in constantes.REALES:
             data_type_param = list()
-            numbers = list()
 
             data_type_param.append("Number")
             data_type_param.append(col_name)
@@ -181,20 +197,19 @@ def clasificar_tipo(columnas, sentencia_where):
             restricciones[-1].update({"tipo": "Number"})
             col_restrictions.update({col_name: restricciones})
 
-            args = sentencia_where.get("args")
-            col = args[1].lower() if isinstance(args[0], int) else args[0].lower()
-            if col_name == col:  # Si el where contiene a la columna, comprobamos las restricciones
-                numbers.extend(restricciones_where(restricciones[-1], sentencia_where))
+            # Si el where contiene a la columna, comprobamos las restricciones
+            if col_name == col_select:
+                data.extend(restricciones_where(restricciones[-1], sentencia_where))
 
             if restricciones[-1].get("other"):
                 for i in range(10):
-                    numbers.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
-                                                      column.get("check")))
+                    data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
+                                                   column.get("check")))
             else:
                 for i in range(10):
-                    numbers.append(gd.generate_number(restricciones[-1]))
+                    data.append(gd.generate_number(restricciones[-1]))
 
-            col_data.update({col_name: numbers})
+            col_data.update({col_name: data})
 
         elif data_type in constantes.STRINGS:
             # char y nchar tienen un tamaño por defecto de 1
@@ -206,15 +221,18 @@ def clasificar_tipo(columnas, sentencia_where):
             restricciones[-1].update({"tipo": "String"})
             col_restrictions.update({col_name: restricciones})
 
-            # data = []
-            # if restricciones[-1].get("other"):
-            #     for i in range(10):
-            #         data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
-            #                                        column.get("check")))
-            # else:
-            #    for i in range(10):
-            #        data.append(gd.generate_string(restricciones[-1]))
-            # col_data.update({col_name: data})
+            # Si el where contiene a la columna, comprobamos las restricciones
+            if col_name == col_select:
+                data.extend(restricciones_where(restricciones[-1], sentencia_where))
+
+            if restricciones[-1].get("other"):
+                for i in range(10):
+                    data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
+                                                   column.get("check")))
+            else:
+                for i in range(10):
+                    data.append(gd.generate_string(restricciones[-1]))
+            col_data.update({col_name: data})
 
         elif data_type in constantes.FECHA:
 
@@ -230,11 +248,11 @@ def clasificar_tipo(columnas, sentencia_where):
             restricciones[-1].update({"tipo": "Date"})
             col_restrictions.update({col_name: restricciones})
 
-            # fechas = []
-            # for i in range(10):
-            #    # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
-            #    fechas.append(gd.gen_fecha(restricciones))
-            # col_data.update({col_name: fechas})
+            fechas = []
+            for i in range(10):
+                # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
+                fechas.append(gd.gen_fecha(restricciones))
+            col_data.update({col_name: fechas})
         else:
             raise ValueError
     return col_data, col_restrictions

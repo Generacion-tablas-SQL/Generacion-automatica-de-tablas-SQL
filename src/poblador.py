@@ -13,7 +13,7 @@ create_table = "CREATE TABLE Persona (" \
 
 select1 = "SELECT ent FROM Persona"
 select2 = "SELECT ent, real FROM Persona"
-select3 = "SELECT ent FROM Persona WHERE ENT = 15"
+select3 = "SELECT ent, string  FROM Persona WHERE ent = 15"
 
 def get_columnas(sentencia_parsed):
     nombre_cols = list()
