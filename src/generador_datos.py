@@ -132,16 +132,15 @@ def generate_number(restricciones):
 # <---- GENERADOR DE FECHAS ---->
 def gen_fecha(restricciones):
     """Genera fechas aleatorias que cumplen una serie de restricciones
-            :param restricciones: [sec_precision, es_date, data_type]
+            :param restricciones: diccionario con los parámetros sec_precision, es_date, data_type
             :return: una una fecha aleatoria del tipo específico(DATE o TIMESTAMP) en formato string
 
         Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
         del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
     """
 
-    dict_restr = restricciones[-1]
-    es_date = dict_restr.get("es_date")
-    sec_precision = dict_restr.get("sec_precision")
+    es_date = restricciones.get("es_date")
+    sec_precision = restricciones.get("sec_precision")
     inicio = "01/01/1971"
     final = "12/12/2022"  # Se podria poner como final la fecha actual del sistema
     formato = "%d/%m/%Y"  # Formato establecido por defecto

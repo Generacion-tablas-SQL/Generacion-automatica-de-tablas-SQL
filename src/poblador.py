@@ -74,10 +74,6 @@ def poblador_tablas(sentencias_create, sentencia_select):
             value_list.clear()
             pos += 1
 
-        # for col in nombre_cols:
-        # values = tuple(i for i in tablas_datos.get(nombre_tabla).get(col))
-        # print("INSERT INTO", nombre_tabla, "VALUES", values)
-
         print(tablas_datos)
         print(tablas_restricciones)
 

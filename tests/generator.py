@@ -41,59 +41,47 @@ class MyTestCase(unittest.TestCase):
     def test_string_gen(self):
         # 1
         self.assertGreaterEqual(len(gd.generate_string({"min": 5, "max": 10, "eq": None, "neq": None, "like": "C%",
-                                                        "scale": None, "tipo": "varchar"})), 5)
+                                                        "scale": None, "tipo": "String"})), 5)
         self.assertLessEqual(len(gd.generate_string({"min": 5, "max": 10, "eq": None, "neq": None, "like": "C%",
-                                                     "scale": None, "tipo": "varchar"})), 10)
+                                                     "scale": None, "tipo": "String"})), 10)
         self.assertRegex(gd.generate_string({"min": 5, "max": 10, "eq": None, "neq": None, "like": "C%", "scale": None,
-                                             "tipo": "varchar"}), "^C\D")
+                                             "tipo": "String"}), "^C\D")
 
         # 2
         self.assertGreaterEqual(len(gd.generate_string({"min": 10, "max": 20, "eq": "hola que tal", "neq": None,
-                                                        "like": None, "scale": None, "tipo": "varchar"})), 10)
+                                                        "like": None, "scale": None, "tipo": "String"})), 10)
         self.assertLessEqual(len(gd.generate_string({"min": 10, "max": 20, "eq": "hola que tal", "neq": None,
-                                                     "like": None, "scale": None, "tipo": "varchar"})), 20)
-        self.assertRegex(gd.generate_string({"min": 10, "max": 20, "eq": None, "neq": None, "like": "hola que tal",
-                                                        "scale": None, "tipo": "varchar"}), "hola que tal")
+                                                     "like": None, "scale": None, "tipo": "String"})), 20)
+        self.assertRegex(gd.generate_string({"min": 10, "max": 20, "eq": None, "neq": None, "like": "prueba",
+                                                        "scale": None, "tipo": "String"}), "prueba")
 
     def test_num_gen(self):
         # 1
         self.assertGreaterEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None, "scale": 0,
-                                             "tipo": "int"}), -10)
+                                                    "tipo": "Number"}), -10)
         self.assertLessEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None, "scale": 0,
-                                "tipo": "varchar"}), 900)
+                                                 "tipo": "Number"}), 900)
         # 2
         self.assertGreaterEqual(gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
-                                "tipo": "int"}), -99953.56)
+                                                    "tipo": "Number"}), -99953.56)
         self.assertLessEqual(
             gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
-                                "tipo": "int"}), -672.78)
+                                "tipo": "Number"}), -672.78)
 
     def test_date_gen(self):
-
         # 1 DATE
-        a = "01/01/1971"
-        b = "12/12/2022"
-        self.assertGreaterEqual(
-            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 0,
-                                "tipo": "varchar"}), a)
-        self.assertLessEqual(
-            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 0,
-                                "tipo": "varchar"}), b)
-        # 2 TIMESTAMP
-        a = "01/01/1971 00:00:00.00"
-        b = "12/12/2022 23:59:59.59"
-        self.assertGreaterEqual(
-            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 2,
-                                "tipo": "varchar"}), a)
-        self.assertLessEqual(
-            gd.gen_fecha({"min": a, "max": b, "eq": None, "neq": None, "like": None, "scale": 2,
-                                "tipo": "varchar"}), b)
+        # Ej: "01/01/1971"
+        self.assertRegex(gd.gen_fecha({'sec_precision': 0, 'es_date': 1, 'tipo': 'Date'}), '[0-3]\d/[0-1]\d/\d{4}')
 
+        # 2 TIMESTAMP
+        # Ej: "01/01/1971 00:00:00.00"
+        self.assertRegex(gd.gen_fecha({'sec_precision': 2, 'es_date': 0, 'tipo': 'Date'}),
+                         '[0-3]\d/[0-1]\d/\d{4} [0-2]\d:[0-5]\d:[0-5]\d.\d+')
 
 
 if __name__ == '__main__':
-   # path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
-    path = 'C:\\Users\\alvar\\PycharmProjects\\TFG_FASE2\\TiposDatos_Generadores-main\\TiposDatos_Generadores\\src'
+    path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
+    # path = 'C:\\Users\\alvar\\PycharmProjects\\TFG_FASE2\\TiposDatos_Generadores-main\\TiposDatos_Generadores\\src'
     sys.path.insert(0, path)
     import src.generador_datos as gd
     unittest.main()
