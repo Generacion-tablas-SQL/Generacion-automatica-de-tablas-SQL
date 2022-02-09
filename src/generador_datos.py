@@ -1,10 +1,10 @@
-import constantes
 from datetime import datetime
 from decimal import Decimal
-import time
+from time import mktime, strftime, strptime, localtime
 from faker import Faker
-import random
 from mo_sql_parsing import format
+import random
+import constantes
 
 # <---- GENERADOR DE UN NUMERO MÁXIMO ---->
 def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
@@ -147,10 +147,10 @@ def gen_fecha(restricciones):
     formato = "%d/%m/%Y"  # Formato establecido por defecto
 
     if es_date:  # DATE
-        minimo = time.mktime(time.strptime(inicio, formato))  # Fecha mínima en formato DATE
-        maximo = time.mktime(time.strptime(final, formato))  # Fecha máxima en formato DATE
+        minimo = mktime(strptime(inicio, formato))  # Fecha mínima en formato DATE
+        maximo = mktime(strptime(final, formato))  # Fecha máxima en formato DATE
         fecha = minimo + (maximo - minimo) * random.random()
-        return time.strftime("%d/%m/%Y", time.localtime(fecha))
+        return strftime("%d/%m/%Y", localtime(fecha))
 
     else:  # TIMESTAMP
         minimo = datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'

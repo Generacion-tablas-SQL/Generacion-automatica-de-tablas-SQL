@@ -13,7 +13,7 @@ create_table = "CREATE TABLE Persona (" \
 
 select1 = "SELECT ent FROM Persona"
 select2 = "SELECT ent, real FROM Persona"
-select3 = "SELECT ent, string  FROM Persona WHERE ent = 15"
+select3 = "SELECT ent, fec1  FROM Persona WHERE ent > 15"
 
 def get_columnas(sentencia_parsed):
     nombre_cols = list()
@@ -63,7 +63,8 @@ def poblador_tablas(sentencias_create, sentencia_select):
         nombre_tabla = select_parsed.get("from").lower()  # Identifica la tabla consultada
 
         for col in nombre_cols:
-            print(col, ": ", tablas_datos.get(nombre_tabla).get(col), sep="")
+            values = tuple(i for i in tablas_datos.get(nombre_tabla).get(col))
+            print("INSERT INTO", col, "VALUES", values)
 
         print(tablas_datos)
         print(tablas_restricciones)
