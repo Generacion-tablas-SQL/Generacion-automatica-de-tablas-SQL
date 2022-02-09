@@ -68,7 +68,7 @@ class MyTestCase(unittest.TestCase):
             gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
                                 "tipo": "int"}), -672.78)
 
-    def test_date_gen(self):
+    def test_date_gen(self):  #FALTA PROBAR Y TERMINAR
 
         # 1 DATE
         a = "01/01/1971"
