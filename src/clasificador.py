@@ -1,3 +1,5 @@
+from datetime import datetime
+from time import mktime, strptime, strftime, localtime
 import random
 import constantes
 import generador_datos as gd
@@ -46,13 +48,19 @@ def get_index(comparison, _not):
 
 # <----RESTRICCIONES WHERE---->
 def cumple_restricciones(restricciones, data):
+    if restricciones.get("eq") is not None and restricciones.get("eq") != data:
+        return False
+    if restricciones.get("neq") is not None and restricciones.get("neq") == data:
+        return False
+
+    # No tenemos en cuenta el tipo Fecha ya que no tiene implementadas restricciones CHECK
     if restricciones.get("tipo") == "Number":
-        if restricciones.get("min") > data or data > restricciones.get("max"):
+        if data < restricciones.get("min") or data > restricciones.get("max"):
             return False
-        if restricciones.get("eq") is not None and restricciones.get("eq") != data:
+    elif restricciones.get("tipo") == "String":
+        if len(data) < restricciones.get("min") or len(data) > restricciones.get("max"):
             return False
-        if restricciones.get("neq") is not None and restricciones.get("neq") == data:
-            return False
+
     return True
 
 # <----RESTRICCIONES CHECK---->
@@ -139,10 +147,11 @@ def restricciones_where(restricciones_tabla, sentencia_where):
     gen_data = list()
 
     if restricciones_tabla.get("tipo") == "Number":
-        if op == "eq":
+        if op == "eq" or op == "gt":
             if cumple_restricciones(restricciones_tabla, arg_data):
                 for i in range(-1, 2):
                     gen_data.append(arg_data + i)
+
     elif restricciones_tabla.get("tipo") == "String":
         if op == "eq":
             if cumple_restricciones(restricciones_tabla, arg_data):
@@ -150,6 +159,12 @@ def restricciones_where(restricciones_tabla, sentencia_where):
                 gen_data.append(arg_data[:b])
                 gen_data.append(arg_data)
                 gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz'))
+    else:  # tipo == "Fecha"
+        if op == "eq":
+            fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
+            gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
+            gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 1)))
+            gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
 
     return gen_data
 
@@ -248,11 +263,13 @@ def clasificar_tipo(columnas, sentencia_where):
             restricciones[-1].update({"tipo": "Date"})
             col_restrictions.update({col_name: restricciones})
 
-            fechas = []
+            if col_name == col_select:
+                data.extend(restricciones_where(restricciones[-1], sentencia_where))
+
             for i in range(10):
                 # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
-                fechas.append(gd.gen_fecha(restricciones))
-            col_data.update({col_name: fechas})
+                data.append(gd.gen_fecha(restricciones))
+            col_data.update({col_name: data})
         else:
             raise ValueError
     return col_data, col_restrictions
