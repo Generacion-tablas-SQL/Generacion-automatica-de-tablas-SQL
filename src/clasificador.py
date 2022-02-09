@@ -1,5 +1,3 @@
-import time
-from datetime import datetime, timedelta
 from time import mktime, strptime, strftime, localtime
 import random
 import constantes
@@ -146,29 +144,28 @@ def restricciones_where(restricciones_tabla, sentencia_where):
     if isinstance(arg_data, dict):
         arg_data = arg_data.get("literal")
 
+    # if isinstance(args[0], dict)
+
     gen_data = list()
 
-    print(restricciones_tabla.get("tipo"))
-    if restricciones_tabla.get("tipo") == "Number":
-        if op == "eq" or op == "gt":
-            if cumple_restricciones(restricciones_tabla, arg_data):
-                for i in range(-1, 2):
+    ops = ["eq", "gt", "gte", "lt", "lte"]
+    if op in ops:
+        if cumple_restricciones(restricciones_tabla, arg_data):
+            if restricciones_tabla.get("tipo") == "Number":
+                scale = restricciones_tabla.get("scale")
+                for i in [-1 / 10 ** scale, 0, 1 / 10 ** scale]:
                     gen_data.append(arg_data + i)
-
-    elif restricciones_tabla.get("tipo") == "String":
-        if op == "eq":
-            if cumple_restricciones(restricciones_tabla, arg_data):
+            elif restricciones_tabla.get("tipo") == "String":
                 b = len(arg_data) - 1
-                gen_data.append(arg_data[:b])
+                gen_data.append(arg_data[:b])  # Quito el último caracter
                 gen_data.append(arg_data)
-                gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz'))
-    else:  # tipo == "Fecha"
-        if op == "eq":
-            fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
-            gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
-            gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
-            # Los días UTC tienen una duración de 86 400 s
-            gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400 )))
+                gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz')) # Añado un caracter
+            else:  # tipo == "Fecha"
+                fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
+                gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
+                gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
+                # Los días UTC tienen una duración de 86 400 s
+                gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))
     return gen_data
 
 
@@ -220,11 +217,11 @@ def clasificar_tipo(columnas, sentencia_where):
                 data.extend(restricciones_where(restricciones[-1], sentencia_where))
 
             if restricciones[-1].get("other"):
-                for i in range(10):
+                for i in range(len(data), 10):
                     data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
                                                    column.get("check")))
             else:
-                for i in range(10):
+                for i in range(len(data), 10):
                     data.append(gd.generate_number(restricciones[-1]))
 
             col_data.update({col_name: data})
@@ -244,11 +241,11 @@ def clasificar_tipo(columnas, sentencia_where):
                 data.extend(restricciones_where(restricciones[-1], sentencia_where))
 
             if restricciones[-1].get("other"):
-                for i in range(10):
+                for i in range(len(data), 10):
                     data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
                                                    column.get("check")))
             else:
-                for i in range(10):
+                for i in range(len(data), 10):
                     data.append(gd.generate_string(restricciones[-1]))
             col_data.update({col_name: data})
 
@@ -262,16 +259,16 @@ def clasificar_tipo(columnas, sentencia_where):
             # restricciones = ['unique', {'sec_precision': 2, 'es_date': 0}]
             restricciones = restricciones_sql(data_type_param, column)
 
-            # 'fec2': ['unique', {'sec_precision': 2, 'es_date': 0, 'tipo': 'timestamp'}]
+            # 'fec2': ['unique', {'sec_precision': 2, 'es_date': 0, 'tipo': 'Date'}]
             restricciones[-1].update({"tipo": "Date"})
             col_restrictions.update({col_name: restricciones})
 
             if col_name == col_select:
                 data.extend(restricciones_where(restricciones[-1], sentencia_where))
 
-            for i in range(10):
+            for i in range(len(data), 10):
                 # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
-                data.append(gd.gen_fecha(restricciones))
+                data.append(gd.gen_fecha(restricciones[-1]))
             col_data.update({col_name: data})
         else:
             raise ValueError
