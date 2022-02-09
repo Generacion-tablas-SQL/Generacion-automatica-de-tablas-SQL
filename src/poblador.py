@@ -64,9 +64,19 @@ def poblador_tablas(sentencias_create, sentencia_select):
         nombre_cols = get_columnas(select_parsed)  # Agrega a una lista todas las columnas de la consulta
         nombre_tabla = select_parsed.get("from").lower()  # Identifica la tabla consultada
 
-        for col in nombre_cols:
-            values = tuple(i for i in tablas_datos.get(nombre_tabla).get(col))
-            print("INSERT INTO", col, "VALUES", values)
+        value_list = list()
+        pos = 0
+        for i in range(0, 10):
+            for data in tablas_datos.get(nombre_tabla).values():
+                value_list.append(data[pos])
+            values = tuple(value_list)
+            print("INSERT INTO", nombre_tabla, "VALUES", values)
+            value_list.clear()
+            pos += 1
+
+        # for col in nombre_cols:
+        # values = tuple(i for i in tablas_datos.get(nombre_tabla).get(col))
+        # print("INSERT INTO", nombre_tabla, "VALUES", values)
 
         print(tablas_datos)
         print(tablas_restricciones)
