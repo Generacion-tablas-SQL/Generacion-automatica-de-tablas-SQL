@@ -1,4 +1,5 @@
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 from time import mktime, strptime, strftime, localtime
 import random
 import constantes
@@ -137,6 +138,7 @@ def restricciones_where(restricciones_tabla, sentencia_where):
     :param sentencia_where:
     :return:
     """
+
     op = sentencia_where.get("op")
     args = sentencia_where.get("args")
     # col = args[0] if isinstance(args[0], int) else args[1]
@@ -146,6 +148,7 @@ def restricciones_where(restricciones_tabla, sentencia_where):
 
     gen_data = list()
 
+    print(restricciones_tabla.get("tipo"))
     if restricciones_tabla.get("tipo") == "Number":
         if op == "eq" or op == "gt":
             if cumple_restricciones(restricciones_tabla, arg_data):
@@ -163,9 +166,9 @@ def restricciones_where(restricciones_tabla, sentencia_where):
         if op == "eq":
             fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
             gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
-            gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 1)))
             gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
-
+            # Los días UTC tienen una duración de 86 400 s
+            gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400 )))
     return gen_data
 
 

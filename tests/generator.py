@@ -80,8 +80,8 @@ class MyTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
-    # path = 'C:\\Users\\alvar\\PycharmProjects\\TFG_FASE2\\TiposDatos_Generadores-main\\TiposDatos_Generadores\\src'
+   # path = 'C:\\Users\\maria\\OneDrive\\Documentos\\Ing. Inf\\4º Ing. Inf\\TFG\\TiposDatos_Generadores\\src'
+    path = 'C:\\Users\\alvar\\PycharmProjects\\TFG_FASE2\\TiposDatos_Generadores-main\\TiposDatos_Generadores\\src'
     sys.path.insert(0, path)
     import src.generador_datos as gd
     unittest.main()
