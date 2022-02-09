@@ -1,6 +1,8 @@
-import clasificador as c
 import mo_parsing
 from mo_sql_parsing import parse, normal_op
+import clasificador as c
+import traceback
+import sys
 # import exceptionsDef
 
 
@@ -70,32 +72,39 @@ def poblador_tablas(sentencias_create, sentencia_select):
         print(tablas_restricciones)
 
     except mo_parsing.exceptions.ParseException as err:
+        traceback.print_exc()
         print("Error, excepción al hacer el parse:\n", err)
 
     except IndentationError as err:
+        traceback.print_exc()
         print("Error, excepción debido a indexación incorrecta:\n", err)
 
     except AttributeError as err:
+        traceback.print_exc()
         print("Error, excepción en la referencia al valor del atributo:\n", err)
 
     except KeyError as err:
+        traceback.print_exc()
         print("Error, excepción en el acceso a diccionario, la clave no está definida:\n", err)
 
     except TypeError as err:
+        traceback.print_exc()
         print("Error, dato de tipo inapropiado:\n", err)
 
     except IndexError as err:
+        traceback.print_exc()
         print("Error, el índice no existe:\n", err)
 
     except NameError as err:
+        traceback.print_exc()
         print("Error, el nombre local o global no esta definido:\n", err)
 
-    except  ValueError as err:
-        print("Error, funcuion/operacion con valor inapropiado:\n", err)
+    except ValueError as err:
+        traceback.print_exc()
+        print("Error, función/operación con valor inapropiado:\n", err)
 
     finally:
-        pass
-        #print("Fin de la ejecución.\n")
+        print("Fin de la ejecución.\n")
 
 
 poblador_tablas(create_table, select3)
