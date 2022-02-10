@@ -1,5 +1,6 @@
 from time import mktime, strptime, strftime, localtime
 import random
+import re
 import constantes
 import generador_datos as gd
 
@@ -57,9 +58,13 @@ def cumple_restricciones(restricciones, data):
         if data < restricciones.get("min") or data > restricciones.get("max"):
             return False
     elif restricciones.get("tipo") == "String":
-        if len(data) < restricciones.get("min") or len(data) > restricciones.get("max"):
+        if (data.find("%") == 0 and len(data) < restricciones.get("min")) or len(data) > restricciones.get("max"):
             return False
-
+        if restricciones.get("like") is not None:
+            like_regex = restricciones.get("like").replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
+            data_regex = data.replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
+            if not re.match(like_regex, data_regex):
+                return False
     return True
 
 # <----RESTRICCIONES CHECK---->
@@ -128,44 +133,52 @@ def comprobar_restricciones_check(parameters, check):
 
 
 # <----RESTRICCIONES WHERE---->
-def restricciones_where(restricciones_tabla, sentencia_where):
+def restricciones_where(restricciones_col, sentencia_where):
     """Comprueba las restricciones where y modifica la lista de restricciones de forma que se puedan generar los
     datos consultados así como datos no consultados
 
-    :param restricciones_tabla: lista con restricciones de la tabla consultada
+    :param restricciones_col: lista con restricciones de la columna consultada
     :param sentencia_where:
-    :return:
+    :return: lista con datos generados
     """
 
     op = sentencia_where.get("op")
     args = sentencia_where.get("args")
-    # col = args[0] if isinstance(args[0], int) else args[1]
-    arg_data = args[1] if isinstance(args[0], str) else args[0]
-    if isinstance(arg_data, dict):
-        arg_data = arg_data.get("literal")
 
-    # if isinstance(args[0], dict)
+    arg_data = args[1] if isinstance(args[0], str) else (
+        args[0] if isinstance(args[1], str) else (
+            args[1] if isinstance(args[0], dict) else args[0]  # para WHERE con función LENGTH()
+        )
+    )
+
+    # arg_data = args[1] if isinstance(args[0], str) else args[0]
+    if isinstance(arg_data, dict):  # Para igualdades o desigualdades de cadenas o LIKE
+        arg_data = arg_data.get("literal")
 
     gen_data = list()
 
-    ops = ["eq", "gt", "gte", "lt", "lte"]
+    ops = ["eq", "gt", "gte", "lt", "lte", "like"]
     if op in ops:
-        if cumple_restricciones(restricciones_tabla, arg_data):
-            if restricciones_tabla.get("tipo") == "Number":
-                scale = restricciones_tabla.get("scale")
+        if cumple_restricciones(restricciones_col, arg_data):
+            if restricciones_col.get("tipo") == "Number":
+                scale = restricciones_col.get("scale")
                 for i in [-1 / 10 ** scale, 0, 1 / 10 ** scale]:
                     gen_data.append(arg_data + i)
-            elif restricciones_tabla.get("tipo") == "String":
+            elif restricciones_col.get("tipo") == "String":
+                if op == "like":
+                    restricciones_col.update({"like": arg_data})
+                    gen_data.append(gd.generate_string(restricciones_col))
                 b = len(arg_data) - 1
                 gen_data.append(arg_data[:b])  # Quito el último caracter
                 gen_data.append(arg_data)
-                gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz')) # Añado un caracter
+                gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz'))  # Añado un caracter
             else:  # tipo == "Fecha"
                 fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
                 gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
                 gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
                 # Los días UTC tienen una duración de 86 400 s
                 gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))
+
     return gen_data
 
 
@@ -188,7 +201,11 @@ def clasificar_tipo(columnas, sentencia_where):
         parameters = column.get("type").get("args", None)  # [5, 0], [4]
 
         args = sentencia_where.get("args")
-        col_select = args[0].lower() if isinstance(args[0], str) else args[1].lower()
+        col_select = args[0].lower() if isinstance(args[0], str) else (
+            args[1].lower() if isinstance(args[1], str) else (
+                args[0].get("args")[0] if isinstance(args[0], dict) else args[1].get("args")[0]
+            )
+        )
 
         data = list()
 
