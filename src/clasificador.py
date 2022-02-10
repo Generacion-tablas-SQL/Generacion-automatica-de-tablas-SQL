@@ -145,7 +145,7 @@ def restricciones_where(restricciones_col, sentencia_where):
     op = sentencia_where.get("op")
     args = sentencia_where.get("args")
 
-    #Para saber si existe un length, buscamos un campo op que contenga "length"
+    #Para saber si existe una op length
     s = str(args[0])
     lenEx = s.find("length")
 
@@ -173,14 +173,27 @@ def restricciones_where(restricciones_col, sentencia_where):
                 if op == "like":
                     restricciones_col.update({"like": arg_data})
                     gen_data.append(gd.generate_string(restricciones_col))
-                #if (lenEx != -1): #Existe el campo length
-                print(arg_data)
+                if (lenEx != -1): #Existe el campo length
+                    pass
+
                 #Operaciones con operadores
                 b = len(arg_data) - 1
                 gen_data.append(arg_data[:b])  # Quito el último caracter
                 gen_data.append(arg_data)
                 gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz'))  # Añado un caracter
+
                 #Añadir siguiente caracter ascii al último caracter
+                cadena = arg_data
+                b = len(cadena) - 1 #Cojo el ultimo caracter de la cadena
+                ultima = cadena[b:]
+                char = chr(ord(ultima) + 1) #Le sumo un caracter ascii
+                b = len(cadena) - 1 #Quito el ultimo caracter de la cadena
+                cadena = cadena[:b]
+
+                cadena = cadena + char
+                gen_data.append(cadena)
+                print(cadena)
+
             else:  # tipo == "Fecha"
                 fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
                 gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))

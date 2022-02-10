@@ -15,7 +15,7 @@ create_table = "CREATE TABLE Persona (" \
 
 select1 = "SELECT ent FROM Persona"
 select2 = "SELECT ent, real FROM Persona"
-select3 = "SELECT ent, fec1 FROM Persona WHERE fec1 > '24/04/2007'"
+select3 = "SELECT string, String FROM Persona WHERE string = string "
 
 
 def get_columnas(sentencia_parsed):
