@@ -174,7 +174,7 @@ def restricciones_where(restricciones_col, sentencia_where):
                     restricciones_col.update({"like": arg_data})
                     gen_data.append(gd.generate_string(restricciones_col))
                 if (lenEx != -1): #Existe el campo length
-                    pass
+                    pass #FALTA
 
                 #Operaciones con operadores
                 b = len(arg_data) - 1
@@ -191,7 +191,6 @@ def restricciones_where(restricciones_col, sentencia_where):
                 cadena = cadena[:b]
                 cadena = cadena + char
                 gen_data.append(cadena)
-
             else:  # tipo == "Fecha"
                 fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
                 gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))

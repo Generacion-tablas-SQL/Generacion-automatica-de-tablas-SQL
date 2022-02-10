@@ -9,13 +9,14 @@ import sys
 create_table = "CREATE TABLE Persona (" \
                "real NUMBER(4,2) UNIQUE NULL CHECK (NOT REal <= 0 AND REAL < 20 AND real != 10)," \
                "ent INT CHECK (ent > 12 and ent < 50)," \
-               "string VARCHAR(15) UNIQUE NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10),"\
+               "string VARCHAR(15) UNIQUE NOT NULL," \
                "fec1 DATE UNIQUE NOT NULL, " \
                "fec2 TIMESTAMP(2) UNIQUE NOT NULL)"
 
+#CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 10)
 select1 = "SELECT ent FROM Persona"
 select2 = "SELECT ent, real FROM Persona"
-select3 = "SELECT string, String FROM Persona WHERE string = string "
+select3 = "SELECT string, string FROM Persona WHERE string = aaaaaa "
 
 
 def get_columnas(sentencia_parsed):
