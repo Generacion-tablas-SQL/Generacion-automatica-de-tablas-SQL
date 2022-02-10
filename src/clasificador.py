@@ -189,10 +189,8 @@ def restricciones_where(restricciones_col, sentencia_where):
                 char = chr(ord(ultima) + 1) #Le sumo un caracter ascii
                 b = len(cadena) - 1 #Quito el ultimo caracter de la cadena
                 cadena = cadena[:b]
-
                 cadena = cadena + char
                 gen_data.append(cadena)
-                print(cadena)
 
             else:  # tipo == "Fecha"
                 fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
