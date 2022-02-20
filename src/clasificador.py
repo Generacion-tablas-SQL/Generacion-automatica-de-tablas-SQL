@@ -13,20 +13,22 @@ def restricciones_sql(parameters, column):
     :return: lista con las restricciones. El último elemento de la lista es un diccionario con las restricciones check.
     """
 
-    restricciones_list = []
+    restricciones_list = list()
+    restricciones_dict = dict()
+
     check = column.get("check", None)
     if ("nullable" in column and column.get("nullable")) or "nullable" not in column:
         restricciones_list.append("nullable")
-    if "unique" in column and column.get("unique"):  # De momento no afecta
-        restricciones_list.append("unique")
-    if "primary key" in column and column.get("primary key"):  # De momento no afecta
-        restricciones_list.append("primary key")
-    if "foreign key" in column and column.get("foreign key"):  # De momento no afecta
+    if "unique" in column and column.get("unique"):
+        restricciones_dict.update({"unique": []})
+    if "primary key" in column and column.get("primary key"):
+        restricciones_dict.update({"primary key": []})
+    if "foreign key" in column and column.get("foreign key"):
         restricciones_list.append("foreign key")
-    if "default" in column:  # De momento no afecta
+    if "default" in column:
         restricciones_list.append({"default", column.get("default").get("literal")})
 
-    restricciones_list.append({})
+    restricciones_list.append(restricciones_dict)
     if parameters[0] == "Number" or parameters[0] == "String":
         restricciones_list[-1].update(comprobar_restricciones_check(parameters, check))
     else:  # parameters[0] == "Fecha"
@@ -270,8 +272,14 @@ def clasificar_tipo(columnas, sentencia_where):
                     data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
                                                    column.get("check")))
             else:
-                for i in range(len(data), 10):
-                    data.append(gd.generate_number(restricciones[-1]))
+                a = len(data)
+                for i in range(a, 10):
+                    gen_num, unique, primary = gd.generate_number(restricciones[-1])
+                    data.append(gen_num)
+                    if unique is not None:
+                        restricciones[-1].update({"unique": unique})
+                    if primary is not None:
+                        restricciones[-1].update({"primary key": primary})
 
             col_data.update({col_name: data})
 
