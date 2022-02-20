@@ -1,5 +1,4 @@
 from time import mktime, strptime, strftime, localtime
-import random
 import re
 import constantes
 import generador_datos as gd
@@ -44,8 +43,11 @@ def get_index(comparison, _not):
     :param _not: operación de la comparación asociada al not
     :return: indice que indica en que posición se sitúa el número a comparar
     """
-    return 1 if _not is None and isinstance(comparison.get("args")[1], int) else (
-        1 if _not is not None and isinstance(comparison.get("args")[0].get("args")[1], int) else 0)
+    return 1 if _not is None and (
+        isinstance(comparison.get("args")[1], int) or isinstance(comparison.get("args")[1], float)) else (
+        1 if _not is not None and (
+            isinstance(comparison.get("args")[0].get("args")[1], int) or isinstance(comparison.get("args")[0].get("args")[1], float))
+        else 0)
 
 
 # <----RESTRICCIONES WHERE---->
@@ -60,13 +62,17 @@ def cumple_restricciones(restricciones, data):
         if data < restricciones.get("min") or data > restricciones.get("max"):
             return False
     elif restricciones.get("tipo") == "String":
-        if (data.find("%") == 0 and len(data) < restricciones.get("min")) or len(data) > restricciones.get("max"):
-            return False
-        if restricciones.get("like") is not None:
-            like_regex = restricciones.get("like").replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
-            data_regex = data.replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
-            if not re.match(like_regex, data_regex):
+        if isinstance(data, int):
+            if data < restricciones.get("min") or data > restricciones.get("max"):
                 return False
+        else:
+            if (data.find("%") == -1 and len(data) < restricciones.get("min")) or len(data) > restricciones.get("max"):
+                return False
+            if restricciones.get("like") is not None:
+                like_regex = restricciones.get("like").replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
+                data_regex = data.replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
+                if not re.match(like_regex, data_regex):
+                    return False
     return True
 
 # <----RESTRICCIONES CHECK---->
@@ -160,10 +166,8 @@ def restricciones_where(restricciones_col, sentencia_where):
     op = sentencia_where.get("op")
     args = sentencia_where.get("args")
 
-    #Para saber si existe una op length
-    s = str(args[0])
-    lenEx = s.find("length")
-
+    # Para saber si existe una op length
+    len_ex = str(args[0]).find("length") if isinstance(args[0], dict) else str(args[1]).find("length")
 
     arg_data = args[1] if isinstance(args[0], str) else (
         args[0] if isinstance(args[1], str) else (
@@ -171,7 +175,6 @@ def restricciones_where(restricciones_col, sentencia_where):
         )
     )
 
-    # arg_data = args[1] if isinstance(args[0], str) else args[0]
     if isinstance(arg_data, dict):  # Para igualdades o desigualdades de cadenas o LIKE
         arg_data = arg_data.get("literal")
 
@@ -186,26 +189,27 @@ def restricciones_where(restricciones_col, sentencia_where):
                     gen_data.append(arg_data + i)
             elif restricciones_col.get("tipo") == "String":
                 if op == "like":
+                    old_like = restricciones_col.get("like")
                     restricciones_col.update({"like": arg_data})
                     gen_data.append(gd.generate_string(restricciones_col))
-                if (lenEx != -1): #Existe el campo length
-                    pass #FALTA
+                    restricciones_col.update({"like": old_like})
+                elif len_ex != -1:  # Existe el campo length
+                    old_min = restricciones_col.get("min")
+                    old_max = restricciones_col.get("max")
+                    for i in range(-1, 2):
+                        restricciones_col.update({"min": arg_data + i})
+                        restricciones_col.update({"max": arg_data + i})
+                        gen_data.append(gd.generate_string(restricciones_col))
+                    restricciones_col.update({"min": old_min})
+                    restricciones_col.update({"max": old_max})
+                else:  # Operaciones con operadores
+                    # Añadir siguiente caracter ascii al último caracter
+                    char = chr(ord(arg_data[-1]) + 1)  # Cojo el ultimo caracter de la cadena y sumo un caracter ascii
+                    gen_data.append(arg_data)
+                    gen_data.append(arg_data[0:-1] + char)
+                    char = chr(ord(arg_data[-1]) - 1)
+                    gen_data.append(arg_data[0:-1] + char)
 
-                #Operaciones con operadores
-                b = len(arg_data) - 1
-                gen_data.append(arg_data[:b])  # Quito el último caracter
-                gen_data.append(arg_data)
-                gen_data.append(arg_data + random.choice('abcdefghijklmnopqrstuvwxyz'))  # Añado un caracter
-
-                #Añadir siguiente caracter ascii al último caracter
-                cadena = arg_data
-                b = len(cadena) - 1 #Cojo el ultimo caracter de la cadena
-                ultima = cadena[b:]
-                char = chr(ord(ultima) + 1) #Le sumo un caracter ascii
-                b = len(cadena) - 1 #Quito el ultimo caracter de la cadena
-                cadena = cadena[:b]
-                cadena = cadena + char
-                gen_data.append(cadena)
             else:  # tipo == "Fecha"
                 fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
                 gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))

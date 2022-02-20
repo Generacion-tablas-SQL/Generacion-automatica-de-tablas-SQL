@@ -1,10 +1,6 @@
-import mo_parsing
 from mo_sql_parsing import parse, normal_op
 import clasificador as c
-import traceback
 from constantes import NUM_FILAS
-import sys
-# import exceptionsDef
 
 
 def get_columnas(sentencia_parsed):
