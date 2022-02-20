@@ -189,5 +189,4 @@ def generate_random(data_type, column_name, restricciones, check):
         if tries > 0:
             return value
         else:
-            # return "No se ha encontrado un dato que satisfaga las restricciones"
-            raise ValueError
+            raise Exception("Operador no soportado.")
