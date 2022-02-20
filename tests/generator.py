@@ -57,13 +57,13 @@ class MyTestCase(unittest.TestCase):
 
     def test_num_gen(self):
         # 1
-        self.assertGreaterEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None, "scale": 0,
-                                                    "tipo": "Number"}), -10)
-        self.assertLessEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None, "scale": 0,
-                                                 "tipo": "Number"}), 900)
+        self.assertGreaterEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None,
+                                                    "scale": 0, "tipo": "Number"}), -10)
+        self.assertLessEqual(gd.generate_number({"min": -10, "max": 900, "eq": None, "neq": None, "like": None,
+                                                 "scale": 0, "tipo": "Number"}), 900)
         # 2
-        self.assertGreaterEqual(gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
-                                                    "tipo": "Number"}), -99953.56)
+        self.assertGreaterEqual(gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None,
+                                                    "like": None, "scale": 2, "tipo": "Number"}), -99953.56)
         self.assertLessEqual(
             gd.generate_number({"min": -99953.56, "max": -672.78, "eq": None, "neq": None, "like": None, "scale": 2,
                                 "tipo": "Number"}), -672.78)
