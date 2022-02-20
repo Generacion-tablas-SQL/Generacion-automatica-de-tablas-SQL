@@ -106,6 +106,8 @@ def generate_number(restricciones):
     _max = restricciones.get("max")
     _eq = restricciones.get("eq")
     _neq = restricciones.get("neq")
+    _unique = restricciones.get("unique") if "unique" in restricciones else None
+    _primary = restricciones.get("primary key") if "primary key" in restricciones else None
 
     if "nullable" in restricciones:
         if generate_null_value() == "NULL":
@@ -114,19 +116,27 @@ def generate_number(restricciones):
     if _eq is not None:
         return _eq
 
-    if scale == 0:
-        generated_number = random.randint(_min, _max)  # Genera un número entero
-        if _neq is not None and generated_number == _neq:
-            generated_number += 1
-    else:
-        # Genera un número real
-        generated_number = float(Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale))
-        if _neq is not None and generated_number == _neq:
-            if scale < 0:
+    while True:
+        if scale == 0:
+            generated_number = random.randint(_min, _max)  # Genera un número entero
+            if _neq is not None and generated_number == _neq:
                 generated_number += 1
-            else:
-                generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
-    return generated_number
+        else:
+            # Genera un número real
+            generated_number = float(Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale))
+            if _neq is not None and generated_number == _neq:
+                if scale < 0:
+                    generated_number += 1
+                else:
+                    generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
+        if _unique is None and _primary is None:
+            break
+        if _unique is not None and generated_number not in _unique:
+            _unique.append(generated_number)
+            break
+        if _primary is not None and generated_number not in _primary:
+            _primary.append(generated_number)
+    return generated_number, _unique, _primary
 
 
 # <---- GENERADOR DE FECHAS ---->
