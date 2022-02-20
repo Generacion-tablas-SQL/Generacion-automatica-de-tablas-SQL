@@ -4,6 +4,8 @@ A continuación, se realizará una descripción de las limitaciones existentes e
 distintos ámbitos de implementación.
 Muchas de estas limitaciones se pueden considerar para un trabajo futuro posterior a la finalización del proyecto.
 
+### Restricciones de columna:
+- No implementado: orden alfabético (col > 'test')
 
 ### Generadores de datos:
 
@@ -24,3 +26,9 @@ por tamaño en bytes debido a que mo-sql-parsing no lo soporta.
   - Restricción LIKE
     - No tiene en cuenta el parámetro ESCAPE
 
+
+### Limitaciones parseador:
+
+- El formateador de mo-sql-parsing no está tan desarrollado como el parseador por lo tanto, nos encontramos
+con más errores. Cuando intentamos formatear una sentencia previamente parseada nos salta una excepción:
+Exception: Operators should have only one key!
