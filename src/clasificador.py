@@ -1,6 +1,7 @@
 from time import mktime, strptime, strftime, localtime
 import re
 import constantes
+from constantes import NUM_FILAS
 import generador_datos as gd
 
 # <----GENERAL---->
@@ -327,7 +328,7 @@ def clasificar_tipo(columnas, sentencia_where):
             if col_name == col_select:
                 data.extend(restricciones_where(restricciones[-1], sentencia_where))
 
-            for i in range(len(data), 10):
+            for i in range(len(data), NUM_FILAS):
                 # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
                 data.append(gd.gen_fecha(restricciones[-1]))
             col_data.update({col_name: data})
