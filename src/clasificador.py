@@ -86,6 +86,9 @@ def comprobar_restricciones_check(parameters, check):
     _scale = 0 if parameters[0] == "String" else parameters[3]
     _other = False
 
+    if _eq is not None and (_eq < _min or _eq > _max):
+        raise Exception("Restricciones de la columna no satisfactibles")
+
     if check is None:
         return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale, "other": _other}
 
@@ -128,6 +131,16 @@ def comprobar_restricciones_check(parameters, check):
         else:
             _other = True
         _not = None
+
+    if _min > _max or _max < _min:
+        raise Exception("Restricciones de la columna no satisfactibles")
+    if _eq is not None and (_eq < _min or _eq > _max):
+        raise Exception("Restricciones de la columna no satisfactibles")
+    if _like is not None:
+        if len(_like) - _like.count('%') > _max:
+            raise Exception("Restricciones de la columna no satisfactibles")
+        if _like.count('%') == 0 and len(_like) < _min:
+            raise Exception("Restricciones de la columna no satisfactibles")
 
     return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale, "other": _other}
 
