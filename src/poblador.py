@@ -52,12 +52,17 @@ def poblador_tablas(sentencias_create, sentencia_select):
     value_list = list()
     insert_list = list()
     pos = 0
+
     for i in range(0, NUM_FILAS):
         for data in tablas_datos.get(nombre_tabla).values():
-            value_list.append(data[pos])
-        values = tuple(value_list)
-        insert_list.append("INSERT INTO " + nombre_tabla + " VALUES " + str(values))
-        value_list.clear()
+            if len(data) > pos:
+                value_list.append(data[pos])
+            else:
+                break
+        if len(value_list) != 0:
+            values = tuple(value_list)
+            insert_list.append("INSERT INTO " + nombre_tabla + " VALUES " + str(values))
+            value_list.clear()
         pos += 1
 
     print(tablas_datos)
