@@ -278,8 +278,9 @@ def clasificar_tipo(columnas, sentencia_where):
             else:
                 a = len(data)
                 for i in range(a, 10):
-                    gen_num, unique, primary = gd.generate_number(restricciones[-1])
-                    data.append(gen_num)
+                    gen_num, unique, primary = gd.generate_number(restricciones)
+                    if gen_num is not None:
+                        data.append(gen_num)
                     if unique is not None:
                         restricciones[-1].update({"unique": unique})
                     if primary is not None:

@@ -73,6 +73,14 @@ def generate_string(restricciones):
 
     fake = Faker(['en_US'])
     generated_string = ""
+
+    if "nullable" in restricciones:
+        if generate_null_value() == "NULL":
+            return None
+
+    if _eq is not None:
+        return _eq
+
     if _like is not None:
         max_percentage_chars = _like.count('%') + _max - len(_like)
         for char in _like:
@@ -101,34 +109,39 @@ def generate_number(restricciones):
     :param restricciones: diccionario con restricciones
     :return: números aleatorios
     """
-    scale = restricciones.get("scale")
-    _min = restricciones.get("min")
-    _max = restricciones.get("max")
-    _eq = restricciones.get("eq")
-    _neq = restricciones.get("neq")
-    _unique = restricciones.get("unique") if "unique" in restricciones else None
-    _primary = restricciones.get("primary key") if "primary key" in restricciones else None
-
-    if "nullable" in restricciones:
-        if generate_null_value() == "NULL":
-            return None
+    scale = restricciones[-1].get("scale")
+    _min = restricciones[-1].get("min")
+    _max = restricciones[-1].get("max")
+    _eq = restricciones[-1].get("eq")
+    _neq = restricciones[-1].get("neq")
+    _unique = restricciones[-1].get("unique") if "unique" in restricciones[-1] else None
+    _primary = restricciones[-1].get("primary key") if "primary key" in restricciones[-1] else None
+    _nullable = False
 
     if _eq is not None:
         return _eq
 
-    while True:
-        if scale == 0:
-            generated_number = random.randint(_min, _max)  # Genera un número entero
-            if _neq is not None and generated_number == _neq:
-                generated_number += 1
-        else:
-            # Genera un número real
-            generated_number = float(Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale))
-            if _neq is not None and generated_number == _neq:
-                if scale < 0:
+    generated_number = None
+    for i in range(0, constantes.UNIQUE_TRIES):
+        if "nullable" in restricciones:
+            if generate_null_value() == "NULL":
+                _nullable = True
+
+        if _nullable is False:
+            if scale == 0:
+                generated_number = random.randint(_min, _max)  # Genera un número entero
+                if _neq is not None and generated_number == _neq:
                     generated_number += 1
-                else:
-                    generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
+            else:
+                # Genera un número real
+                generated_number = float(Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale))
+                if _neq is not None and generated_number == _neq:
+                    if scale < 0:
+                        generated_number += 1
+                    else:
+                        generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
+        else:
+            generated_number = "NULL"
         if _unique is None and _primary is None:
             break
         if _unique is not None and generated_number not in _unique:
@@ -136,6 +149,8 @@ def generate_number(restricciones):
             break
         if _primary is not None and generated_number not in _primary:
             _primary.append(generated_number)
+            break
+        generated_number = None
     return generated_number, _unique, _primary
 
 
@@ -154,6 +169,10 @@ def gen_fecha(restricciones):
     inicio = "01/01/1971"
     final = "12/12/2022"  # Se podria poner como final la fecha actual del sistema
     formato = "%d/%m/%Y"  # Formato establecido por defecto
+
+    if "nullable" in restricciones:
+        if generate_null_value() == "NULL":
+            return None
 
     if es_date:  # DATE
         minimo = mktime(strptime(inicio, formato))  # Fecha mínima en formato DATE
