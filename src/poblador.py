@@ -3,15 +3,15 @@ import clasificador as c
 from constantes import NUM_FILAS
 
 
-def get_columnas(sentencia_parsed):
-    nombre_cols = list()
-    cols = sentencia_parsed.get("select")
-    if not isinstance(cols, list):
-        cols = [cols]
-    for col in cols:
-        nombre_cols.append(col.get("value").lower())
-
-    return nombre_cols
+# def get_columnas(sentencia_parsed):
+#     nombre_cols = list()
+#     cols = sentencia_parsed.get("select")
+#     if not isinstance(cols, list):
+#         cols = [cols]
+#     for col in cols:
+#         nombre_cols.append(col.get("value").lower())
+#
+#     return nombre_cols
 
 
 def poblador_tablas(sentencias_create, sentencia_select):
@@ -46,7 +46,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
         tablas_restricciones.get(nombre_tabla).update(restricciones)
         tablas_datos.get(nombre_tabla).update(datos)
 
-    nombre_cols = get_columnas(select_parsed)  # Agrega a una lista todas las columnas de la consulta
+    # nombre_cols = get_columnas(select_parsed)  # Agrega a una lista todas las columnas de la consulta
     nombre_tabla = select_parsed.get("from").lower()  # Identifica la tabla consultada
 
     value_list = list()

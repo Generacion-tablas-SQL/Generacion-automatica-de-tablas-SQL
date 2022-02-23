@@ -1,3 +1,4 @@
+import itertools
 from time import mktime, strptime, strftime, localtime
 import re
 import constantes
@@ -46,7 +47,8 @@ def get_index(comparison, _not):
     return 1 if _not is None and (
         isinstance(comparison.get("args")[1], int) or isinstance(comparison.get("args")[1], float)) else (
         1 if _not is not None and (
-            isinstance(comparison.get("args")[0].get("args")[1], int) or isinstance(comparison.get("args")[0].get("args")[1], float))
+            isinstance(comparison.get("args")[0].get("args")[1], int)
+            or isinstance(comparison.get("args")[0].get("args")[1], float))
         else 0)
 
 
@@ -154,71 +156,132 @@ def comprobar_restricciones_check(parameters, check):
 
 
 # <----RESTRICCIONES WHERE---->
-def restricciones_where(restricciones_col, sentencia_where):
+def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
     """Comprueba las restricciones where y modifica la lista de restricciones de forma que se puedan generar los
     datos consultados así como datos no consultados
 
+    :param col_name: nombre de la columna
     :param restricciones_col: lista con restricciones de la columna consultada
     :param sentencia_where:
-    :return: lista con datos generados
+    :param gen_data: diccionario con datos previamente generados en esta función asociados a su columna. Si es la
+    primera vez que accede, será un diccionario vacío
+    :return: diccionario con datos generados, lista con valores unique usados, lista con valores primary key usados
     """
 
     op = sentencia_where.get("op")
-    args = sentencia_where.get("args")
+    args = list()
+    args.extend(sentencia_where.get("args"))
 
-    # Para saber si existe una op length
-    len_ex = str(args[0]).find("length") if isinstance(args[0], dict) else str(args[1]).find("length")
+    _unique = restricciones_col.get("unique")
+    _primary = restricciones_col.get("primary key")
 
-    arg_data = args[1] if isinstance(args[0], str) else (
-        args[0] if isinstance(args[1], str) else (
-            args[1] if isinstance(args[0], dict) else args[0]  # para WHERE con función LENGTH()
+    for arg in args:
+
+        args_ = arg.get("args")
+        arg_data, arg_col = (args_[1], args_[0]) if isinstance(args_[0], str) else (
+            (args_[0], args_[1]) if isinstance(args_[1], str) else (
+                (args_[1], args_[0]) if isinstance(args_[0], dict) else (args_[0], args_[1])  # para WHERE con LENGTH()
+            )
         )
-    )
 
-    if isinstance(arg_data, dict):  # Para igualdades o desigualdades de cadenas o LIKE
-        arg_data = arg_data.get("literal")
+        if arg_col != col_name:
+            continue
 
-    gen_data = list()
+        op_ = arg.get("op")
+        col_data = list()  # Aquí se almacenan los datos generados para una columna del where
 
-    ops = ["eq", "gt", "gte", "lt", "lte", "like", "length"]
-    if op in ops:
-        if cumple_restricciones(restricciones_col, arg_data):
-            if restricciones_col.get("tipo") == "Number":
-                scale = restricciones_col.get("scale")
-                for i in [-1 / 10 ** scale, 0, 1 / 10 ** scale]:
-                    gen_data.append(arg_data + i)
-            elif restricciones_col.get("tipo") == "String":
-                if op == "like":
-                    old_like = restricciones_col.get("like")
-                    restricciones_col.update({"like": arg_data})
-                    gen_data.append(gd.generate_string(restricciones_col))
-                    restricciones_col.update({"like": old_like})
-                elif len_ex != -1:  # Existe el campo length
-                    old_min = restricciones_col.get("min")
-                    old_max = restricciones_col.get("max")
-                    for i in range(-1, 2):
-                        restricciones_col.update({"min": arg_data + i})
-                        restricciones_col.update({"max": arg_data + i})
+        # Para saber si existe una op length
+        len_ex = str(args_[0]).find("length") if isinstance(args_[0], dict) else (
+            str(args_[1]).find("length") if isinstance(args_[1], dict) else None
+        )
+
+        if isinstance(arg_data, dict):  # Para igualdades o desigualdades de cadenas o LIKE
+            arg_data = arg_data.get("literal")
+
+        ops = ["eq", "gt", "gte", "lt", "lte", "like", "length"]
+        if op_ in ops:
+            if cumple_restricciones(restricciones_col, arg_data):
+                if restricciones_col.get("tipo") == "Number":
+                    scale = restricciones_col.get("scale")
+                    for i in [-1 / 10 ** scale, 0, 1 / 10 ** scale]:
+                        if scale == 0:
+                            i = int(i)
+                        if _unique is None and _primary is None:
+                            col_data.append(arg_data + i)
+                        elif _unique is not None and arg_data + i not in _unique:
+                            col_data.append(arg_data + i)
+                            _unique.append(arg_data + i)
+                        elif _primary is not None and arg_data + i not in _primary:
+                            col_data.append(arg_data + i)
+                            _primary.append(arg_data + i)
+                elif restricciones_col.get("tipo") == "String":
+                    if op == "like":
+                        old_like = restricciones_col.get("like")
+                        restricciones_col.update({"like": arg_data})
                         gen_data.append(gd.generate_string(restricciones_col))
-                    restricciones_col.update({"min": old_min})
-                    restricciones_col.update({"max": old_max})
-                else:  # Operaciones con operadores
-                    # Añadir siguiente caracter ascii al último caracter
-                    char = chr(ord(arg_data[-1]) + 1)  # Cojo el ultimo caracter de la cadena y sumo un caracter ascii
-                    gen_data.append(arg_data)
-                    gen_data.append(arg_data[0:-1] + char)
-                    char = chr(ord(arg_data[-1]) - 1)
-                    gen_data.append(arg_data[0:-1] + char)
+                        restricciones_col.update({"like": old_like})
+                    elif len_ex != -1:  # Existe el campo length
+                        old_min = restricciones_col.get("min")
+                        old_max = restricciones_col.get("max")
+                        for i in range(-1, 2):
+                            restricciones_col.update({"min": arg_data + i})
+                            restricciones_col.update({"max": arg_data + i})
+                            gen_data.append(gd.generate_string(restricciones_col))
+                        restricciones_col.update({"min": old_min})
+                        restricciones_col.update({"max": old_max})
+                    else:  # Operaciones con operadores
+                        # Añadir siguiente caracter ascii al último caracter
+                        # Cojo el ultimo caracter de la cadena y sumo un caracter ascii
+                        char = chr(ord(arg_data[-1]) + 1)
+                        gen_data.append(arg_data)
+                        gen_data.append(arg_data[0:-1] + char)
+                        char = chr(ord(arg_data[-1]) - 1)
+                        gen_data.append(arg_data[0:-1] + char)
 
-            else:  # tipo == "Fecha"
-                fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
-                gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
-                gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
-                # Los días UTC tienen una duración de 86 400 s
-                gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))
+                else:  # tipo == "Fecha"
+                    fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
+                    gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
+                    gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
+                    # Los días UTC tienen una duración de 86 400 s
+                    gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))
+                gen_data.update({col_name: col_data[:]})
+                col_data.clear()
+        else:
+            raise Exception("Operador en sentencia where no soportado")
+    return gen_data, _unique, _primary
 
-    return gen_data
 
+def generar_datos(col_name, restricciones, check, times):
+    data = list()
+    if restricciones[-1].get("tipo") == "Number":
+        if restricciones[-1].get("other"):
+            for i in range(0, times):
+                data.append(gd.generate_random("Number", col_name, restricciones[-1], check))
+        else:
+            for i in range(0, times):
+                gen_num, unique, primary = gd.generate_number(restricciones)
+                if gen_num is not None:
+                    data.append(gen_num)
+                if unique is not None:
+                    restricciones[-1].update({"unique": unique})
+                if primary is not None:
+                    restricciones[-1].update({"primary key": primary})
+
+    elif restricciones[-1].get("tipo") == "String":
+        if restricciones[-1].get("other"):
+            for i in range(0, times):
+                data.append(gd.generate_random("String", col_name, restricciones[-1], check))
+        else:
+            for i in range(0, times):
+                data.append(gd.generate_string(restricciones[-1]))
+    elif restricciones[-1].get("tipo") == "Date":
+        for i in range(len(data), 10):
+            # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
+            data.append(gd.gen_fecha(restricciones[-1]))
+    else:
+        raise Exception
+
+    return data
 
 # <----INICIO---->
 def clasificar_tipo(columnas, sentencia_where):
@@ -233,20 +296,30 @@ def clasificar_tipo(columnas, sentencia_where):
     col_data = {}
     col_restrictions = {}
 
+    # op = sentencia_where.get("op")
+    # and_or = op if op == "and" or op == "or" else None
+
+    args = list()
+    args.extend(sentencia_where.get("args"))
+    col_select = list()
+
+    for arg in args:
+        in_args = arg.get("args")
+        col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
+            col_select.append(in_args[1].lower()) if isinstance(in_args[1], str) else (
+                col_select.append(in_args[0].get("args")[0]) if isinstance(in_args[0], dict) else
+                col_select.append(in_args[1].get("args")[0])
+            )
+        )
+
+    where_data = dict()
+    # Evaluación de restricciones de las columnas
     for column in columnas:
         col_name = column.get("name").lower()
         data_type = column.get("type").get("op").lower()  # number
         parameters = column.get("type").get("args", None)  # [5, 0], [4]
 
-        args = sentencia_where.get("args")
-        col_select = args[0].lower() if isinstance(args[0], str) else (
-            args[1].lower() if isinstance(args[1], str) else (
-                args[0].get("args")[0] if isinstance(args[0], dict) else args[1].get("args")[0]
-            )
-        )
-
         data = list()
-
         if data_type in constantes.ENTEROS or data_type in constantes.REALES:
             data_type_param = list()
 
@@ -268,23 +341,14 @@ def clasificar_tipo(columnas, sentencia_where):
             col_restrictions.update({col_name: restricciones})
 
             # Si el where contiene a la columna, comprobamos las restricciones
-            if col_name == col_select:
-                data.extend(restricciones_where(restricciones[-1], sentencia_where))
-
-            if restricciones[-1].get("other"):
-                for i in range(len(data), 10):
-                    data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
-                                                   column.get("check")))
-            else:
-                a = len(data)
-                for i in range(a, 10):
-                    gen_num, unique, primary = gd.generate_number(restricciones)
-                    if gen_num is not None:
-                        data.append(gen_num)
-                    if unique is not None:
-                        restricciones[-1].update({"unique": unique})
-                    if primary is not None:
-                        restricciones[-1].update({"primary key": primary})
+            if col_name in col_select:
+                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
+                                                                  where_data)
+                # data.extend(where_data)
+                if unique is not None:
+                    restricciones[-1].update({"unique": unique})
+                if primary is not None:
+                    restricciones[-1].update({"primary key": primary})
 
             col_data.update({col_name: data})
 
@@ -300,15 +364,14 @@ def clasificar_tipo(columnas, sentencia_where):
 
             # Si el where contiene a la columna, comprobamos las restricciones
             if col_name == col_select:
-                data.extend(restricciones_where(restricciones[-1], sentencia_where))
+                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
+                                                                  where_data)
+                data.extend(where_data)
+                if unique is not None:
+                    restricciones[-1].update({"unique": unique})
+                if primary is not None:
+                    restricciones[-1].update({"primary key": primary})
 
-            if restricciones[-1].get("other"):
-                for i in range(len(data), 10):
-                    data.append(gd.generate_random(data_type_param[0], data_type_param[1], restricciones[-1],
-                                                   column.get("check")))
-            else:
-                for i in range(len(data), 10):
-                    data.append(gd.generate_string(restricciones[-1]))
             col_data.update({col_name: data})
 
         elif data_type in constantes.FECHA:
@@ -326,12 +389,62 @@ def clasificar_tipo(columnas, sentencia_where):
             col_restrictions.update({col_name: restricciones})
 
             if col_name == col_select:
-                data.extend(restricciones_where(restricciones[-1], sentencia_where))
+                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
+                                                                  where_data)
+                data.extend(where_data)
+                if unique is not None:
+                    restricciones[-1].update({"unique": unique})
+                if primary is not None:
+                    restricciones[-1].update({"primary key": primary})
 
-            for i in range(len(data), 10):
-                # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
-                data.append(gd.gen_fecha(restricciones[-1]))
             col_data.update({col_name: data})
         else:
             raise ValueError
+
+    # Evaluación de permutaciones entre condiciones de una sentencia where doble
+    if len(where_data) > 1:
+        values = list(where_data.values())
+        keys = list(where_data.keys())
+        permutations = list(itertools.product(values[0], values[1]))
+        unique1 = [] if col_restrictions.get(keys[0])[-1].get("unique") is not None else None
+        unique2 = [] if col_restrictions.get(keys[1])[-1].get("unique") is not None else None
+        primary1 = [] if col_restrictions.get(keys[0])[-1].get("primary key") is not None else None
+        primary2 = [] if col_restrictions.get(keys[1])[-1].get("primary key") is not None else None
+
+        for permutation in permutations:
+            ok = True
+            if cumple_restricciones(col_restrictions.get(keys[0])[-1], permutation[0]) and \
+                    cumple_restricciones(col_restrictions.get(keys[1])[-1], permutation[1]):
+
+                if unique1 is None and primary1 is None:
+                    pass
+                elif unique1 is not None and permutation[0] not in unique1:
+                    unique1.append(permutation[0])
+                elif primary1 is not None and permutation[0] not in primary1:
+                    primary1.append(permutation[0])
+                else:
+                    ok = False
+
+                if unique2 is None and primary2 is None:
+                    pass
+                elif unique2 is not None and permutation[1] not in unique2:
+                    unique2.append(permutation[1])
+                elif primary2 is not None and permutation[1] not in primary2:
+                    primary2.append(permutation[1])
+                else:
+                    ok = False
+
+                if ok:
+                    col_data.get(keys[0]).append(permutation[0])
+                    col_data.get(keys[1]).append(permutation[1])
+            ok = True
+
+        # Generación del resto de datos
+        times = min(len(col_data.get(keys[0])), len(col_data.get(keys[0])))
+        for dato in col_data:
+            if not col_data.get(dato):
+                check = next((col for col in columnas if col['name'] == dato), None)
+
+                col_data.update({dato: generar_datos(dato, col_restrictions.get(dato), check, times)})
+
     return col_data, col_restrictions
