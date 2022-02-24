@@ -1,5 +1,6 @@
-NULL_PROBABILITY = 0.1
+NULL_PROBABILITY = 0.2
 NUM_FILAS = 10
+UNIQUE_TRIES = 20
 ENTEROS = ["int", "integer", "smallint"]  # NUMBER(p) y NUMBER(p, 0) son enteros
 COMPARADORES = ["eq", "neq", "gt", "gte", "lt", "lte"]
 REALES = ["number", "float", "numeric", "decimal", "dec", "real"]  # double precision no soportado por mo-sql-parsing
