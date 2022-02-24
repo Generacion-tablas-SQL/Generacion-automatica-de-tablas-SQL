@@ -43,6 +43,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
         # restricciones: diccionario con un array de restricciones asociado a cada columna
         datos, restricciones = c.clasificar_tipo(tabla_parsed.get("create table").get("columns"), where_restr)
 
+
         tablas_restricciones.get(nombre_tabla).update(restricciones)
         tablas_datos.get(nombre_tabla).update(datos)
 

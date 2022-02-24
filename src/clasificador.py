@@ -44,11 +44,17 @@ def get_index(comparison, _not):
     :param _not: operación de la comparación asociada al not
     :return: indice que indica en que posición se sitúa el número a comparar
     """
+
     return 1 if _not is None and (
-        isinstance(comparison.get("args")[1], int) or isinstance(comparison.get("args")[1], float)) else (
+        isinstance(comparison.get("args")[1], int)
+        or isinstance(comparison.get("args")[1], float)
+        or isinstance(comparison.get("args")[1], str)
+    ) else (
         1 if _not is not None and (
             isinstance(comparison.get("args")[0].get("args")[1], int)
-            or isinstance(comparison.get("args")[0].get("args")[1], float))
+            or isinstance(comparison.get("args")[0].get("args")[1], float)
+            or isinstance(comparison.get("args")[0].get("args")[1], str)
+            )
         else 0)
 
 
@@ -168,12 +174,14 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
     :return: diccionario con datos generados, lista con valores unique usados, lista con valores primary key usados
     """
 
+
     op = sentencia_where.get("op")
     args = list()
     args.extend(sentencia_where.get("args"))
 
     _unique = restricciones_col.get("unique")
     _primary = restricciones_col.get("primary key")
+
 
     for arg in args:
 
@@ -238,12 +246,25 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         char = chr(ord(arg_data[-1]) - 1)
                         gen_data.append(arg_data[0:-1] + char)
 
+
                 else:  # tipo == "Fecha"
+
                     fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
-                    gen_data.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
-                    gen_data.append(strftime("%d/%m/%Y", localtime(fecha)))
-                    # Los días UTC tienen una duración de 86 400 s
-                    gen_data.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))
+                    fechas = list()
+                    fechas.append(strftime("%d/%m/%Y", localtime(fecha)))
+                    fechas.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
+                    fechas.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))    # Los días UTC tienen una duración de 86 400 s
+
+                    for i in fechas:
+                        if _unique is None and _primary is None:
+                            col_data.append(i)
+                        elif _unique is not None and arg_data + i not in _unique:
+                            col_data.append(i)
+                            _unique.append(i)
+                        elif _primary is not None and arg_data + i not in _primary:
+                            col_data.append(i)
+                            _primary.append(i)
+
                 gen_data.update({col_name: col_data[:]})
                 col_data.clear()
         else:
@@ -320,6 +341,7 @@ def clasificar_tipo(columnas, sentencia_where):
         parameters = column.get("type").get("args", None)  # [5, 0], [4]
 
         data = list()
+
         if data_type in constantes.ENTEROS or data_type in constantes.REALES:
             data_type_param = list()
 
@@ -388,7 +410,9 @@ def clasificar_tipo(columnas, sentencia_where):
             restricciones[-1].update({"tipo": "Date"})
             col_restrictions.update({col_name: restricciones})
 
-            if col_name == col_select:
+
+            if col_name in col_select:
+
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
                                                                   where_data)
                 data.extend(where_data)
@@ -406,6 +430,9 @@ def clasificar_tipo(columnas, sentencia_where):
         values = list(where_data.values())
         keys = list(where_data.keys())
         permutations = list(itertools.product(values[0], values[1]))
+        #print(values) #
+        #print(keys) #
+        #print(permutations) #
         unique1 = [] if col_restrictions.get(keys[0])[-1].get("unique") is not None else None
         unique2 = [] if col_restrictions.get(keys[1])[-1].get("unique") is not None else None
         primary1 = [] if col_restrictions.get(keys[0])[-1].get("primary key") is not None else None
