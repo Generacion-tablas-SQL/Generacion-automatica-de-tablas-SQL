@@ -185,6 +185,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         old_like = restricciones_col.get("like")
                         restricciones_col.update({"like": arg_data})
                         strings.append(gd.generate_string(restricciones_col))
+                        # FALTA VALOR INVÁLIDO
                         restricciones_col.update({"like": old_like})
                     elif len_ex != -1:  # Existe el campo length
                         old_min = restricciones_col.get("min")
@@ -343,18 +344,19 @@ def clasificar_tipo(columnas, sentencia_where):
     # op = sentencia_where.get("op")
     # and_or = op if op == "and" or op == "or" else None
 
-    args = list()
-    args.extend(sentencia_where.get("args"))
     col_select = list()
+    if sentencia_where is not None:
+        args = list()
+        args.extend(sentencia_where.get("args"))
 
-    for arg in args:
-        in_args = arg.get("args")
-        col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
-            col_select.append(in_args[1].lower()) if isinstance(in_args[1], str) else (
-                col_select.append(in_args[0].get("args")[0]) if isinstance(in_args[0], dict) else
-                col_select.append(in_args[1].get("args")[0])
+        for arg in args:
+            in_args = arg.get("args")
+            col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
+                col_select.append(in_args[1].lower()) if isinstance(in_args[1], str) else (
+                    col_select.append(in_args[0].get("args")[0]) if isinstance(in_args[0], dict) else
+                    col_select.append(in_args[1].get("args")[0])
+                )
             )
-        )
 
     where_data = dict()
     # Evaluación de restricciones de las columnas
@@ -386,7 +388,7 @@ def clasificar_tipo(columnas, sentencia_where):
             col_restrictions.update({col_name: restricciones})
 
             # Si el where contiene a la columna, comprobamos las restricciones
-            if col_name in col_select:
+            if sentencia_where is not None and col_name in col_select:
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
                                                                   where_data)
                 if unique is not None:
@@ -486,11 +488,12 @@ def clasificar_tipo(columnas, sentencia_where):
         col_data.update({col_select[0]: where_data.get(col_select[0])})
 
     # Generación del resto de datos
-    times = min(len(col_data.get(keys[0])), len(col_data.get(keys[1]))) if len(keys) == 2 else len(col_data.get(keys[0]))
+    times = constantes.NUM_FILAS
+    if sentencia_where is not None:
+        times = min(len(col_data.get(keys[0])), len(col_data.get(keys[1]))) if len(keys) == 2 else len(col_data.get(keys[0]))
     for dato in col_data:
         if not col_data.get(dato):
             check = next((col for col in columnas if col['name'] == dato), None)
-
             col_data.update({dato: generar_datos(dato, col_restrictions.get(dato), check, times)})
 
     return col_data, col_restrictions

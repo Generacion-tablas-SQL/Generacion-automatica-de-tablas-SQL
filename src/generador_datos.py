@@ -151,6 +151,7 @@ def generate_number(restricciones):
             _primary.append(generated_number)
             break
         generated_number = None
+        _nullable = False
     return generated_number, _unique, _primary
 
 
