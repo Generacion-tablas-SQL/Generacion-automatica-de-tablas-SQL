@@ -102,8 +102,10 @@ def cumple_restricciones(restricciones, data):
 
     # No tenemos en cuenta el tipo Fecha ya que no tiene implementadas restricciones CHECK
     if restricciones.get("tipo") == "Number":
-        if data < restricciones.get("min") or data > restricciones.get("max"):
-            return False
+        if data < restricciones.get("min"):
+            new_data = restricciones.get("min")
+        elif data > restricciones.get("max"):
+            new_data = restricciones.get("max")
     elif restricciones.get("tipo") == "String":
         if isinstance(data, int):
             if data < restricciones.get("min"):
@@ -491,14 +493,16 @@ def clasificar_tipo(columnas, sentencia_where):
         else:
             raise ValueError
 
-    # Evaluación de permutaciones entre condiciones de una sentencia where doble
+    # Evaluación de permutaciones entre condiciones de una sentencia where
     values = list(where_data.values())
     keys = list(where_data.keys())
     if len(where_data) > 1:
         permutations = list(itertools.product(*values))
+        aux = permutations[0]
         print(permutations)
-        # random.shuffle(permutations)
-        # print(permutations)
+        permutations = random.sample(permutations[1:], len(permutations) - 1)
+        permutations.insert(0, aux)
+        print(permutations)
 
         uniques = list()
         primaries = list()
