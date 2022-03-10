@@ -349,14 +349,22 @@ def clasificar_tipo(columnas, sentencia_where):
         args = list()
         args.extend(sentencia_where.get("args"))
 
+
         for arg in args:
-            in_args = arg.get("args")
-            col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
-                col_select.append(in_args[1].lower()) if isinstance(in_args[1], str) else (
-                    col_select.append(in_args[0].get("args")[0]) if isinstance(in_args[0], dict) else
-                    col_select.append(in_args[1].get("args")[0])
+            if isinstance(arg, dict):
+                in_args = arg.get("args")
+                col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
+                    col_select.append(in_args[1].lower()) if isinstance(in_args[1], str) else (
+                        col_select.append(in_args[0].get("args")[0]) if isinstance(in_args[0], dict) else
+                        col_select.append(in_args[1].get("args")[0])
+                    )
                 )
-            )
+            else:
+                in_args = args
+                if isinstance(in_args[0], str): col_select.append(in_args[0].lower())
+                else: col_select.append(in_args[1].lower())
+                break
+
 
     where_data = dict()
     # Evaluación de restricciones de las columnas
