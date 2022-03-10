@@ -1,4 +1,5 @@
 import itertools
+import random
 from time import mktime, strptime, strftime, localtime
 import re
 import constantes
@@ -110,7 +111,7 @@ def cumple_restricciones(restricciones, data):
             elif data > restricciones.get("max"):
                 new_data = restricciones.get("max")
         else:
-            if (data.find("%") == -1 and len(data) < restricciones.get("min")) or len(data) > restricciones.get("max"):
+            if data.find("%") == -1 and (len(data) < restricciones.get("min")) or len(data) > restricciones.get("max"):
                 return False
             if restricciones.get("like") is not None:
                 like_regex = restricciones.get("like").replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
@@ -165,7 +166,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
         ops = ["eq", "gt", "gte", "lt", "lte", "like", "length"]
         if op_ in ops:
             data = cumple_restricciones(restricciones_col, arg_data)
-            if data != 0:
+            if data is not False:
                 if restricciones_col.get("tipo") == "Number":
                     scale = restricciones_col.get("scale")
                     for i in [-1 / 10 ** scale, 0, 1 / 10 ** scale]:
@@ -450,47 +451,48 @@ def clasificar_tipo(columnas, sentencia_where):
     values = list(where_data.values())
     keys = list(where_data.keys())
     if len(where_data) > 1:
-        permutations = list(itertools.product(values[0], values[1]))
+        permutations = list(itertools.product(*values))
+        print(permutations)
+        random.shuffle(permutations)
+        print(permutations)
 
-        unique1 = [] if col_restrictions.get(keys[0])[-1].get("unique") is not None else None
-        unique2 = [] if col_restrictions.get(keys[1])[-1].get("unique") is not None else None
-        primary1 = [] if col_restrictions.get(keys[0])[-1].get("primary key") is not None else None
-        primary2 = [] if col_restrictions.get(keys[1])[-1].get("primary key") is not None else None
+        uniques = list()
+        primaries = list()
+        for i in range(0, len(keys)):
+            uniques.append([] if col_restrictions.get(keys[i])[-1].get("unique") is not None else None)
+            primaries.append([] if col_restrictions.get(keys[i])[-1].get("primary key") is not None else None)
 
         for permutation in permutations:
             ok = True
-            if cumple_restricciones(col_restrictions.get(keys[0])[-1], permutation[0]) and \
-                    cumple_restricciones(col_restrictions.get(keys[1])[-1], permutation[1]):
+            # if cumple_restricciones(col_restrictions.get(keys[0])[-1], permutation[0]) and \
+            #        cumple_restricciones(col_restrictions.get(keys[1])[-1], permutation[1]):
 
-                if unique1 is None and primary1 is None:
-                    pass
-                elif unique1 is not None and permutation[0] not in unique1:
-                    unique1.append(permutation[0])
-                elif primary1 is not None and permutation[0] not in primary1:
-                    primary1.append(permutation[0])
+            for i in range(0, len(keys)):
+                if cumple_restricciones(col_restrictions.get(keys[i])[-1], permutation[i]):
+                    if uniques[i] is None and primaries[i] is None:
+                        pass
+                    elif uniques[i] is not None and permutation[i] not in uniques[i]:
+                        uniques[i].append(permutation[i])
+                    elif primaries[i] is not None and permutation[i] not in primaries[i]:
+                        primaries[i].append(permutation[i])
+                    else:
+                        ok = False
                 else:
                     ok = False
-
-                if unique2 is None and primary2 is None:
-                    pass
-                elif unique2 is not None and permutation[1] not in unique2:
-                    unique2.append(permutation[1])
-                elif primary2 is not None and permutation[1] not in primary2:
-                    primary2.append(permutation[1])
-                else:
-                    ok = False
-
-                if ok:
-                    col_data.get(keys[0]).append(permutation[0])
-                    col_data.get(keys[1]).append(permutation[1])
-            ok = True
+                    break
+            if ok:
+                for j in range(0, len(keys)):
+                    col_data.get(keys[j]).append(permutation[j])
+                # col_data.get(keys[1]).append(permutation[1])
+            # ok = True
     elif len(where_data) > 0:
         col_data.update({col_select[0]: where_data.get(col_select[0])})
 
     # Generación del resto de datos
     times = constantes.NUM_FILAS
     if sentencia_where is not None:
-        times = min(len(col_data.get(keys[0])), len(col_data.get(keys[1]))) if len(keys) == 2 else len(col_data.get(keys[0]))
+        for i in range(0, len(keys)):
+            times = min(times, len(col_data.get(keys[i])))
     for dato in col_data:
         if not col_data.get(dato):
             check = next((col for col in columnas if col['name'] == dato), None)
