@@ -211,6 +211,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         strings.append(gd.generate_string(restricciones_col))
                         # FALTA VALOR INVÁLIDO
                         restricciones_col.update({"like": old_like})
+
                     elif len_ex != -1:  # Existe el campo length
                         old_min = restricciones_col.get("min")
                         old_max = restricciones_col.get("max")
@@ -225,15 +226,6 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         restricciones_col.update({"min": old_min})
                         restricciones_col.update({"max": old_max})
 
-                        for i in strings:
-                            if _unique is None and _primary is None:
-                                col_data.append(i)
-                            elif _unique is not None and arg_data + i not in _unique:
-                                col_data.append(i)
-                                _unique.append(i)
-                            elif _primary is not None and arg_data + i not in _primary:
-                                col_data.append(i)
-                                _primary.append(i)
 
                     else:  # Operaciones con operadores
                         # Añadir siguiente caracter ascii al último caracter
@@ -244,15 +236,15 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                             char = chr(ord(arg_data[-1]) + i)
                             strings.append(arg_data[0:-1] + char)
 
-                        for i in strings:
-                            if _unique is None and _primary is None:
-                                col_data.append(i)
-                            elif _unique is not None and arg_data + i not in _unique:
-                                col_data.append(i)
-                                _unique.append(i)
-                            elif _primary is not None and arg_data + i not in _primary:
-                                col_data.append(i)
-                                _primary.append(i)
+                    for i in strings:
+                        if _unique is None and _primary is None:
+                            col_data.append(i)
+                        elif _unique is not None and arg_data + i not in _unique:
+                            col_data.append(i)
+                            _unique.append(i)
+                        elif _primary is not None and arg_data + i not in _primary:
+                            col_data.append(i)
+                            _primary.append(i)
 
                 else:  # tipo == "Fecha"
                     loop = list()
@@ -512,8 +504,6 @@ def clasificar_tipo(columnas, sentencia_where):
 
         for permutation in permutations:
             ok = True
-            # if cumple_restricciones(col_restrictions.get(keys[0])[-1], permutation[0]) and \
-            #        cumple_restricciones(col_restrictions.get(keys[1])[-1], permutation[1]):
 
             for i in range(0, len(keys)):
                 if cumple_restricciones(col_restrictions.get(keys[i])[-1], permutation[i]):
@@ -531,8 +521,7 @@ def clasificar_tipo(columnas, sentencia_where):
             if ok:
                 for j in range(0, len(keys)):
                     col_data.get(keys[j]).append(permutation[j])
-                # col_data.get(keys[1]).append(permutation[1])
-            # ok = True
+
     elif len(where_data) > 0:
         col_data.update({col_select[0]: where_data.get(col_select[0])})
 
