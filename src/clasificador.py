@@ -1,5 +1,5 @@
 import itertools
-import random
+import random, string
 from time import mktime, strptime, strftime, localtime
 import re
 import constantes
@@ -209,7 +209,15 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         old_like = restricciones_col.get("like")
                         restricciones_col.update({"like": arg_data})
                         strings.append(gd.generate_string(restricciones_col))
-                        # FALTA VALOR INVÁLIDO
+
+                        # GENERAR VALOR INVÁLIDO
+                        letr = random.choice(string.ascii_letters)
+                        while letr == old_like[0]:
+                            letr = random.choice(string.ascii_letters)
+                        generate = gd.generate_string(restricciones_col)[1:]
+
+                        strings.append(letr + generate)
+
                         restricciones_col.update({"like": old_like})
 
                     elif len_ex != -1:  # Existe el campo length

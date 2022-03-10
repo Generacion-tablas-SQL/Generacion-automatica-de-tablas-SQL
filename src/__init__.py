@@ -10,7 +10,7 @@ def main():
                    "fec1 DATE NOT NULL, " \
                    "fec2 TIMESTAMP(2) NOT NULL)"
 
-    select1 = "SELECT string FROM Persona WHERE string like 'S%'"
+    select1 = "SELECT string FROM Persona WHERE string like 'C%'"
     select2 = "SELECT ent, real FROM Persona WHERE ent > 30 and ent < 40"
     select3 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting'"
     select4 = "SELECT ent FROM Persona WHERE ent > 40 and ent < 30"
