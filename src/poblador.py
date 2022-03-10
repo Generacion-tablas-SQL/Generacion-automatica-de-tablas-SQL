@@ -63,7 +63,4 @@ def poblador_tablas(sentencias_create, sentencia_select):
             insert_list.append("INSERT INTO " + nombre_tabla + " VALUES " + str(values))
             value_list.clear()
 
-    print(tablas_datos)
-    print(tablas_restricciones)
-
     return insert_list

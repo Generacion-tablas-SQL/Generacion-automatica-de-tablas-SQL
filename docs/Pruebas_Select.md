@@ -8,6 +8,15 @@
 "SELECT ent FROM Persona where ent > 30". --> Genera 3 sentencias INSERT INTO, una con ent = 31,
 otra ent = 30 y otra con ent = 29 
 
+"SELECT string FROM Persona WHERE string like '%'" --> REVISAR
+
+- Una restriccion que no cumple restriccion de columna:
+"SELECT string FROM Persona WHERE ent > 50" (ent < 50 en columna) --> Genera 3 INSERT INTO con 
+ent = 50, 49 y 48 --> REVISAR::::50 no tiene que generarse
+
+"SELECT string FROM Persona WHERE ent = 50" (ent < 50 en columna) --> Genera 3 INSERT INTO con 
+ent = 49, 48, 50 --> REVISAR::::50 no tiene que generarse
+
 - Dos restricciónes, dos columnas:
 
 "SELECT ent, real FROM Persona WHERE ent > 30 and real != 0.02"

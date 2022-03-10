@@ -194,14 +194,15 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                     for i in loop:
                         if scale == 0:
                             i = int(i)
+                            data = int(data)
                         if _unique is None and _primary is None:
-                            col_data.append(arg_data + i)
-                        elif _unique is not None and arg_data + i not in _unique:
-                            col_data.append(arg_data + i)
-                            _unique.append(arg_data + i)
-                        elif _primary is not None and arg_data + i not in _primary:
-                            col_data.append(arg_data + i)
-                            _primary.append(arg_data + i)
+                            col_data.append(data + i)
+                        elif _unique is not None and data + i not in _unique:
+                            col_data.append(data + i)
+                            _unique.append(data + i)
+                        elif _primary is not None and data + i not in _primary:
+                            col_data.append(data + i)
+                            _primary.append(data + i)
 
                 elif restricciones_col.get("tipo") == "String":
                     strings = list()
@@ -211,12 +212,24 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         strings.append(gd.generate_string(restricciones_col))
 
                         # GENERAR VALOR INVÁLIDO
-                        letr = random.choice(string.ascii_letters)
-                        while letr == old_like[0]:
-                            letr = random.choice(string.ascii_letters)
-                        generate = gd.generate_string(restricciones_col)[1:]
+                        pos = 0
+                        found = False
+                        for i in arg_data:
+                            if i != "_" and i != "%":
+                                found = True
+                                break
+                            pos += 1
 
-                        strings.append(letr + generate)
+                        if found:
+                            letr = random.choice(string.ascii_letters)
+                            while letr == old_like[pos]:
+                                letr = random.choice(string.ascii_letters)
+                            generate = gd.generate_string(restricciones_col)[1:]
+
+                            strings.append(letr + generate)
+                        else:
+                            raise Exception("Restricción LIKE en sentencia SELECT no soportada. "
+                                            "Debe contener al menos un caracter válido.")
 
                         restricciones_col.update({"like": old_like})
 
