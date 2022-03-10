@@ -120,6 +120,19 @@ def cumple_restricciones(restricciones, data):
                     return False
     return new_data
 
+def loop_list(op, scale):
+    loop = list()
+    if op in ["eq", "lte"]:
+        loop = [0, -1 / 10 ** scale, 1 / 10 ** scale]
+    elif op == "gte":
+        loop = [0, 1 / 10 ** scale, -1 / 10 ** scale]
+    elif op == "gt":
+        loop = [1 / 10 ** scale, 0, -1 / 10 ** scale]
+    elif op == "lt":
+        loop = [-1 / 10 ** scale, 0, 1 / 10 ** scale]
+    elif op == "neq":
+        loop = [-1 / 10 ** scale, 1 / 10 ** scale, 0]
+    return loop
 
 def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
     """Comprueba las restricciones where y modifica la lista de restricciones de forma que se puedan generar los
@@ -135,7 +148,10 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
 
     op = sentencia_where.get("op")
     args = list()
-    args.extend(sentencia_where.get("args"))
+    if op == "and":
+        args.extend(sentencia_where.get("args"))
+    else:
+        args.append(sentencia_where)
 
     _unique = restricciones_col.get("unique")
     _primary = restricciones_col.get("primary key")
@@ -163,13 +179,17 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
         if isinstance(arg_data, dict):  # Para igualdades o desigualdades de cadenas o LIKE
             arg_data = arg_data.get("literal")
 
-        ops = ["eq", "gt", "gte", "lt", "lte", "like", "length"]
+        ops = ["eq", "neq", "gt", "gte", "lt", "lte", "like", "length"]
         if op_ in ops:
             data = cumple_restricciones(restricciones_col, arg_data)
             if data is not False:
                 if restricciones_col.get("tipo") == "Number":
                     scale = restricciones_col.get("scale")
-                    for i in [-1 / 10 ** scale, 0, 1 / 10 ** scale]:
+
+                    # Para semiordenar el orden de las permutaciones más adelante. Primero los valores correctos.
+                    loop = loop_list(op_, scale)
+
+                    for i in loop:
                         if scale == 0:
                             i = int(i)
                         if _unique is None and _primary is None:
@@ -180,9 +200,10 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         elif _primary is not None and arg_data + i not in _primary:
                             col_data.append(arg_data + i)
                             _primary.append(arg_data + i)
+
                 elif restricciones_col.get("tipo") == "String":
                     strings = list()
-                    if op == "like":
+                    if op_ == "like":
                         old_like = restricciones_col.get("like")
                         restricciones_col.update({"like": arg_data})
                         strings.append(gd.generate_string(restricciones_col))
@@ -191,7 +212,10 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                     elif len_ex != -1:  # Existe el campo length
                         old_min = restricciones_col.get("min")
                         old_max = restricciones_col.get("max")
-                        for i in range(-1, 2):
+
+                        loop = loop_list(op_, 0)
+
+                        for i in loop:
                             if old_min <= data + i <= old_max:
                                 restricciones_col.update({"min": data + i})
                                 restricciones_col.update({"max": data + i})
@@ -208,14 +232,15 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                             elif _primary is not None and arg_data + i not in _primary:
                                 col_data.append(i)
                                 _primary.append(i)
+
                     else:  # Operaciones con operadores
                         # Añadir siguiente caracter ascii al último caracter
                         # Cojo el ultimo caracter de la cadena y sumo un caracter ascii
-                        char = chr(ord(arg_data[-1]) + 1)
-                        strings.append(arg_data)
-                        strings.append(arg_data[0:-1] + char)
-                        char = chr(ord(arg_data[-1]) - 1)
-                        strings.append(arg_data[0:-1] + char)
+                        loop = loop_list(op_, 0)
+                        for i in loop:
+                            i = int(i)
+                            char = chr(ord(arg_data[-1]) + i)
+                            strings.append(arg_data[0:-1] + char)
 
                         for i in strings:
                             if _unique is None and _primary is None:
@@ -228,12 +253,22 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                                 _primary.append(i)
 
                 else:  # tipo == "Fecha"
+                    loop = list()
+                    if op in ["eq", "lte"]:
+                        loop = [0, -1, 86400]  # Los días UTC duran 86400 s
+                    elif op == "gte":
+                        loop = [0, 86400, -1]
+                    elif op == "gt":
+                        loop = [86400, 0, -1]
+                    elif op == "lt":
+                        loop = [-1, 0, 86400]
+                    elif op == "neq":
+                        loop = [-1, 86400, 0]
 
                     fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
                     fechas = list()
-                    fechas.append(strftime("%d/%m/%Y", localtime(fecha)))
-                    fechas.append(strftime("%d/%m/%Y", localtime(fecha - 1)))
-                    fechas.append(strftime("%d/%m/%Y", localtime(fecha + 86400)))  # Los días UTC duran 86400 s
+                    for i in loop:
+                        fechas.append(strftime("%d/%m/%Y", localtime(fecha + i)))
 
                     for i in fechas:
                         if _unique is None and _primary is None:
@@ -244,6 +279,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         elif _primary is not None and arg_data + i not in _primary:
                             col_data.append(i)
                             _primary.append(i)
+
                 if gen_data.get(col_name) is None:
                     gen_data[col_name] = col_data[:]
                 else:
@@ -350,7 +386,6 @@ def clasificar_tipo(columnas, sentencia_where):
         args = list()
         args.extend(sentencia_where.get("args"))
 
-
         for arg in args:
             if isinstance(arg, dict):
                 in_args = arg.get("args")
@@ -362,10 +397,11 @@ def clasificar_tipo(columnas, sentencia_where):
                 )
             else:
                 in_args = args
-                if isinstance(in_args[0], str): col_select.append(in_args[0].lower())
-                else: col_select.append(in_args[1].lower())
+                if isinstance(in_args[0], str):
+                    col_select.append(in_args[0].lower())
+                else:
+                    col_select.append(in_args[1].lower())
                 break
-
 
     where_data = dict()
     # Evaluación de restricciones de las columnas
@@ -461,8 +497,8 @@ def clasificar_tipo(columnas, sentencia_where):
     if len(where_data) > 1:
         permutations = list(itertools.product(*values))
         print(permutations)
-        random.shuffle(permutations)
-        print(permutations)
+        # random.shuffle(permutations)
+        # print(permutations)
 
         uniques = list()
         primaries = list()
