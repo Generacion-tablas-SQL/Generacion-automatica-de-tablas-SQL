@@ -107,7 +107,7 @@ def cumple_restricciones(restricciones, data):
         elif data > restricciones.get("max"):
             new_data = restricciones.get("max")
     elif restricciones.get("tipo") == "String":
-        if isinstance(data, int):
+        if isinstance(data, int) or isinstance(data, float):
             if data < restricciones.get("min"):
                 new_data = restricciones.get("min")
             elif data > restricciones.get("max"):
@@ -122,7 +122,7 @@ def cumple_restricciones(restricciones, data):
                     return False
     return new_data
 
-def loop_list(op, scale):
+def loop_list(op: str, scale: int):
     loop = list()
     if op in ["eq", "lte"]:
         loop = [0, -1 / 10 ** scale, 1 / 10 ** scale]
@@ -195,6 +195,10 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         if scale == 0:
                             i = int(i)
                             data = int(data)
+                        # Comprueba si el número generado cumple restricciones de su columna
+                        data2 = cumple_restricciones(restricciones_col, data + i)
+                        if data2 is not False and data2 != data + i:
+                            i = 0
                         if _unique is None and _primary is None:
                             col_data.append(data + i)
                         elif _unique is not None and data + i not in _unique:
@@ -234,19 +238,22 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         restricciones_col.update({"like": old_like})
 
                     elif len_ex != -1:  # Existe el campo length
-                        old_min = restricciones_col.get("min")
-                        old_max = restricciones_col.get("max")
+                        old_min = int(restricciones_col.get("min"))
+                        old_max = int(restricciones_col.get("max"))
 
                         loop = loop_list(op_, 0)
 
                         for i in loop:
-                            if old_min <= data + i <= old_max:
-                                restricciones_col.update({"min": data + i})
-                                restricciones_col.update({"max": data + i})
-                                strings.append(gd.generate_string(restricciones_col))
+                            i = int(i)
+                            data = int(data)
+                            data2 = cumple_restricciones(restricciones_col, data + i)
+                            if data2 is not False and data2 != data + i:
+                                i = 0
+                            restricciones_col.update({"min": data + i})
+                            restricciones_col.update({"max": data + i})
+                            strings.append(gd.generate_string(restricciones_col))
                         restricciones_col.update({"min": old_min})
                         restricciones_col.update({"max": old_max})
-
 
                     else:  # Operaciones con operadores
                         # Añadir siguiente caracter ascii al último caracter
@@ -414,7 +421,7 @@ def clasificar_tipo(columnas, sentencia_where):
                 in_args = args
                 if isinstance(in_args[0], str):
                     col_select.append(in_args[0].lower())
-                else:
+                elif isinstance(in_args[1], str):
                     col_select.append(in_args[1].lower())
                 break
 
