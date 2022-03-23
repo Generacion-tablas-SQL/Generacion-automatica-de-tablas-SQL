@@ -57,7 +57,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
             if len(data) > i:
                 value_list.append(data[i])
             else:
-                continue
+                break
         if len(value_list) != 0:
             values = tuple(value_list)
             insert_list.append("INSERT INTO " + nombre_tabla + " VALUES " + str(values))

@@ -201,12 +201,16 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                         if scale == 0:
                             i = int(i)
                             data = int(data)
+                        else:
+                            i = float(i)
+                            data = float(data)
                         # Comprueba si el número generado cumple restricciones de su columna
                         rounded_data = round(data + i, scale)  # evita restas incorrectas como 0.03 - 0.01 = 0.19999..7
                         valid2, data2 = cumple_restricciones(restricciones_col, rounded_data)
-
-                        if valid2 and data2 != rounded_data:
-                            i = 0
+                        if scale == 0:
+                            data2 = int(data2)
+                        # if valid2 and data2 != rounded_data:
+                        #     i = 0
                         if _unique is None and _primary is None:
                             col_data.append(data2)
                         elif _unique is not None and data2 not in _unique:
