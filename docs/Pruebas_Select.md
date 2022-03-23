@@ -12,9 +12,12 @@ otra ent = 30 y otra con ent = 29
 --> REVISAR::::Generar 0.00 no 0.
 
 "SELECT string FROM Persona WHERE real > 0.03" --> Genera 3 sentencias INSERT INTO con 0.03, 0.03
-y 0.019999999999999997 --> REVISAR::::Problema en cumple_restricciones
+y 0.02
 
-"SELECT string FROM Persona WHERE string like '%'" --> REVISAR
+"SELECT string FROM Persona WHERE string like '%c%'" (sin restricciones de columna) --> 
+Genera 2 sentencias INSERT INTO con 'Thousand shacG' y 'SaxG' --> OK
+
+"SELECT string FROM Persona WHERE string like '_c_'" --> Genera 2 sentencias INSERT INTO con 'xcz' y 'xuc' --> OK
 
 "SELECT string FROM Persona WHERE string like 'Carmen'" --> Carmen, jarmen --> OK
 
@@ -23,19 +26,22 @@ y 0.019999999999999997 --> REVISAR::::Problema en cumple_restricciones
 "SELECT string FROM Persona WHERE REAL = NULL" --> REVISAR::::restricciones_where en búsqueda de
 nombre de arg_data y arg_col
 
-"SELECT string FROM Persona WHERE fec1 = '01/02/2000'"  --> Genera mismo dia, dia anterior y dia
-siguiente. --> OK
+"SELECT string FROM Persona WHERE fec1 = '01/02/2000'" --> Genera mismo dia, dia anterior y dia
+siguiente --> OK
 
-- Una restriccion que no cumple restriccion de columna:
+- Una restricción que no cumple restricción de columna:
 
-"SELECT string FROM Persona WHERE ent > 50" (ent < 50 en columna) --> Genera 3 INSERT INTO con 
+"SELECT ent FROM Persona WHERE ent > 50" (ent < 50 en columna) --> Genera 3 INSERT INTO con 
 ent = 49 y 48 --> Si no tuviera restricción unique en la columna se generaría un 2º valor 49.
 
-"SELECT string FROM Persona WHERE ent = 50" (ent < 50 en columna) --> Genera 2 INSERT INTO con 
+"SELECT ent FROM Persona WHERE ent = 50" (ent < 50 en columna) --> Genera 2 INSERT INTO con 
 ent = 49, 48. Si no tuviera restricción unique en la columna se generaría un 2º valor 49.
 
-"SELECT string FROM Persona WHERE string like 'Car'" --> Genera 10 INSERT INTO. Al no cumplir
-las restricciones de columna(LENGTH(string) > 5) no se generan valores "personalizados"
+"SELECT string FROM Persona WHERE string like 'Car'" (length(string) > 5) --> Genera 2 INSERT INTO con 'Caraaa' y 
+'Cyraaa'. --> OK
+
+"SELECT string FROM Persona WHERE string like '%c%'" (restricción columna: like 'C%') --> Genera 10 valores que cumplen
+las restricciones de la columna pero no del where -->REVISAR::::cumple_restricciones devuelve false
 
 "SELECT string FROM Persona WHERE LENGTH(string) > 4" --> Genera 3 INSERT INTO. Restriccion de 
 columna: lenght(string) > 5 --> Genera CMove M (7), CComWi (6) y CPlaBu (6)  --> OK

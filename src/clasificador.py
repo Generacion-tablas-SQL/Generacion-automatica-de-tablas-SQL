@@ -1,5 +1,6 @@
 import itertools
-import random, string
+import random
+import string
 from time import mktime, strptime, strftime, localtime
 import re
 import constantes
@@ -95,10 +96,11 @@ def generar_datos(col_name, restricciones, check, times):
 # <----RESTRICCIONES WHERE---->
 def cumple_restricciones(restricciones, data):
     new_data = data
+    valid = True
     if restricciones.get("eq") is not None and restricciones.get("eq") != data:
-        return False
+        valid = False
     if restricciones.get("neq") is not None and restricciones.get("neq") == data:
-        return False
+        valid = False
 
     # No tenemos en cuenta el tipo Fecha ya que no tiene implementadas restricciones CHECK
     if restricciones.get("tipo") == "Number":
@@ -113,14 +115,18 @@ def cumple_restricciones(restricciones, data):
             elif data > restricciones.get("max"):
                 new_data = restricciones.get("max")
         else:
-            if data.find("%") == -1 and (len(data) < restricciones.get("min")) or len(data) > restricciones.get("max"):
-                return False
+            if data.find("%") == -1:
+                if len(data) < restricciones.get("min"):
+                    for i in range(len(data), int(restricciones.get("min"))):
+                        new_data += 'a'
+                elif len(data) > restricciones.get("max"):
+                    new_data = data[0:restricciones.get("max")]
             if restricciones.get("like") is not None:
                 like_regex = restricciones.get("like").replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
-                data_regex = data.replace("%", "[a-zA-Z ]*").replace("_", "[a-zA-Z ]")
+                data_regex = data.replace("%", "as").replace("_", "a")
                 if not re.match(like_regex, data_regex):
-                    return False
-    return new_data
+                    valid = False
+    return valid, new_data
 
 def loop_list(op: str, scale: int):
     loop = list()
@@ -183,8 +189,8 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
 
         ops = ["eq", "neq", "gt", "gte", "lt", "lte", "like", "length"]
         if op_ in ops:
-            data = cumple_restricciones(restricciones_col, arg_data)
-            if data is not False:
+            valid, data = cumple_restricciones(restricciones_col, arg_data)
+            if valid:
                 if restricciones_col.get("tipo") == "Number":
                     scale = restricciones_col.get("scale")
 
@@ -196,41 +202,44 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
                             i = int(i)
                             data = int(data)
                         # Comprueba si el número generado cumple restricciones de su columna
-                        data2 = cumple_restricciones(restricciones_col, data + i)
-                        if data2 is not False and data2 != data + i:
+                        rounded_data = round(data + i, scale)  # evita restas incorrectas como 0.03 - 0.01 = 0.19999..7
+                        valid2, data2 = cumple_restricciones(restricciones_col, rounded_data)
+
+                        if valid2 and data2 != rounded_data:
                             i = 0
                         if _unique is None and _primary is None:
-                            col_data.append(data + i)
-                        elif _unique is not None and data + i not in _unique:
-                            col_data.append(data + i)
-                            _unique.append(data + i)
-                        elif _primary is not None and data + i not in _primary:
-                            col_data.append(data + i)
-                            _primary.append(data + i)
+                            col_data.append(data2)
+                        elif _unique is not None and data2 not in _unique:
+                            col_data.append(data2)
+                            _unique.append(data2)
+                        elif _primary is not None and data2 not in _primary:
+                            col_data.append(data2)
+                            _primary.append(data2)
 
                 elif restricciones_col.get("tipo") == "String":
                     strings = list()
                     if op_ == "like":
                         old_like = restricciones_col.get("like")
-                        restricciones_col.update({"like": arg_data})
+                        restricciones_col.update({"like": data})
                         strings.append(gd.generate_string(restricciones_col))
 
                         # GENERAR VALOR INVÁLIDO
                         pos = 0
                         found = False
-                        for i in arg_data:
-                            if i != "_" and i != "%":
+                        for i in data:
+                            if i != "_" and i != "%" and i != old_like[pos]:
                                 found = True
                                 break
                             pos += 1
 
                         if found:
                             letr = random.choice(string.ascii_letters)
-                            while letr == old_like[pos]:
+                            while letr == data[pos]:
                                 letr = random.choice(string.ascii_letters)
-                            generate = gd.generate_string(restricciones_col)[1:]
 
-                            strings.append(letr + generate)
+                            invalid_data = data[0:pos] + letr + data[pos + 1:]
+                            restricciones_col.update({"like": invalid_data})
+                            strings.append(gd.generate_string(restricciones_col))
                         else:
                             raise Exception("Restricción LIKE en sentencia SELECT no soportada. "
                                             "Debe contener al menos un caracter válido.")
@@ -243,17 +252,17 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
 
                         loop = loop_list(op_, 0)
 
+                        data = int(data)
                         for i in loop:
                             i = int(i)
-                            data = int(data)
-                            data2 = cumple_restricciones(restricciones_col, data + i)
-                            if data2 is not False and data2 != data + i:
+                            valid2, data2 = cumple_restricciones(restricciones_col, data + i)
+                            if valid2 and data2 != data + i:
                                 i = 0
                             restricciones_col.update({"min": data + i})
                             restricciones_col.update({"max": data + i})
                             strings.append(gd.generate_string(restricciones_col))
-                        restricciones_col.update({"min": old_min})
-                        restricciones_col.update({"max": old_max})
+                            restricciones_col.update({"min": old_min})
+                            restricciones_col.update({"max": old_max})
 
                     else:  # Operaciones con operadores
                         # Añadir siguiente caracter ascii al último caracter
