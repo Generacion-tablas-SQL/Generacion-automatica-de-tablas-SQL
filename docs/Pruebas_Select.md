@@ -45,11 +45,11 @@ ent = 49, 48. Si no tuviera restricción unique en la columna se generaría un 2
 "SELECT string FROM Persona WHERE string like '%c%'" (restricción columna: like 'C%') --> Genera 10 valores que cumplen
 las restricciones de la columna, pero no del where --> REVISAR::::cumple_restricciones devuelve false
 
-"SELECT string FROM Persona WHERE LENGTH(string) > 4" (Restriccion de columna: lenght(string) > 5 ) --> 
-Genera 3 INSERT INTO con CMove M (7), CComWi (6) y CPlaBu (6)  --> OK
+"SELECT string FROM Persona WHERE LENGTH(string) > 4" (Restricción de columna: length(string) > 5 ) --> 
+Genera 3 INSERT INTO con CArt Pro (8), COccur  (7) y CSHist (6)  --> OK
 
-"SELECT string FROM Persona WHERE LENGTH(string) < 4" --> Genera 3 INSERT INTO. Restriccion de 
-columna: lenght(string) > 5 --> Genera 3 cadenas de tamaño 6  --> OK(?)
+"SELECT string FROM Persona WHERE LENGTH(string) < 4" (Restricción de columna: length(string) > 5 ) --> Genera 3 INSERT 
+INTO con  CNatur (6), CACultu (7) y CMagazPe (8)--> OK
 
 
 - Dos condiciones, dos columnas (cumplen restricciones de columna) (sin restricciones unique):
@@ -107,7 +107,22 @@ de string no siempre se genera (es aleatorio) --> OK¿?
 (29, 'CHaStar av')] --> 3 INSERT INTO con (31, Carmen), (29, Carmem), (30, Carmeo) --> OK
 
 
-- Dos restricciones, una columna:
+- Dos restricciones, dos columnas (no cumplen restricciones columna):
+
+"SELECT ent FROM Persona WHERE ent > 50 and real != 0.02" (ent < 45 en columna) --> [(0.01, 44), (0.01, 44), (0.01, 43),
+(0.03, 44), (0.03, 44), (0.03, 43), (0.02, 44), (0.02, 44), (0.02, 43)] --> 9 INSERT INTO con los valores de las 
+permutaciones
+
+"SELECT ent FROM Persona WHERE ent > 50 and real != 0.02" (ent < 45 en columna) (unique en ent) --> [(0.01, 44), 
+(0.01, 44), (0.01, 43), (0.03, 44), (0.03, 44), (0.03, 43), (0.02, 44), (0.02, 44), (0.02, 43)] --> 2 INSERT INTO con
+(0.01, 44) y (0.01, 43)
+
+"SELECT string FROM Persona WHERE ent > 50 and string like 'Car'"(length(string) > 5 en columna) --> [(44, 'Caraaa'), 
+(44, 'Cwraaa'), (43, 'Caraaa'), (43, 'Cwraaa'), (42, 'Caraaa'), (42, 'Cwraaa')] --> 6 INSERT INTO con los valores de 
+las permutaciones --> OK
+
+
+- Dos condiciones, una columna:
 
 "SELECT ent FROM Persona WHERE ent > 30 and ent < 40". --> Genera 6 INSERT INTO con 31, 30, 29 y 39, 40, 41 --> OK
 
@@ -116,7 +131,8 @@ de string no siempre se genera (es aleatorio) --> OK¿?
 "SELECT string FROM Persona WHERE string != 'Carmen' and string like 'Car%'"
 
 
-- Tres columnas diferentes sin nada raro:
+
+- Tres condiciones, tres columnas:
 
 "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting'"
 
@@ -129,9 +145,3 @@ de string no siempre se genera (es aleatorio) --> OK¿?
 
 [(31, 'Cartinf'), (31, 'Cartinh'), (31, 'Carting'), (30, 'Cartinf'), (30, 'Cartinh'), (30, 'Carting'), (29, 'Cartinf'), (29, 'Cartinh'), (29, 'Carting'), (39, 'Cartinf'), (39, 'Cartinh'), (39, 'Carting'), (40, 'Cartinf'), (40, 'Cartinh'), (40, 'Carting'), (41, 'Cartinf'), (41, 'Cartinh'), (41, 'Carting')]
 
-
-
-
-
-
-"SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00"

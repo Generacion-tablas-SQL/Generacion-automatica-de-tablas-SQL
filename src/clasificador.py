@@ -188,11 +188,11 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
             arg_data = arg_data.get("literal")
 
         ops = ["eq", "neq", "gt", "gte", "lt", "lte", "like", "length"]
+        scale = restricciones_col.get("scale")
         if op_ in ops:
             valid, data = cumple_restricciones(restricciones_col, arg_data)
             if valid:
                 if restricciones_col.get("tipo") == "Number":
-                    scale = restricciones_col.get("scale")
 
                     # Para semiordenar el orden de las permutaciones más adelante. Primero los valores correctos.
                     loop = loop_list(op_, scale)
@@ -289,15 +289,15 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
 
                 else:  # tipo == "Fecha"
                     loop = list()
-                    if op in ["eq", "lte"]:
+                    if op_ in ["eq", "lte"]:
                         loop = [0, -1, 86400]  # Los días UTC duran 86400 s
-                    elif op == "gte":
+                    elif op_ == "gte":
                         loop = [0, 86400, -1]
-                    elif op == "gt":
+                    elif op_ == "gt":
                         loop = [86400, 0, -1]
-                    elif op == "lt":
+                    elif op_ == "lt":
                         loop = [-1, 0, 86400]
-                    elif op == "neq":
+                    elif op_ == "neq":
                         loop = [-1, 86400, 0]
 
                     fecha = mktime(strptime(arg_data, "%d/%m/%Y"))
