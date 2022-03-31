@@ -139,7 +139,7 @@ las permutaciones --> OK
 [(0.01, 31, 'Cartinf'), (0.01, 31, 'Cartinh'), (0.01, 31, 'Carting'), (0.01, 30, 'Cartinf'), (0.01, 30, 'Cartinh'), (0.01, 30, 'Carting'), (0.01, 29, 'Cartinf'), (0.01, 29, 'Cartinh'), (0.01, 29, 'Carting'), (0.0, 31, 'Cartinf'), (0.0, 31, 'Cartinh'), (0.0, 31, 'Carting'), (0.0, 30, 'Cartinf'), (0.0, 30, 'Cartinh'), (0.0, 30, 'Carting'), (0.0, 29, 'Cartinf'), (0.0, 29, 'Cartinh'), (0.0, 29, 'Carting'), (-0.01, 31, 'Cartinf'), (-0.01, 31, 'Cartinh'), (-0.01, 31, 'Carting'), (-0.01, 30, 'Cartinf'), (-0.01, 30, 'Cartinh'), (-0.01, 30, 'Carting'), (-0.01, 29, 'Cartinf'), (-0.01, 29, 'Cartinh'), (-0.01, 29, 'Carting')]
 
 
-- Tres columnas, dos iguales:
+- Tres columnas, dos columnas:
 
 "SELECT ent, real  FROM Persona WHERE ent > 30 and ent < 40 and string != 'Carting'"
 

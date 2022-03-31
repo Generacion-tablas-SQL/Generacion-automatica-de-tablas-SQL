@@ -32,3 +32,17 @@ por tamaño en bytes debido a que mo-sql-parsing no lo soporta.
 - El formateador de mo-sql-parsing no está tan desarrollado como el parseador por lo tanto, nos encontramos
 con más errores. Cuando intentamos formatear una sentencia previamente parseada nos salta una excepción:
 Exception: Operators should have only one key!
+Esto nos impide tener un método de backup que genere datos aleatorios hasta que cumpla con la sentencia nuevamente 
+formateada.
+
+### Sentencias SELECT con WHERE:
+
+- Se comprueba si el dato de la condición en el WHERE cumple con las restricciones de la columna
+  - Si cumple con las restricciones de la columna devuelve una tupla con un valor booleano a True y el valor de la
+condición.
+  - Si no cumple con las restricciones de desigualdad, se adapta para que las cumpla devolviendo una tupla con un
+valor booleano a True y el nuevo valor que se ajusta a los mínimos o máximos de la columnas.
+  - Si no cumple alguna otra restricción, devuelve una tupla con un valor booleano a False y el valor de la condición.
+  
+- En las sentencias SELECT, si hay una restricción WHERE con LIKE, el literal debe contener al menos un caracter 
+diferente a "_" o "%".
