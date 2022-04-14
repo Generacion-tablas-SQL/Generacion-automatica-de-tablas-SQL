@@ -23,10 +23,10 @@ def restricciones_sql(parameters, column):
         restricciones_list.append("nullable")
     if "unique" in column and column.get("unique"):
         restricciones_dict.update({"unique": []})
-    if "primary key" in column and column.get("primary key"):
-        restricciones_dict.update({"primary key": []})
-    if "foreign key" in column and column.get("foreign key"):
-        restricciones_list.append("foreign key")
+    if "primary_key" in column and column.get("primary_key"):
+        restricciones_dict.update({"primary_key": []})
+    if "foreign key" in column and column.get("foreign_key"):
+        restricciones_list.append("foreign_key")
     if "default" in column:
         restricciones_list.append({"default", column.get("default").get("literal")})
 
@@ -401,11 +401,14 @@ def comprobar_restricciones_check(parameters, check):
 
 
 # <----INICIO---->
-def clasificar_tipo(columnas, sentencia_where):
+# def clasificar_tipo(columnas, select_from, condicion_where):
+def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
     """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
 
-    :param columnas: array con las columnas de una tabla
-    :param sentencia_where:
+    :param nombre_tabla: nombre de la tabla que se se está clasificando
+    :param tablas: lista con las tablas necesarias parseadas
+    :param select_joins: diccionario con las columnas con las que dos tablas hacen join
+    :param condicion_where:
     :return: col_data: diccionario con los datos generados de cada columna
              col_restrictions: diccionario con las restricciones de cada columna.
     """
@@ -417,9 +420,9 @@ def clasificar_tipo(columnas, sentencia_where):
     # and_or = op if op == "and" or op == "or" else None
 
     col_select = list()
-    if sentencia_where is not None:
+    if condicion_where is not None:
         args = list()
-        args.extend(sentencia_where.get("args"))
+        args.extend(condicion_where.get("args"))
 
         for arg in args:
             if isinstance(arg, dict):
@@ -440,6 +443,12 @@ def clasificar_tipo(columnas, sentencia_where):
 
     where_data = dict()
     # Evaluación de restricciones de las columnas
+    columnas = list()
+    for tabla in tablas:
+        if tabla.get("name").lower() == nombre_tabla:
+            columnas = tabla.get("columns")
+            break
+
     for column in columnas:
         col_name = column.get("name").lower()
         data_type = column.get("type").get("op").lower()  # number
@@ -468,8 +477,8 @@ def clasificar_tipo(columnas, sentencia_where):
             col_restrictions.update({col_name: restricciones})
 
             # Si el where contiene a la columna, comprobamos las restricciones
-            if sentencia_where is not None and col_name in col_select:
-                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
+            if condicion_where is not None and col_name in col_select:
+                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
                                                                   where_data)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
@@ -490,7 +499,7 @@ def clasificar_tipo(columnas, sentencia_where):
 
             # Si el where contiene a la columna, comprobamos las restricciones
             if col_name in col_select:
-                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
+                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
                                                                   where_data)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
@@ -515,7 +524,7 @@ def clasificar_tipo(columnas, sentencia_where):
 
             if col_name in col_select:
 
-                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], sentencia_where,
+                where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
                                                                   where_data)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
@@ -566,9 +575,33 @@ def clasificar_tipo(columnas, sentencia_where):
     elif len(where_data) > 0:
         col_data.update({col_select[0]: where_data.get(col_select[0])})
 
+    # Generación de datos por JOIN
+    if len(select_joins) > 0:
+        i = 1
+        ultimo = False
+        for join in select_joins:  # join es una tupla que contiene las tablas de un join
+            if i == len(select_joins):
+                ultimo = True
+            # Solo evaluamos el primer elemento de la tupla a no ser que estemos en el último par de joins
+            # Así no repetimos tablas
+            if (not ultimo and nombre_tabla == join[0]) or (ultimo and (nombre_tabla == join[0] or nombre_tabla == join[1])):
+                # De momento no permite que dos columnas de dos tablas diferentes se llamen igual, con lo cual no hay
+                # problema en comprobar las dos columnas.
+                col = select_joins.get(join)[1].lower()
+                if col_restrictions.get(col) is None:
+                    col = select_joins.get(join)[2].lower()
+                if col_restrictions.get(col)[-1].get('primary_key') is not None:
+                    # Generar dos valores diferentes para la columna
+                    col_data.update({col: [1, 2]})
+                else:
+                    # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
+                    col_data.update({col: [1]})
+                break
+            i += 1
+
     # Generación del resto de datos
     times = constantes.NUM_FILAS
-    if sentencia_where is not None:
+    if condicion_where is not None:
         for i in range(0, len(keys)):
             times = min(times, len(col_data.get(keys[i])))
     for dato in col_data:

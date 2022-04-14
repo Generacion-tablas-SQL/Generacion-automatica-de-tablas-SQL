@@ -41,10 +41,11 @@ def main():
                         "CONSTRAINT PK_Enfrena PRIMARY KEY (CIF_L, CIF_V)" \
                     ")"
 
-    select9 = "SELECT * From Club"
+    select9 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB"
+    # De momento solo funciona con un join
+    select10 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L"
 
     try:
-        print(create_table2)
         print(*poblador_tablas(create_table2, select9), sep='\n')
     except Exception as msg:
         traceback.print_exc()
