@@ -37,11 +37,15 @@ def poblador_tablas(sentencias_create, sentencia_select):
     # Analizar los joins
     joins = dict()
     if len(_from) > 1:
-        pos = 0
+        num_elems = 2
+        # pos = 0
         for join in _from[1:]:
-            joins.update({(tablas_select[pos], tablas_select[pos + 1]): [join.get("on").get("op"), join.get("on")
+            key = tuple([tablas_select[x] for x in range(0, num_elems)])
+            # tablas_select[pos], tablas_select[pos + 1]
+            joins.update({key: [join.get("on").get("op"), join.get("on")
                          .get("args")[0], join.get("on").get("args")[1]]})
-            pos += 1
+            num_elems += 1
+            # pos += 1
 
     for tabla_s in tablas_select:
         tablas_restricciones.update({tabla_s: {}})

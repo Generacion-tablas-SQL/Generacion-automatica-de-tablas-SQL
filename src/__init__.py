@@ -20,33 +20,34 @@ def main():
     select8 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting' and fec1 > '30/08/2000'"
 
     create_table2 = "CREATE TABLE Club(" \
-                        "CIF INT PRIMARY KEY NOT NULL," \
-                        "Nombre VARCHAR(50) NOT NULL," \
+                        "CIF NUMBER(4) PRIMARY KEY NOT NULL," \
+                        "Nombre_Club VARCHAR(50) NOT NULL," \
                         "Sede VARCHAR(100)," \
-                        "NumSocios INT," \
-                        "NumAsientos INT" \
+                        "NumSocios NUMBER(5)," \
+                        "NumAsientos NUMBER(5)" \
                     ");" \
                     "CREATE TABLE Jugador(" \
-                        "NIF INT PRIMARY KEY NOT NULL," \
+                        "NIF NUMBER(8) PRIMARY KEY NOT NULL," \
                         "Nombre VARCHAR(30) NOT NULL," \
                         "Altura NUMBER(3, 2)," \
-                        "CIF_Club INT REFERENCES Club(CIF)" \
+                        "CIF_Club NUMBER(4) REFERENCES Club(CIF)" \
                     ");" \
                     "CREATE TABLE Enfrenta(" \
-                        "CIF_L INT REFERENCES Club(CIF) NOT NULL," \
-                        "CIF_V INT REFERENCES Club(CIF) NOT NULL," \
-                        "Goles_L INT," \
-                        "Goles_V INT," \
+                        "CIF_L NUMBER(4) REFERENCES Club(CIF) NOT NULL," \
+                        "CIF_V NUMBER(4) REFERENCES Club(CIF) NOT NULL," \
+                        "Goles_L NUMBER(2)," \
+                        "Goles_V NUMBER(2)," \
                         "Fecha DATE," \
                         "CONSTRAINT PK_Enfrena PRIMARY KEY (CIF_L, CIF_V)" \
                     ")"
 
     select9 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB"
-    # De momento solo funciona con un join
     select10 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L"
+    select11 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB WHERE Altura > 1.65"
+    select12 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L WHERE Altura > 1.65"
 
     try:
-        print(*poblador_tablas(create_table2, select9), sep='\n')
+        print(*poblador_tablas(create_table2, select12), sep='\n')
     except Exception as msg:
         traceback.print_exc()
         print(msg)

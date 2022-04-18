@@ -173,7 +173,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
             )
         )
 
-        if arg_col != col_name:
+        if arg_col.lower() != col_name:
             continue
 
         op_ = arg.get("op")
@@ -416,9 +416,7 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
     col_data = {}
     col_restrictions = {}
 
-    # op = sentencia_where.get("op")
-    # and_or = op if op == "and" or op == "or" else None
-
+    # Analisis de condiciones en WHERE
     col_select = list()
     if condicion_where is not None:
         args = list()
@@ -575,38 +573,48 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
     elif len(where_data) > 0:
         col_data.update({col_select[0]: where_data.get(col_select[0])})
 
+    # Si hay algún dato generado por las condiciones where,
+    times = 0
+    if condicion_where is not None:
+        for i in range(0, len(keys)):
+            times = max(times, len(col_data.get(keys[i])))
+
     # Generación de datos por JOIN
     if len(select_joins) > 0:
-        i = 1
-        ultimo = False
         for join in select_joins:  # join es una tupla que contiene las tablas de un join
-            if i == len(select_joins):
-                ultimo = True
-            # Solo evaluamos el primer elemento de la tupla a no ser que estemos en el último par de joins
-            # Así no repetimos tablas
-            if (not ultimo and nombre_tabla == join[0]) or (ultimo and (nombre_tabla == join[0] or nombre_tabla == join[1])):
-                # De momento no permite que dos columnas de dos tablas diferentes se llamen igual, con lo cual no hay
-                # problema en comprobar las dos columnas.
+            if nombre_tabla in join:
+                # De momento no permite alias, asi que dos columnas de dos tablas diferentes tiene que llamarse
+                # diferente, con lo cual no hay problema en comprobar las dos columnas.
                 col = select_joins.get(join)[1].lower()
                 if col_restrictions.get(col) is None:
                     col = select_joins.get(join)[2].lower()
-                if col_restrictions.get(col)[-1].get('primary_key') is not None:
-                    # Generar dos valores diferentes para la columna
-                    col_data.update({col: [1, 2]})
-                else:
-                    # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
-                    col_data.update({col: [1]})
+
+                if col_restrictions.get(col) is not None:  # Puede ser que las col del join no sean de la tabla actual
+                    if col_restrictions.get(col)[-1].get('primary_key') is not None:
+                        # Generar dos valores diferentes para la columna
+                        col_data.update({col: [1, 2]})
+                    else:
+                        # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
+                        join_data = list()
+                        aux_times = 1 if times == 0 else times
+                        for i in range(0, aux_times):
+                            join_data.append(1)
+                        col_data.update({col: join_data})
                 break
-            i += 1
 
     # Generación del resto de datos
-    times = constantes.NUM_FILAS
-    if condicion_where is not None:
-        for i in range(0, len(keys)):
-            times = min(times, len(col_data.get(keys[i])))
+    if select_joins is not None:
+        for key in col_data.keys():
+            times = max(times, len(col_data.get(key)))
+
+    if times == 0:
+        times = constantes.NUM_FILAS
+
     for dato in col_data:
-        if not col_data.get(dato):
+        # if not col_data.get(dato):
+        if len(col_data.get(dato)) < times:
+            times_aux = times - len(col_data.get(dato))
             check = next((col for col in columnas if col['name'] == dato), None)
-            col_data.update({dato: generar_datos(dato, col_restrictions.get(dato), check, times)})
+            col_data.update({dato: generar_datos(dato, col_restrictions.get(dato), check, times_aux)})
 
     return col_data, col_restrictions
