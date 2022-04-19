@@ -142,7 +142,7 @@ def loop_list(op: str, scale: int):
         loop = [-1 / 10 ** scale, 1 / 10 ** scale, 0]
     return loop
 
-def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
+def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, misma_tabla):
     """Comprueba las restricciones where y modifica la lista de restricciones de forma que se puedan generar los
     datos consultados así como datos no consultados
 
@@ -151,6 +151,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
     :param sentencia_where:
     :param gen_data: diccionario con datos previamente generados en esta función asociados a su columna. Si es la
     primera vez que accede, será un diccionario vacío
+    :param misma_tabla: valor que nos indica si se están comparando dos columnas de la misma tabla
     :return: diccionario con datos generados, lista con valores unique usados, lista con valores primary key usados
     """
 
@@ -190,6 +191,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data):
         ops = ["eq", "neq", "gt", "gte", "lt", "lte", "like", "length"]
         scale = restricciones_col.get("scale")
         if op_ in ops:
+            if(misma_tabla): arg_data = 20
             valid, data = cumple_restricciones(restricciones_col, arg_data)
             if valid:
                 if restricciones_col.get("tipo") == "Number":
@@ -447,6 +449,14 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
             columnas = tabla.get("columns")
             break
 
+    cont = 0
+    for column in columnas:
+        mismaTabla = False
+        if column.get("name").lower() in args[0].lower() or column.get("name").lower() in args[1].lower():  # Para saber si dos columnas se estan comparando en la misma tabla
+            cont = cont + 1
+            if cont == 2: mismaTabla = True
+
+
     for column in columnas:
         col_name = column.get("name").lower()
         data_type = column.get("type").get("op").lower()  # number
@@ -477,7 +487,7 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
             # Si el where contiene a la columna, comprobamos las restricciones
             if condicion_where is not None and col_name in col_select:
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
-                                                                  where_data)
+                                                                  where_data, mismaTabla)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
                 if primary is not None:
@@ -498,7 +508,7 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
             # Si el where contiene a la columna, comprobamos las restricciones
             if col_name in col_select:
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
-                                                                  where_data)
+                                                                  where_data, mismaTabla)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
                 if primary is not None:
