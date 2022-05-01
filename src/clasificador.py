@@ -191,7 +191,8 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
         ops = ["eq", "neq", "gt", "gte", "lt", "lte", "like", "length"]
         scale = restricciones_col.get("scale")
         if op_ in ops:
-            if(misma_tabla): arg_data = 20
+            if misma_tabla:
+                arg_data = 20
             valid, data = cumple_restricciones(restricciones_col, arg_data)
             if valid:
                 if restricciones_col.get("tipo") == "Number":
@@ -403,12 +404,13 @@ def comprobar_restricciones_check(parameters, check):
 
 
 # <----INICIO---->
-# def clasificar_tipo(columnas, select_from, condicion_where):
-def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
+def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicion_where):
+
     """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
 
     :param nombre_tabla: nombre de la tabla que se se está clasificando
-    :param tablas: lista con las tablas necesarias parseadas
+    :param columnas: lista con las columnas de la tabla necesaria parseada
+    :param tablas_datos: diccionario con los datos de cada columna de cada tabla sobre la que se haya iterado.
     :param select_joins: diccionario con las columnas con las que dos tablas hacen join
     :param condicion_where:
     :return: col_data: diccionario con los datos generados de cada columna
@@ -442,20 +444,17 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
                 break
 
     where_data = dict()
-    # Evaluación de restricciones de las columnas
-    columnas = list()
-    for tabla in tablas:
-        if tabla.get("name").lower() == nombre_tabla:
-            columnas = tabla.get("columns")
-            break
 
     cont = 0
-    for column in columnas:
-        mismaTabla = False
-        if column.get("name").lower() in args[0].lower() or column.get("name").lower() in args[1].lower():  # Para saber si dos columnas se estan comparando en la misma tabla
-            cont = cont + 1
-            if cont == 2: mismaTabla = True
-
+    # for column in columnas:
+    misma_tabla = False
+    # Para saber si dos columnas se están comparando en la misma tabla
+    # if isinstance(args[0], str) and column.get("name").lower() == args[0].lower() and \
+    #        isinstance(args[1], str) and column.get("name").lower() == args[1].lower():
+    # if isinstance(args[0], str) and isinstance(args[1], str) and column.get("name") in args:
+    #     cont += 1
+    #     if cont == 2:
+    #         misma_tabla = True
 
     for column in columnas:
         col_name = column.get("name").lower()
@@ -487,7 +486,7 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
             # Si el where contiene a la columna, comprobamos las restricciones
             if condicion_where is not None and col_name in col_select:
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
-                                                                  where_data, mismaTabla)
+                                                                  where_data, misma_tabla)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
                 if primary is not None:
@@ -508,7 +507,7 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
             # Si el where contiene a la columna, comprobamos las restricciones
             if col_name in col_select:
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
-                                                                  where_data, mismaTabla)
+                                                                  where_data, misma_tabla)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
                 if primary is not None:
@@ -533,7 +532,7 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
             if col_name in col_select:
 
                 where_data, unique, primary = restricciones_where(col_name, restricciones[-1], condicion_where,
-                                                                  where_data)
+                                                                  where_data, misma_tabla)
                 if unique is not None:
                     restricciones[-1].update({"unique": unique})
                 if primary is not None:
@@ -596,20 +595,55 @@ def clasificar_tipo(nombre_tabla, tablas, select_joins, condicion_where):
                 # De momento no permite alias, asi que dos columnas de dos tablas diferentes tiene que llamarse
                 # diferente, con lo cual no hay problema en comprobar las dos columnas.
                 col = select_joins.get(join)[1].lower()
+                # Compruebo si la columna es de la tabla sobre la que se está iterando o es de la otra
                 if col_restrictions.get(col) is None:
                     col = select_joins.get(join)[2].lower()
+
+                # for t in join:
+                #     Se usa para saber si ya hay algún dato metido por los join
+                #     for t2 in tablas:
+                #         if t2.get('name') == t:
+                #             data_in_col = None if col_data.get(t2.get('columns').get(col)) is None else col_data.get(t2.get('columns').get(col))
 
                 if col_restrictions.get(col) is not None:  # Puede ser que las col del join no sean de la tabla actual
                     if col_restrictions.get(col)[-1].get('primary_key') is not None:
                         # Generar dos valores diferentes para la columna
-                        col_data.update({col: [1, 2]})
+                        check = next((columna for columna in columnas if columna['name'] == col), None)
+                        datos_join = generar_datos(col, col_restrictions.get(col), check, 2)
+                        while datos_join[0] == datos_join[1]:  # Comprobamos que los dos datos son distintos
+                            datos_join[1] = generar_datos(col, col_restrictions.get(col), check, 1)
+                        col_data.update({col: datos_join})
                     else:
                         # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
-                        join_data = list()
+                        datos_join = list()
+                        # times es el número máximo de datos metidos en una columna por el where
                         aux_times = 1 if times == 0 else times
-                        for i in range(0, aux_times):
-                            join_data.append(1)
-                        col_data.update({col: join_data})
+                        if len(col_data.get(col)) == 0:  # Si aún no hemos metido ningún dato en esta columna
+                            tabla_primary = join[0]  # En join sigue guardado el join que estamos analizando
+                            col_primary = select_joins.get(join)[1].lower()
+                            dato_primary = tablas_datos.get(tabla_primary).get(col_primary)[0]
+                            if select_joins.get(join)[0] == "eq":
+                                col_restrictions.get(col)[-1].update({"eq": dato_primary})
+                            elif select_joins.get(join)[0] == "gt":
+                                col_restrictions.get(col)[-1].update({"min": dato_primary + 1})
+                            elif select_joins.get(join)[0] == "gte":
+                                col_restrictions.get(col)[-1].update({"min": dato_primary})
+                            elif select_joins.get(join)[0] == "lt":
+                                col_restrictions.get(col)[-1].update({"max": dato_primary - 1})
+                            elif select_joins.get(join)[0] == "lte":
+                                col_restrictions.get(col)[-1].update({"max": dato_primary})
+                            else:
+                                raise Exception("operador en join no soportado")
+
+                            check = next((columna for columna in columnas if columna['name'] == col), None)
+                            dato = generar_datos(col, col_restrictions.get(col), check, 1)
+                        # else:
+                        #     dato = col_data.get(data_in_col)[0]
+
+                            for i in range(0, aux_times):
+                                # Coger un valor de los generados en la col que tiene primary key
+                                datos_join.extend(dato)
+                            col_data.update({col: datos_join})
                 break
 
     # Generación del resto de datos

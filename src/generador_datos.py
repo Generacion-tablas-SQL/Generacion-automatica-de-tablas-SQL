@@ -119,7 +119,11 @@ def generate_number(restricciones):
     _nullable = False
 
     if _eq is not None:
-        return _eq
+        if _unique is not None and _eq not in _unique:
+            _unique.append(_eq)
+        if _primary is not None and _eq not in _primary:
+            _primary.append(_eq)
+        return _eq, _unique, _primary
 
     generated_number = None
     for i in range(0, constantes.UNIQUE_TRIES):

@@ -6,7 +6,7 @@ def main():
     create_table = "CREATE TABLE Persona (" \
                    "real NUMBER(4,2) CHECK (REal >= 0.00 AND REAL <= 0.03)," \
                    "ent INT CHECK (INT > 25 AND INT < 45)," \
-                   "string VARCHAR(15) NOT NULL CHECK (string LIKE 'Ca%' and LENGTH(string) > 5 and LENGTH(string) < 20)," \
+                   "string VARCHAR(15) NOT NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 20)," \
                    "fec1 DATE NOT NULL, " \
                    "fec2 TIMESTAMP(2) NOT NULL)"
 
@@ -39,17 +39,22 @@ def main():
                         "Goles_V NUMBER(2)," \
                         "Fecha DATE," \
                         "CONSTRAINT PK_Enfrena PRIMARY KEY (CIF_L, CIF_V)" \
-                    ")"
+                    ");" \
+                    "CREATE TABLE Jugador2(" \
+                        "NIF2 NUMBER(8) PRIMARY KEY NOT NULL," \
+                        "Nombre VARCHAR(30) NOT NULL," \
+                        "Altura NUMBER(3, 2)," \
+                        "CIF_Club2 NUMBER(4) REFERENCES Club(CIF)" \
+                    ");"
 
-    select9 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB"
-    select10 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L"
-    select11 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB WHERE Altura > 1.65"
-    select12 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L WHERE Altura > 1.65"
-    select13= "SELECT * From Club WHERE NumSocios > NumAsientos"
-
+    select9 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB;"
+    select10 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L;"
+    select11 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB WHERE Altura > 1.65;"
+    select12 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L WHERE Altura > 1.65;"
+    select13 = "SELECT * From Club WHERE NumSocios > NumAsientos;"
 
     try:
-        print(*poblador_tablas(create_table2, select13), sep='\n')
+        print(*poblador_tablas(create_table2, select12), sep='\n')
     except Exception as msg:
         traceback.print_exc()
         print(msg)
