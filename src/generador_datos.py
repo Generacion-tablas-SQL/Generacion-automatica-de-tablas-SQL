@@ -6,8 +6,7 @@ from mo_sql_parsing import format
 import random
 import constantes
 
-# <---- GENERADOR DE UN NUMERO MÁXIMO ---->
-def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
+def max_number(precision, scale):
     """Devuelve el número máximo que se puede generar con la precisión indicada.
         Ejemplo: si precision == 3, max_num = 999
                  si precision == 5 y precision == 2,  max_num = 999.99
@@ -21,14 +20,14 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     aux = 9
 
     # NUMBER(p,s) con p(1,38) y s(-84,127)
-    if scale == 0:                      # Number sin decimales
-        while precision > 1:            # Más de 1 dígito
+    if scale == 0:                           # Number sin decimales
+        while precision > 1:
             precision -= 1
             aux *= 10
             max_num += aux
-    else:                               # Number con decimales, rango scale:[-84,0), (0,127]
-        if scale in range(-84, 0):      # Se trata de un scale negativo
-            precision -= abs(scale)  # Dígitos no redondeados
+    else:                                    # Number con decimales, rango scale:[-84,0), (0,127]
+        if scale in range(-84, 0):
+            precision -= abs(scale)
             if precision <= 0:
                 max_num = 9 * 10 ** abs(scale)
             else:
@@ -36,9 +35,9 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
                     precision -= 1
                     aux *= 10
                     max_num += aux
-                max_num *= 10 ** abs(scale)  # Añade los dígitos redondeados a 0
+                max_num *= 10 ** abs(scale)
 
-        elif scale in range(1, 128):           # Se trata de un scale positivo
+        elif scale in range(1, 128):
             num_nueves = precision if precision > scale else scale
             while num_nueves > 1:
                 num_nueves -= 1
@@ -49,7 +48,6 @@ def max_number(precision, scale):  # Ej: precision 3 --> max_num = 999
     return max_num
 
 
-# <---- GENERADOR DE VALORES NULOS ---->
 def generate_null_value():
     """Genera valores nulos con una probabilidad preestablecida
     :return: valor nulo
@@ -58,7 +56,8 @@ def generate_null_value():
         return "NULL"
     return ""
 
-# <---- GENERADOR DE STRINGS ---->
+
+
 def generate_string(restricciones):
     """Genera cadenas de caracteres aleatorias que cumplen una serie de restricciones
 
@@ -88,13 +87,12 @@ def generate_string(restricciones):
             if char == '_':
                 generated_string += random.choice('abcdefghijklmnopqrstuvwxyz')
             elif char == '%':
-                b = random.randint(0, max_percentage_chars)  # El % puede no ser ningún caracter
+                b = random.randint(0, max_percentage_chars)
                 generated_string += fake.text()[0:b]
                 max_percentage_chars -= b
             else:
                 generated_string += char
         if len(generated_string) < _min:
-            # Añade el resto de caracteres hasta el mínimo solicitado
             b = _min - len(generated_string)
             generated_string += fake.text()[0:int(b)]
     else:
@@ -103,7 +101,6 @@ def generate_string(restricciones):
     return generated_string
 
 
-# <---- GENERADOR DE NÚMEROS ---->
 def generate_number(restricciones):
     """Genera números aleatorios que cumplen una serie de restricciones
 
@@ -127,14 +124,15 @@ def generate_number(restricciones):
         return _eq, _unique, _primary
 
     generated_number = None
-    # Repetimos el proceso si genera un número generado previamente y hay restricción unique o primary key
-    for i in range(0, constantes.UNIQUE_TRIES):
+
+    for i in range(0, constantes.UNIQUE_TRIES):  # Repetimos el proceso si genera un número generado previamente y existe una restricción unique o primary key
         if _nullable is True:
             generated_number = generate_null_value()
 
         if generated_number != "NULL":
             if scale == 0:
-                generated_number = random.randint(_min, _max)  # Genera un número entero
+                # Genera un número entero
+                generated_number = random.randint(_min, _max)
                 if _neq is not None and generated_number == _neq:
                     generated_number += 1
             else:
@@ -144,7 +142,7 @@ def generate_number(restricciones):
                     if scale < 0:
                         generated_number += 1
                     else:
-                        generated_number += 1 / 10 ** scale  # Suma uno en el decimal menos significativo
+                        generated_number += 1 / 10 ** scale
         if _unique is None and _primary is None:
             break
         if _unique is not None and generated_number not in _unique:
@@ -157,7 +155,6 @@ def generate_number(restricciones):
     return generated_number, _unique, _primary
 
 
-# <---- GENERADOR DE FECHAS ---->
 def generate_fecha(restricciones):
     """Genera fechas aleatorias que cumplen una serie de restricciones
             :param restricciones: diccionario con los parámetros sec_precision, es_date, data_type
@@ -170,7 +167,7 @@ def generate_fecha(restricciones):
     es_date = restricciones.get("es_date")
     sec_precision = restricciones.get("sec_precision")
     inicio = "01/01/1971"
-    final = "12/12/2022"  # Se podria poner como final la fecha actual del sistema
+    final = "12/12/2022"  # Se podria establecer como final la fecha actual del sistema
     formato = "%d/%m/%Y"  # Formato establecido por defecto
     _nullable = restricciones.get("nullable")
     generated_date = ""
@@ -180,14 +177,14 @@ def generate_fecha(restricciones):
 
     if generated_date != "NULL":
         if es_date:  # DATE
-            minimo = mktime(strptime(inicio, formato))  # Fecha mínima en formato DATE
-            maximo = mktime(strptime(final, formato))  # Fecha máxima en formato DATE
+            minimo = mktime(strptime(inicio, formato))     # Fecha mínima en formato DATE
+            maximo = mktime(strptime(final, formato))      # Fecha máxima en formato DATE
             fecha = minimo + (maximo - minimo) * random.random()
             generated_date = strftime(strftime, localtime(fecha))
 
-        else:  # TIMESTAMP
-            minimo = datetime.strptime(inicio, formato)  # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-            maximo = datetime.strptime(final, formato)  # Fecha máxima en formato TIMESTAMP
+        else:        # TIMESTAMP
+            minimo = datetime.strptime(inicio, formato)    # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+            maximo = datetime.strptime(final, formato)     # Fecha máxima en formato TIMESTAMP
             fecha = minimo + (maximo - minimo) * random.random()
             if sec_precision >= 6:
                 generated_date = fecha.strftime("%d/%m/%Y %H:%M:%S.%f")

@@ -6,7 +6,6 @@ import re
 import constantes
 import generador_datos as gd
 
-# <----GENERAL---->
 def restricciones_sql(parameters, column):
     """Comprueba las restricciones SQL.
 
@@ -26,17 +25,13 @@ def restricciones_sql(parameters, column):
         restricciones_dict.update({"unique": []})
     if "primary_key" in column and column.get("primary_key"):
         restricciones_dict.update({"primary_key": []})
-    # if "foreign key" in column and column.get("foreign_key"):
-    #    restricciones_list.append("foreign_key")
     if "references" in column:
         restricciones_dict.update({"references": [x.lower() for x in column.get("references").values()]})
-    # if "default" in column:
-    #     restricciones_dict.update({"default", column.get("default").get("literal")})
 
     if parameters[0] == "Number" or parameters[0] == "String":
         restricciones_dict.update(comprobar_restricciones_check(parameters, check))
-    else:  # parameters[0] == "Fecha"
-        # POR EL MOMENTO LAS FECHAS NO POSEEN RESTRICCIONES CHECK
+    else:    # parameters[0] == "Fecha"
+             # LAS FECHAS NO POSEEN RESTRICCIONES CHECK
         restricciones_dict.update({"sec_precision": parameters[2], "es_date": parameters[3]})
 
     return restricciones_dict
@@ -52,12 +47,10 @@ def get_index(comparison, _not):
     return 1 if _not is None and (
         isinstance(comparison.get("args")[1], int)
         or isinstance(comparison.get("args")[1], float)
-        # or isinstance(comparison.get("args")[1], str)
     ) else (
         1 if _not is not None and (
             isinstance(comparison.get("args")[0].get("args")[1], int)
             or isinstance(comparison.get("args")[0].get("args")[1], float)
-            # or isinstance(comparison.get("args")[0].get("args")[1], str)
             )
         else 0)
 
@@ -87,7 +80,6 @@ def generar_datos(col_name, restricciones, check, times):
                 data.append(gd.generate_string(restricciones))
     elif restricciones.get("tipo") == "Date":
         for i in range(len(data), times):
-            # restricciones[0] = sec_precision, restricciones[1]= es_date, restricciones[2] = data_type
             data.append(gd.generate_fecha(restricciones))
     else:
         raise Exception
@@ -104,7 +96,6 @@ def cumple_restricciones(restricciones, data):
     if restricciones.get("neq") is not None and restricciones.get("neq") == data:
         valid = False
 
-    # No tenemos en cuenta el tipo Fecha ya que no tiene implementadas restricciones CHECK
     if restricciones.get("tipo") == "Number":
         if data < restricciones.get("min"):
             new_data = restricciones.get("min")
@@ -130,7 +121,7 @@ def cumple_restricciones(restricciones, data):
                     valid = False
     return valid, new_data
 
-
+# Para semiordenar el orden de las permutaciones más adelante.
 def loop_list(op: str, scale: int):
     loop = list()
     if op in ["eq", "lte"]:
@@ -148,7 +139,7 @@ def loop_list(op: str, scale: int):
 
 def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, compara_cols):
     """Comprueba las condiciones del where y modifica el diccionario de restricciones de forma que se puedan generar los
-    datos consultados así como datos no consultados
+    datos consultados así como datos no consultados.
 
     :param col_name: nombre de la columna
     :param restricciones_col: lista con restricciones de la columna consultada
@@ -173,7 +164,6 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
         args_ = arg.get("args")
         arg_data, arg_col = (args_[1], args_[0]) if isinstance(args_[0], str) else (
             (args_[0], args_[1]) if isinstance(args_[1], str) else (
-                # para WHERE con LENGTH()
                 (args_[1], args_[0].get("args")[0]) if isinstance(args_[0], dict) else (args_[0], args_[1].get("args")[0])
             )
         )
@@ -181,7 +171,6 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
         if not compara_cols and arg_col.lower() != col_name:
             continue
 
-        # Si es una comparación de columnas y estoy iterando sobre la segunda
         elif compara_cols and arg_col.lower() != col_name:
             data = gen_data.get(arg_data.lower())
             valid, data = cumple_restricciones(restricciones_col, data[0])
@@ -189,14 +178,15 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
             break
 
         op_ = arg.get("op")
-        col_data = list()  # Aquí se almacenan los datos generados para una columna del where
+        col_data = list()  # Almacena los datos generados para una columna del where
 
-        # Para saber si existe una op length
+        # Para saber si existe una operación length
         len_ex = str(args_[0]).find("length") if isinstance(args_[0], dict) else (
             str(args_[1]).find("length") if isinstance(args_[1], dict) else -1
         )
 
-        if isinstance(arg_data, dict):  # Para igualdades o desigualdades de cadenas o LIKE
+        # Para igualdades o desigualdades de cadenas o LIKE
+        if isinstance(arg_data, dict):
             arg_data = arg_data.get("literal")
 
         ops = ["eq", "neq", "gt", "gte", "lt", "lte", "like", "length"]
@@ -213,12 +203,12 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                         while data == "NULL":
                             data = gd.generate_number(restricciones_col)[0]
 
-                    # Para semiordenar el orden de las permutaciones más adelante. Primero los valores correctos.
+                    # Para semiordenar el orden de las permutaciones más adelante.
                     loop = loop_list(op_, scale)
 
                     for i in loop:
                         # Si se están comparando dos columnas de una tabla, generamos un valor aleatorio para la
-                        # segunda columna y para la primera columna generamos valores frontera
+                        # segunda columna y para la primera columna generamos valores frontera.
                         if compara_cols:
                             if gen_data.get(arg_data.lower()) is None:
                                 gen_data[arg_data.lower()] = [data]
@@ -228,13 +218,13 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                         else:
                             i = float(i)
                             data = float(data)
+
                         # Comprueba si el número generado cumple restricciones de su columna
-                        rounded_data = round(data + i, scale)  # evita restas incorrectas como 0.03 - 0.01 = 0.19999..7
+                        rounded_data = round(data + i, scale)  # Evita restas incorrectas como 0.03 - 0.01 = 0.19999..7
                         valid2, data2 = cumple_restricciones(restricciones_col, rounded_data)
                         if scale == 0:
                             data2 = int(data2)
-                        # if valid2 and data2 != rounded_data:
-                        #     i = 0
+
                         if _unique is None and _primary is None:
                             col_data.append(data2)
                         elif _unique is not None and data2 not in _unique:
@@ -280,7 +270,6 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                         restricciones_col.update({"like": old_like})
 
                     elif len_ex != -1:  # Existe el campo length
-                        # Puede haber entre cols si una de las cols es un entero
 
                         old_min = int(restricciones_col.get("min"))
                         old_max = int(restricciones_col.get("max"))
@@ -300,8 +289,6 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                             restricciones_col.update({"max": old_max})
 
                     else:  # Operaciones con operadores
-                        # Añadir siguiente caracter ascii al último caracter
-                        # Cojo el ultimo caracter de la cadena y sumo un caracter ascii
                         loop = loop_list(op_, 0)
                         for i in loop:
                             if compara_cols:
@@ -309,7 +296,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                                     gen_data[arg_data.lower()] = [data]
                             i = int(i)
                             char = chr(ord(data[-1]) + i)
-                            strings.append(data[0:-1] + char)
+                            strings.append(data[0:-1] + char)  # Añade el siguiente caracter ascii al último caracter
 
                     for i in strings:
                         if _unique is None and _primary is None:
@@ -375,7 +362,6 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
     return gen_data, _unique, _primary
 
 
-# <----RESTRICCIONES CHECK---->
 def comprobar_restricciones_check(parameters, check):
     """Comprueba las restricciones CHECK
 
@@ -403,18 +389,17 @@ def comprobar_restricciones_check(parameters, check):
 
         comparison_op = comparison.get("op")
         if comparison_op == "not":
-            _not = comparison.get("args")[0].get("op")  # _not contiene: "lte", "gt"...
+            _not = comparison.get("args")[0].get("op")
         if comparison_op == "eq":
             _eq = comparison.get("args")[get_index(comparison, None)]
         elif comparison_op == "neq":
             _neq = comparison.get("args")[get_index(comparison, None)]
         elif comparison_op == "gt" or _not == "gt":
             if _not == "gt":
-                # mínimo entre _max y el contenido del comparador
+                # Calcula el mínimo entre _max y el contenido del comparador
                 _max = min(_max, comparison.get("args")[0].get("args")[get_index(comparison, _not)])
             else:
-                # máximo entre _min y el contenido del comparador
-                # Si es de tipo número decimal, se suma uno al decimal menos significativo
+                # Calcula el máximo entre _min y el contenido del comparador. Si es de tipo número decimal, se suma uno al decimal menos significativo
                 _min = max(_min, comparison.get("args")[get_index(comparison, None)] + 1 / 10 ** _scale)
         elif comparison_op == "gte" or _not == "gte":
             if _not == "gte":
@@ -450,7 +435,6 @@ def comprobar_restricciones_check(parameters, check):
     return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale, "other": _other}
 
 
-# <----INICIO---->
 def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicion_where):
 
     """Detecta los tipo de datos de las columnas y delega la generación del tipo de dato detectado.
@@ -473,15 +457,15 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
         args = list()
         args.extend(condicion_where.get("args"))
         nombre_columnas = [x.get("name") for x in columnas]
-        cont = 0  # Contamos el número de veces que aparece un nombre de columna en los argumentos
-        compara_cols = False  # Si el contador es igual a 2 significa que se están comparando dos columnas de la tabla
+        cont = 0                                                    # Contamos el número de veces que aparece un nombre de columna en los argumentos
+        compara_cols = False                                        # Si el contador es igual a 2 significa que se están comparando dos columnas de la tabla
 
         # Determinar el nombre de las columnas de las condiciones
         for arg in args:
-            if isinstance(arg, dict):  # Ej: {'op': 'gt', 'args': ['real', 0.0]}
+            if isinstance(arg, dict):
                 in_args = arg.get("args")
 
-                # Para igualdades/desigualdades de entre fechas. Ej: ['fec2', {'literal': '05/10/1995 00:20:38.47'}]
+                # Para igualdades/desigualdades entre fechas.
                 if in_args is None:
                     break
                 col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
@@ -500,7 +484,6 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                         col_select.append(in_args[0].lower())
                     elif isinstance(in_args[1], str):
                         col_select.append(in_args[1].lower())
-                    # break
         if cont == 2:
             compara_cols = True
 
@@ -508,8 +491,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
     for column in columnas:
         col_name = column.get("name").lower()
-        data_type = column.get("type").get("op").lower()  # number
-        parameters = column.get("type").get("args", None)  # [5, 0], [4]
+        data_type = column.get("type").get("op").lower()
+        parameters = column.get("type").get("args", None)
 
         data = list()
 
@@ -521,7 +504,7 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
             if data_type in constantes.ENTEROS:
                 data_type_param.append(38) if parameters is None else data_type_param.append(parameters)
-                data_type_param.append(0)  # Escala = 0
+                data_type_param.append(0)
             else:
                 data_type_param.extend([10, 4]) if data_type == "float" or data_type == "real" else (
                     data_type_param.extend([38, 127]) if parameters is None else data_type_param.extend(parameters))
@@ -545,6 +528,7 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
             col_data.update({col_name: data})
 
         elif data_type in constantes.STRINGS:
+
             # char y nchar tienen un tamaño por defecto de 1
             max_size = 1 if parameters is None else parameters[0]
             varying = False if data_type == "char" or data_type == "nchar" else True
@@ -572,10 +556,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
             data_type_param = ["Fecha", col_name, sec_precision, es_date]
 
-            # restricciones = ['unique', {'sec_precision': 2, 'es_date': 0}]
             restricciones = restricciones_sql(data_type_param, column)
 
-            # 'fec2': ['unique', {'sec_precision': 2, 'es_date': 0, 'tipo': 'Date'}]
             restricciones.update({"tipo": "Date"})
             col_restrictions.update({col_name: restricciones})
 
@@ -630,7 +612,6 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
     elif len(where_data) > 0:
         col_data.update({col_select[0]: where_data.get(col_select[0])})
 
-    # Si hay algún dato generado por las condiciones where,
     times = 0
     if condicion_where is not None:
         for i in range(0, len(keys)):
@@ -638,36 +619,31 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
     # Generación de datos por JOIN
     if len(select_joins) > 0:
-        for join in select_joins:  # join es una tupla que contiene las tablas de un join
+        for join in select_joins:                                         # join es una tupla que contiene las tablas de un JOIN
             if nombre_tabla in join:
-                # De momento no permite alias, asi que dos columnas de dos tablas diferentes tiene que llamarse
+                # No se permite alias, asi que dos columnas de dos tablas diferentes tiene que llamarse
                 # diferente, con lo cual no hay problema en comprobar las dos columnas.
                 col = select_joins.get(join)[1].lower()
                 # Compruebo si la columna es de la tabla sobre la que se está iterando o es de la otra
                 if col_restrictions.get(col) is None:
                     col = select_joins.get(join)[2].lower()
 
-                # for t in join:
-                #     Se usa para saber si ya hay algún dato metido por los join
-                #     for t2 in tablas:
-                #         if t2.get('name') == t:
-                #             data_in_col = None if col_data.get(t2.get('columns').get(col)) is None else col_data.get(t2.get('columns').get(col))
 
-                if col_restrictions.get(col) is not None:  # Puede ser que las col del join no sean de la tabla actual
+
+                if col_restrictions.get(col) is not None:                  # Puede ser que las col del JOIN no sean de la tabla actual
                     if col_restrictions.get(col).get('primary_key') is not None:
                         # Generar dos valores diferentes para la columna
                         check = next((columna for columna in columnas if columna['name'] == col), None)
                         datos_join = generar_datos(col, col_restrictions.get(col), check, 2)
-                        while datos_join[0] == datos_join[1]:  # Comprobamos que los dos datos son distintos
+                        while datos_join[0] == datos_join[1]:              # Comprobamos que los dos datos son distintos
                             datos_join[1] = generar_datos(col, col_restrictions.get(col), check, 1)
                         col_data.update({col: datos_join})
                     else:
                         # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
                         datos_join = list()
-                        # times es el número máximo de datos metidos en una columna por el where
-                        aux_times = 1 if times == 0 else times
-                        if len(col_data.get(col)) == 0:  # Si aún no hemos metido ningún dato en esta columna
-                            tabla_primary = join[0]  # En join sigue guardado el join que estamos analizando
+                        aux_times = 1 if times == 0 else times             # times es el número máximo de datos metidos en una columna por el where
+                        if len(col_data.get(col)) == 0:
+                            tabla_primary = join[0]
                             col_primary = select_joins.get(join)[1].lower()
                             dato_primary = tablas_datos.get(tabla_primary).get(col_primary)[0]
                             if select_joins.get(join)[0] == "eq":
@@ -685,11 +661,9 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
                             check = next((columna for columna in columnas if columna['name'] == col), None)
                             dato = generar_datos(col, col_restrictions.get(col), check, 1)
-                        # else:
-                        #     dato = col_data.get(data_in_col)[0]
+
 
                             for i in range(0, aux_times):
-                                # Coger un valor de los generados en la col que tiene primary key
                                 datos_join.extend(dato)
                             col_data.update({col: datos_join})
                 break

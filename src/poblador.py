@@ -8,14 +8,9 @@ def poblador_tablas(sentencias_create, sentencia_select):
     :param sentencia_select: una sentencia select
     :return:
     """
-    # tablas_restricciones = {tabla1: [
-    #                    {col1: ["nullable", "unique", {min:0, max:10, eq: None, neq: 5, scale: 0, tipo: int}]},
-    #                    {col2: ["primary key", {min: 5, max:10, eq: None, neq: None, like: '___-_%', tipo: varchar}]}
-    #                    ]}
-    # variable para almacenar en un diccionario las restricciones de cada tabla
-    tablas_restricciones = {}
-    # variable para almacenar en un diccionario los datos generados en cada columna de cada tabla
-    tablas_datos = {}
+
+    tablas_restricciones = {}  # Variable para almacenar en un diccionario las restricciones de cada tabla
+    tablas_datos = {}          # Variable para almacenar en un diccionario los datos generados en cada columna de cada tabla
 
     # Parsear las sentencias CREATE TABLE
     tablas = sentencias_create.split(";")
@@ -54,27 +49,23 @@ def poblador_tablas(sentencias_create, sentencia_select):
 
         # Buscar las tabla en tablas_parsed cuyos nombres coincidan con tabla_s.
         # Así no iteramos sobre tablas no necesarias
-        # tablas = list()
         col_tablas = dict()
         for tabla_p in tablas_parsed:
             col_tablas = tabla_p.get("create table")
             if col_tablas.get("name").lower() == tabla_s:
                 col_tablas.update({'name': tabla_s})  # Nos aseguramos de que se quede en minúsculas
-                # tablas.append(aux)
                 break
-        # if len(tablas) == 0:
+
         if len(col_tablas) == 0:
             raise Exception("La tabla no existe")
 
-        # datos: diccionario con un array de datos generados aleatoriamente asociado a cada columna
-        # restricciones: diccionario con un array de restricciones asociado a cada columna
-        # datos, restricciones = c.clasificar_tipo(tabla_s, tablas, tablas_datos, joins, select_parsed.get("where"))
+        # datos: Diccionario con un array de datos generados aleatoriamente asociado a cada columna
+        # restricciones: Diccionario con un array de restricciones asociado a cada columna
         datos, restricciones = c.clasificar_tipo(tabla_s, col_tablas.get("columns"), tablas_datos, joins, select_parsed.get("where"))
 
         tablas_restricciones.get(tabla_s).update(restricciones)
         tablas_datos.get(tabla_s).update(datos)
 
-    # nombre_tabla = select_parsed.get("from").lower()  # Identifica la tabla consultada
 
     insert_list = list()
     value_list = list()

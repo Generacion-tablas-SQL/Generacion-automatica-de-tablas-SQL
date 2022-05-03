@@ -3,22 +3,21 @@ import sys
 
 class MyTestCase(unittest.TestCase):
     def test_float(self):
-        for i in range(1, 17):  # Debería ser 39
+        for i in range(1, 17):
             for j in range(-84, 17):
                 result = gd.max_number(i, j)
                 if j in range(-84, 0):
                     if i > abs(j):
-                        self.assertEqual(len(str(result)), i)  # num dígitos total
+                        self.assertEqual(len(str(result)), i)                       # Número de dígitos total
                         nines = result // (10 ** abs(j))
-                        self.assertEqual(len(str(nines)), i - abs(j))  # cantidad de 9 = precision - abs(scale)
-                        self.assertNotIn("0", str(nines))  # no hay 0 en la zona de nueves
-                        # resultado igual a zona de nueves + cantidad de 0 indicados en precision
-                        self.assertEqual(str(result), str(nines) + "0" * abs(j))
+                        self.assertEqual(len(str(nines)), i - abs(j))               # Cantidad de 9 = precision - abs(scale)
+                        self.assertNotIn("0", str(nines))                           # No existe 0 en la zona de nueves
+                        self.assertEqual(str(result), str(nines) + "0" * abs(j))    # Resultado igual a zona de nueves + cantidad de 0 indicados en precision
                     else:
-                        self.assertEqual(len(str(result)), abs(j) + 1)  # num dígitos total
-                        self.assertNotIn("9", str(result)[1:])  # solo hay un nueve, en la primera posición
-                        self.assertEqual("9", str(result)[0])  # el primer dígito es un nueve
-                elif j in range(1, 17):  # Debería llegar a 128 pero float no soporta tanta precision, se convierte a
+                        self.assertEqual(len(str(result)), abs(j) + 1)              # Número de dígitos total
+                        self.assertNotIn("9", str(result)[1:])                      # Solo hay un nueve, en la primera posición
+                        self.assertEqual("9", str(result)[0])                       # El primer dígito es un nueve
+                elif j in range(1, 17):
                     if i > j:
                         self.assertEqual(len(str(result)), i + 1)
                         self.assertEqual(str(result)[i - j], ".")
