@@ -71,11 +71,11 @@ class MyTestCase(unittest.TestCase):
     def test_date_gen(self):
         # 1 DATE
         # Ej: "01/01/1971"
-        self.assertRegex(gd.gen_fecha({'sec_precision': 0, 'es_date': 1, 'tipo': 'Date'}), '[0-3]\d/[0-1]\d/\d{4}')
+        self.assertRegex(gd.generate_fecha({'sec_precision': 0, 'es_date': 1, 'tipo': 'Date'}), '[0-3]\d/[0-1]\d/\d{4}')
 
         # 2 TIMESTAMP
         # Ej: "01/01/1971 00:00:00.00"
-        self.assertRegex(gd.gen_fecha({'sec_precision': 2, 'es_date': 0, 'tipo': 'Date'}),
+        self.assertRegex(gd.generate_fecha({'sec_precision': 2, 'es_date': 0, 'tipo': 'Date'}),
                          '[0-3]\d/[0-1]\d/\d{4} [0-2]\d:[0-5]\d:[0-5]\d.\d+')
 
 

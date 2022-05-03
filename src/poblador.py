@@ -92,7 +92,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
                     break
             if len(value_list) != 0:
                 values = tuple(value_list)
-                insert_list.append("INSERT INTO " + tabla_s + " VALUES " + str(values))
+                insert_list.append("INSERT INTO " + tabla_s + " VALUES " + str(values) + ";")
                 value_list.clear()
 
     return insert_list

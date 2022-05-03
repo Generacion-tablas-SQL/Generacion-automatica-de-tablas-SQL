@@ -8,7 +8,8 @@ def main():
                    "ent INT CHECK (INT > 25 AND INT < 45)," \
                    "string VARCHAR(15) NOT NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 20)," \
                    "fec1 DATE NOT NULL, " \
-                   "fec2 TIMESTAMP(2) NOT NULL)"
+                   "fec2 TIMESTAMP(2) NOT NULL, "\
+                    "fec3 TIMESTAMP(2) NOT NULL)"
 
     select1 = "SELECT string FROM Persona WHERE LENGTH(string) < 4"
     select2 = "SELECT ent FROM Persona WHERE ent > 50 and real != 0.02"
@@ -18,6 +19,7 @@ def main():
     select6 = "SELECT fec1, ent FROM Persona WHERE fec1 > '30/08/2000' and ent > 35"
     select7 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting'"
     select8 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting' and fec1 > '30/08/2000'"
+    select14 = "SELECT * FROM Persona WHERE fec2 = '05/10/1995 00:20:38.47'"
 
     create_table2 = "CREATE TABLE Club(" \
                         "CIF NUMBER(4) PRIMARY KEY NOT NULL," \
@@ -51,10 +53,10 @@ def main():
     select10 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L;"
     select11 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB WHERE Altura > 1.65;"
     select12 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L WHERE Altura > 1.65;"
-    select13 = "SELECT * From Club WHERE NumSocios > NumAsientos;"
+    select13 = "SELECT * From Club WHERE Nombre_Club = Sede;"
 
     try:
-        print(*poblador_tablas(create_table2, select12), sep='\n')
+        print(*poblador_tablas(create_table, select14), sep='\n')
     except Exception as msg:
         traceback.print_exc()
         print(msg)
