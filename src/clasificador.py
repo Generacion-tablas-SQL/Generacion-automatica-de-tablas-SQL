@@ -58,26 +58,24 @@ def get_index(comparison, _not):
 def generar_datos(col_name, restricciones, check, times):
     data = list()
     if restricciones.get("tipo") == "Number":
-        if restricciones.get("other"):
-            for i in range(0, times):
-                data.append(gd.generate_random("Number", col_name, restricciones, check))
-        else:
-            for i in range(0, times):
-                gen_num, unique, primary = gd.generate_number(restricciones)
-                if gen_num is not None:
-                    data.append(gen_num)
-                if unique is not None:
-                    restricciones.update({"unique": unique})
-                if primary is not None:
-                    restricciones.update({"primary key": primary})
+        for i in range(0, times):
+            gen_num, unique, primary = gd.generate_number(restricciones)
+            if gen_num is not None:
+                data.append(gen_num)
+            if unique is not None:
+                restricciones.update({"unique": unique})
+            if primary is not None:
+                restricciones.update({"primary key": primary})
 
     elif restricciones.get("tipo") == "String":
-        if restricciones.get("other"):
-            for i in range(0, times):
-                data.append(gd.generate_random("String", col_name, restricciones, check))
-        else:
-            for i in range(0, times):
-                data.append(gd.generate_string(restricciones))
+        for i in range(0, times):
+            gen_string, unique, primary = gd.generate_string(restricciones)
+            if gen_string is not None:
+                data.append(gen_string)
+            if unique is not None:
+                restricciones.update({"unique": unique})
+            if primary is not None:
+                restricciones.update({"primary key": primary})
     elif restricciones.get("tipo") == "Date":
         for i in range(len(data), times):
             data.append(gd.generate_fecha(restricciones))
@@ -378,10 +376,9 @@ def comprobar_restricciones_check(parameters, check):
     _not = None
     _like = None
     _scale = 0 if parameters[0] == "String" else parameters[3]
-    _other = False
 
     if check is None:
-        return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale, "other": _other}
+        return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale}
 
     comparisons = check.get("args")
 
@@ -419,7 +416,7 @@ def comprobar_restricciones_check(parameters, check):
         elif comparison_op == "like":
             _like = comparison.get("args")[1].get("literal")
         else:
-            _other = True
+            raise Exception("Operador en sentencia CREATE TABLE no soportado")
         _not = None
 
     if _min > _max or _max < _min:
@@ -432,7 +429,7 @@ def comprobar_restricciones_check(parameters, check):
         if _like.count('%') == 0 and len(_like) < _min:
             raise Exception("Restricciones de la columna no satisfactibles")
 
-    return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale, "other": _other}
+    return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale}
 
 
 def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicion_where):

@@ -2,7 +2,6 @@ from datetime import datetime
 from decimal import Decimal
 from time import mktime, strftime, strptime, localtime
 from faker import Faker
-from mo_sql_parsing import format
 import random
 import constantes
 
@@ -195,20 +194,3 @@ def generate_fecha(restricciones):
                 generated_date = fecha.strftime("%d/%m/%Y %H:%M:%S.%f")[:-sec_precision]
     return generated_date
 
-
-def generate_random(data_type, column_name, restricciones, check):
-    tries = 20
-    value = generate_string(restricciones) if data_type == "String" else generate_number(restricciones)
-    check = format(check).lower()
-    check = check.replace(column_name, str(value))
-    check = check.replace("<>", "!=")
-
-    while not eval(check) and tries > 0:
-        new_value = generate_string(restricciones) if data_type == "String" else generate_number(restricciones)
-        check = check.replace(str(value), str(new_value))
-        value = new_value
-        tries -= 1
-        if tries > 0:
-            return value
-        else:
-            raise Exception("Operador no soportado.")
