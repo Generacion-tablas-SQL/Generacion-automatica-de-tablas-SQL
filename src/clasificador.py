@@ -24,7 +24,7 @@ def restricciones_sql(parameters, column):
     if "unique" in column and column.get("unique"):
         restricciones_dict.update({"unique": []})
     if "primary_key" in column and column.get("primary_key"):
-        restricciones_dict.update({"primary_key": []})
+        restricciones_dict.update({"primary key": []})
     if "references" in column:
         restricciones_dict.update({"references": [x.lower() for x in column.get("references").values()]})
 

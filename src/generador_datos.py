@@ -56,7 +56,6 @@ def generate_null_value():
     return ""
 
 
-
 def generate_string(restricciones):
     """Genera cadenas de caracteres aleatorias que cumplen una serie de restricciones
 
@@ -164,12 +163,14 @@ def generate_number(restricciones):
                         generated_number += 1
                     else:
                         generated_number += 1 / 10 ** scale
-        if generated_number == "NULL" or (_unique is None and _primary is None):
+        if _unique is None and _primary is None:
+            break
+        if _unique is not None and generated_number == "NULL":
             break
         if _unique is not None and generated_number not in _unique:
             _unique.append(generated_number)
             break
-        if _primary is not None and generated_number not in _primary:
+        if _primary is not None and generated_number != "NULL" and generated_number not in _primary:
             _primary.append(generated_number)
             break
         generated_number = None
