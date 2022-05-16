@@ -31,7 +31,7 @@ def restricciones_sql(parameters, column):
     if parameters[0] == "Number" or parameters[0] == "String":
         restricciones_dict.update(comprobar_restricciones_check(parameters, check))
     else:    # parameters[0] == "Fecha"
-             # LAS FECHAS NO POSEEN RESTRICCIONES CHECK
+        # En esta versión de la biblioteca, las fechas no poseen restricciones check
         restricciones_dict.update({"sec_precision": parameters[2], "es_date": parameters[3]})
 
     return restricciones_dict
@@ -55,7 +55,7 @@ def get_index(comparison, _not):
         else 0)
 
 
-def generar_datos(col_name, restricciones, check, times):
+def generar_datos(restricciones, times):
     data = list()
     if restricciones.get("tipo") == "Number":
         for i in range(0, times):
@@ -396,7 +396,8 @@ def comprobar_restricciones_check(parameters, check):
                 # Calcula el mínimo entre _max y el contenido del comparador
                 _max = min(_max, comparison.get("args")[0].get("args")[get_index(comparison, _not)])
             else:
-                # Calcula el máximo entre _min y el contenido del comparador. Si es de tipo número decimal, se suma uno al decimal menos significativo
+                # Calcula el máximo entre _min y el contenido del comparador. Si es de tipo número decimal,
+                # se suma uno al decimal menos significativo
                 _min = max(_min, comparison.get("args")[get_index(comparison, None)] + 1 / 10 ** _scale)
         elif comparison_op == "gte" or _not == "gte":
             if _not == "gte":
@@ -454,8 +455,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
         args = list()
         args.extend(condicion_where.get("args"))
         nombre_columnas = [x.get("name") for x in columnas]
-        cont = 0                                                    # Contamos el número de veces que aparece un nombre de columna en los argumentos
-        compara_cols = False                                        # Si el contador es igual a 2 significa que se están comparando dos columnas de la tabla
+        cont = 0  # Contamos el número de veces que aparece un nombre de columna en los argumentos
+        compara_cols = False  # Si el contador es igual a 2 significa que se están comparando dos columnas de la tabla
 
         # Determinar el nombre de las columnas de las condiciones
         for arg in args:
@@ -631,9 +632,9 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                     if col_restrictions.get(col).get('primary_key') is not None:
                         # Generar dos valores diferentes para la columna
                         check = next((columna for columna in columnas if columna['name'] == col), None)
-                        datos_join = generar_datos(col, col_restrictions.get(col), check, 2)
+                        datos_join = generar_datos(col_restrictions.get(col), 2)
                         while datos_join[0] == datos_join[1]:              # Comprobamos que los dos datos son distintos
-                            datos_join[1] = generar_datos(col, col_restrictions.get(col), check, 1)
+                            datos_join[1] = generar_datos(col_restrictions.get(col), 1)
                         col_data.update({col: datos_join})
                     else:
                         # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
@@ -657,7 +658,7 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                                 raise Exception("Operador en join no soportado")
 
                             check = next((columna for columna in columnas if columna['name'] == col), None)
-                            dato = generar_datos(col, col_restrictions.get(col), check, 1)
+                            dato = generar_datos(col_restrictions.get(col), 1)
 
 
                             for i in range(0, aux_times):
@@ -694,6 +695,6 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
         if len(col_data.get(dato)) < times:
             times_aux = times - len(col_data.get(dato))
             check = next((col for col in columnas if col['name'] == dato), None)
-            col_data.update({dato: generar_datos(dato, col_restrictions.get(dato), check, times_aux)})
+            col_data.update({dato: generar_datos(col_restrictions.get(dato), times_aux)})
 
     return col_data, col_restrictions

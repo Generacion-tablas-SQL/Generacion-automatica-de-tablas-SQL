@@ -124,7 +124,9 @@ def generate_number(restricciones):
 
     generated_number = None
 
-    for i in range(0, constantes.UNIQUE_TRIES):  # Repetimos el proceso si genera un número generado previamente y existe una restricción unique o primary key
+    # Repetimos el proceso si genera un número generado previamente y existe una restricción
+    # unique o primary key
+    for i in range(0, constantes.UNIQUE_TRIES):
         if _nullable is True:
             generated_number = generate_null_value()
 
@@ -136,7 +138,8 @@ def generate_number(restricciones):
                     generated_number += 1
             else:
                 # Genera un número real
-                generated_number = float(Decimal(str(random.uniform(_min, _max))).quantize(Decimal(10) ** -scale))
+                generated_number = float(Decimal(str(random.uniform(_min, _max)))
+                                         .quantize(Decimal(10) ** -scale))
                 if _neq is not None and generated_number == _neq:
                     if scale < 0:
                         generated_number += 1
@@ -157,10 +160,11 @@ def generate_number(restricciones):
 def generate_fecha(restricciones):
     """Genera fechas aleatorias que cumplen una serie de restricciones
             :param restricciones: diccionario con los parámetros sec_precision, es_date, data_type
-            :return: una una fecha aleatoria del tipo específico(DATE o TIMESTAMP) en formato string
+            :return: una fecha aleatoria del tipo específico(DATE o TIMESTAMP) en formato string
 
-        Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria, además
-        del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD , TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
+        Se establecen una fecha inicio y una fecha final como rango para generar la fecha aleatoria,
+        además del formato específico en el que lo mostramos. DATE: 'YYYY-MM-DD ,
+        TIMESTAMP: 'YYYY-MM-DD HH24:MI:SS.FF'
     """
 
     es_date = restricciones.get("es_date")
