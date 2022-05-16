@@ -68,36 +68,55 @@ def generate_string(restricciones):
     _neq = restricciones.get("neq")
     _eq = restricciones.get("eq")
     _like = restricciones.get("like")
+    _unique = restricciones.get("unique") if "unique" in restricciones else None
+    _primary = restricciones.get("primary key") if "primary key" in restricciones else None
     _nullable = restricciones.get("nullable")
 
     fake = Faker(['en_US'])
-    generated_string = ""
-
-    if _nullable:
-        if generate_null_value() == "NULL":
-            return "NULL"
+    generated_string = None
 
     if _eq is not None:
-        return _eq
+        if _unique is not None and _eq != "NULL" and _eq not in _unique:
+            _unique.append(_eq)
+        if _primary is not None and _eq not in _primary:
+            _primary.append(_eq)
+        return _eq, _unique, _primary
 
-    if _like is not None:
-        max_percentage_chars = _like.count('%') + _max - len(_like)
-        for char in _like:
-            if char == '_':
-                generated_string += random.choice('abcdefghijklmnopqrstuvwxyz')
-            elif char == '%':
-                b = random.randint(0, max_percentage_chars)
-                generated_string += fake.text()[0:b]
-                max_percentage_chars -= b
+    # Repetimos el proceso si genera un string generado previamente y existe una restricción
+    # unique o primary key
+    for i in range(0, constantes.UNIQUE_TRIES):
+        if _nullable is True:
+            generated_string = generate_null_value()
+
+        if generated_string != "NULL":
+            if _like is not None:
+                generated_string = ""
+                max_percentage_chars = _like.count('%') + _max - len(_like)
+                for char in _like:
+                    if char == '_':
+                        generated_string += random.choice('abcdefghijklmnopqrstuvwxyz')
+                    elif char == '%':
+                        fin = random.randint(0, max_percentage_chars)
+                        generated_string += fake.text()[0:fin]
+                        max_percentage_chars -= fin
+                    else:
+                        generated_string += char
+                if len(generated_string) < _min:
+                    fin = _min - len(generated_string)
+                    generated_string += fake.text()[0:int(fin)]
             else:
-                generated_string += char
-        if len(generated_string) < _min:
-            b = _min - len(generated_string)
-            generated_string += fake.text()[0:int(b)]
-    else:
-        b = random.randint(_min, _max)
-        generated_string = fake.text()[0:b]
-    return generated_string
+                fin = random.randint(_min, _max)
+                generated_string = fake.text()[0:fin]
+        if generated_string == "NULL" or (_unique is None and _primary is None):
+            break
+        if _unique is not None and generated_string not in _unique:
+            _unique.append(generated_string)
+            break
+        if _primary is not None and generated_string not in _primary:
+            _primary.append(generated_string)
+            break
+        generated_string = None
+    return generated_string, _unique, _primary
 
 
 def generate_number(restricciones):

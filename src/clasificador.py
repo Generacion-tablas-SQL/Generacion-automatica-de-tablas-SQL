@@ -236,13 +236,13 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                     if compara_cols:
                         data = "NULL"
                         while data == "NULL":
-                            data = gd.generate_string(restricciones_col)
+                            data = gd.generate_string(restricciones_col)[0]
 
                     strings = list()
                     if op_ == "like":
                         old_like = restricciones_col.get("like")
                         restricciones_col.update({"like": data})
-                        strings.append(gd.generate_string(restricciones_col))
+                        strings.append(gd.generate_string(restricciones_col)[0])
 
                         # GENERAR VALOR INVÁLIDO
                         pos = 0
@@ -260,7 +260,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
 
                             invalid_data = data[0:pos] + letr + data[pos + 1:]
                             restricciones_col.update({"like": invalid_data})
-                            strings.append(gd.generate_string(restricciones_col))
+                            strings.append(gd.generate_string(restricciones_col)[0])
                         else:
                             raise Exception("Restricción LIKE en sentencia SELECT no soportada. "
                                             "Debe contener al menos un caracter válido.")
@@ -282,7 +282,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                                 i = 0
                             restricciones_col.update({"min": data + i})
                             restricciones_col.update({"max": data + i})
-                            strings.append(gd.generate_string(restricciones_col))
+                            strings.append(gd.generate_string(restricciones_col)[0])
                             restricciones_col.update({"min": old_min})
                             restricciones_col.update({"max": old_max})
 
