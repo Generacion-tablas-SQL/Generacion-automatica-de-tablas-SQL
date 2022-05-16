@@ -116,7 +116,7 @@ def generate_number(restricciones):
     _nullable = restricciones.get("nullable")
 
     if _eq is not None:
-        if _unique is not None and _eq not in _unique:
+        if _unique is not None and _eq != "NULL" and _eq not in _unique:
             _unique.append(_eq)
         if _primary is not None and _eq not in _primary:
             _primary.append(_eq)
@@ -145,7 +145,7 @@ def generate_number(restricciones):
                         generated_number += 1
                     else:
                         generated_number += 1 / 10 ** scale
-        if _unique is None and _primary is None:
+        if generated_number == "NULL" or (_unique is None and _primary is None):
             break
         if _unique is not None and generated_number not in _unique:
             _unique.append(generated_number)
