@@ -199,14 +199,16 @@ def generate_fecha(restricciones):
 
     if generated_date != "NULL":
         if es_date:  # DATE
-            minimo = mktime(strptime(inicio, formato))     # Fecha mínima en formato DATE
-            maximo = mktime(strptime(final, formato))      # Fecha máxima en formato DATE
+            minimo = mktime(strptime(inicio, formato))  # Fecha mínima en formato DATE
+            maximo = mktime(strptime(final, formato))  # Fecha máxima en formato DATE
             fecha = minimo + (maximo - minimo) * random.random()
-            generated_date = strftime(strftime, localtime(fecha))
+            generated_date = strftime(formato, localtime(fecha))
 
-        else:        # TIMESTAMP
-            minimo = datetime.strptime(inicio, formato)    # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
-            maximo = datetime.strptime(final, formato)     # Fecha máxima en formato TIMESTAMP
+        else:  # TIMESTAMP
+            # Fecha mínima en formato TIMESTAMP 'YYYY-MM-DD HH24:MI:SS.FF'
+            minimo = datetime.strptime(inicio, formato)
+            # Fecha máxima en formato TIMESTAMP
+            maximo = datetime.strptime(final, formato)
             fecha = minimo + (maximo - minimo) * random.random()
             if sec_precision >= 6:
                 generated_date = fecha.strftime("%d/%m/%Y %H:%M:%S.%f")

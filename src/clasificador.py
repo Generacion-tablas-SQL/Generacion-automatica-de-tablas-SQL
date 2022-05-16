@@ -504,7 +504,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                 data_type_param.append(38) if parameters is None else data_type_param.append(parameters)
                 data_type_param.append(0)
             else:
-                data_type_param.extend([10, 4]) if data_type == "float" or data_type == "real" else (
+                # Si es un número con coma flotante lo convertimos a uno de coma fija
+                data_type_param.extend([10, 4]) if data_type in constantes.COMA_FLOTANTE else (
                     data_type_param.extend([38, 127]) if parameters is None else data_type_param.extend(parameters))
 
                 if len(data_type_param) == 3:
