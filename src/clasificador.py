@@ -205,33 +205,46 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                     loop = loop_list(op_, scale)
 
                     for i in loop:
-                        # Si se están comparando dos columnas de una tabla, generamos un valor aleatorio para la
-                        # segunda columna y para la primera columna generamos valores frontera.
-                        if compara_cols:
-                            if gen_data.get(arg_data.lower()) is None:
-                                gen_data[arg_data.lower()] = [data]
-                        if scale == 0:
-                            i = int(i)
-                            data = int(data)
-                        else:
-                            i = float(i)
-                            data = float(data)
+                        # Si hay restriccion unique o primary key y se repite un dato, se vuelve a generar hasta
+                        # que se genera un dato no repetido, o hasta que de UNIQUE_TRIES vueltas
+                        for j in range(0, constantes.UNIQUE_TRIES):
+                            # Si se están comparando dos columnas de una tabla, generamos un valor aleatorio para la
+                            # segunda columna y para la primera columna generamos valores frontera.
+                            if compara_cols:
+                                if gen_data.get(arg_data.lower()) is None:
+                                    gen_data[arg_data.lower()] = [data]
+                            if scale == 0:
+                                i = int(i)
+                                data = int(data)
+                            else:
+                                i = float(i)
+                                data = float(data)
 
-                        # Comprueba si el número generado cumple restricciones de su columna
-                        rounded_data = round(data + i, scale)  # Evita restas incorrectas como 0.03 - 0.01 = 0.19999..7
-                        valid2, data2 = cumple_restricciones(restricciones_col, rounded_data)
-                        if scale == 0:
-                            data2 = int(data2)
+                            # Evita restas incorrectas como 0.03 - 0.01 = 0.19999..7
+                            rounded_data = round(data + i, scale)
 
-                        if _unique is None and _primary is None:
-                            col_data.append(data2)
-                        elif _unique is not None and data2 not in _unique:
-                            col_data.append(data2)
-                            _unique.append(data2)
-                        elif _primary is not None and data2 not in _primary:
-                            col_data.append(data2)
-                            _primary.append(data2)
+                            # Comprueba si el número generado cumple restricciones de su columna
+                            valid2, data2 = cumple_restricciones(restricciones_col, rounded_data)
+                            if scale == 0:
+                                data2 = int(data2)
 
+                            if _unique is None and _primary is None:
+                                col_data.append(data2)
+                                break
+                            elif _unique is not None and data2 not in _unique:
+                                col_data.append(data2)
+                                _unique.append(data2)
+                                break
+                            elif _primary is not None and data2 not in _primary:
+                                col_data.append(data2)
+                                _primary.append(data2)
+                                break
+                            else:
+                                if i == 0:
+                                    break
+                                else:
+                                    # Suma o resta y vuelve a intentar insertarlo
+                                    i += i
                 elif restricciones_col.get("tipo") == "String":
                     if compara_cols:
                         data = "NULL"
@@ -618,7 +631,7 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
     # Generación de datos por JOIN
     if len(select_joins) > 0:
-        for join in select_joins:                                         # join es una tupla que contiene las tablas de un JOIN
+        for join in select_joins:  # join es una tupla que contiene las tablas de un JOIN
             if nombre_tabla in join:
                 # No se permite alias, asi que dos columnas de dos tablas diferentes tiene que llamarse
                 # diferente, con lo cual no hay problema en comprobar las dos columnas.
@@ -627,9 +640,7 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                 if col_restrictions.get(col) is None:
                     col = select_joins.get(join)[2].lower()
 
-
-
-                if col_restrictions.get(col) is not None:                  # Puede ser que las col del JOIN no sean de la tabla actual
+                if col_restrictions.get(col) is not None:  # Puede ser que las col del JOIN no sean de la tabla actual
                     if col_restrictions.get(col).get('primary_key') is not None:
                         # Generar dos valores diferentes para la columna
                         check = next((columna for columna in columnas if columna['name'] == col), None)
@@ -640,7 +651,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                     else:
                         # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
                         datos_join = list()
-                        aux_times = 1 if times == 0 else times             # times es el número máximo de datos metidos en una columna por el where
+                        # times es el número máximo de datos metidos en una columna por el where
+                        aux_times = 1 if times == 0 else times
                         if len(col_data.get(col)) == 0:
                             tabla_primary = join[0]
                             col_primary = select_joins.get(join)[1].lower()
@@ -660,7 +672,6 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
                             check = next((columna for columna in columnas if columna['name'] == col), None)
                             dato = generar_datos(col_restrictions.get(col), 1)
-
 
                             for i in range(0, aux_times):
                                 datos_join.extend(dato)
