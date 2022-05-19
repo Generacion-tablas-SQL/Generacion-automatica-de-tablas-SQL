@@ -1,5 +1,6 @@
 from mo_sql_parsing import parse, normal_op
 import clasificador as c
+import constantes as cts
 
 def poblador_tablas(sentencias_create, sentencia_select):
     """Dada una o varias tablas y una o varias sentencias select, ...
@@ -87,3 +88,9 @@ def poblador_tablas(sentencias_create, sentencia_select):
                 value_list.clear()
 
     return insert_list
+
+def set_null_probability(null_probability):
+    if 0 <= null_probability <= 1:
+        cts.NULL_PROBABILITY = null_probability
+    else:
+        raise Exception('Probabilidad fuera de rango')
