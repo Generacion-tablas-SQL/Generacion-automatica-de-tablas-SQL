@@ -11,7 +11,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
     """
 
     tablas_restricciones = {}  # Variable para almacenar en un diccionario las restricciones de cada tabla
-    tablas_datos = {}          # Variable para almacenar en un diccionario los datos generados en cada columna de cada tabla
+    tablas_datos = {}  # Variable para almacenar en un diccionario los datos generados en cada columna de cada tabla
 
     # Parsear las sentencias CREATE TABLE
     tablas = sentencias_create.split(";")
@@ -67,7 +67,6 @@ def poblador_tablas(sentencias_create, sentencia_select):
         tablas_restricciones.get(tabla_s).update(restricciones)
         tablas_datos.get(tabla_s).update(datos)
 
-
     insert_list = list()
     value_list = list()
 
@@ -89,8 +88,9 @@ def poblador_tablas(sentencias_create, sentencia_select):
 
     return insert_list
 
-def set_null_probability(null_probability):
+
+def set_null_probability(null_probability: int):
     if 0 <= null_probability <= 1:
         cts.NULL_PROBABILITY = null_probability
     else:
-        raise Exception('Probabilidad fuera de rango')
+        raise Exception('Probabilidad fuera de rango. El valor debe estar entre 0 y 1')

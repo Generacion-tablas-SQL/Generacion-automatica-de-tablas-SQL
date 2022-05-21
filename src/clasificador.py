@@ -10,8 +10,8 @@ def restricciones_sql(parameters, column):
     """Comprueba las restricciones SQL.
 
     :param parameters: lista con parámetros del tipo de dato.
-    :param column: diccionario con restricciones de la columna.
-    :return: lista con las restricciones. El último elemento de la lista es un diccionario con las restricciones check.
+    :param column: diccionario con las restricciones de la columna devuelto por el parseador.
+    :return: diccionario más simple con las restricciones de la columna.
     """
 
     restricciones_dict = dict()
@@ -150,7 +150,7 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
 
     op = sentencia_where.get("op")
     args = list()
-    if op == "and":
+    if op == "and" or op == "or":
         args.extend(sentencia_where.get("args"))
     else:
         args.append(sentencia_where)
@@ -255,16 +255,24 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                     if op_ == "like":
                         old_like = restricciones_col.get("like")
                         restricciones_col.update({"like": data})
-                        strings.append(gd.generate_string(restricciones_col)[0])
+                        gen_string = gd.generate_string(restricciones_col)[0]
+                        col_data.append(gen_string)
 
                         # GENERAR VALOR INVÁLIDO
-                        pos = 0
                         found = False
-                        for i in data:
-                            if i != "_" and i != "%" and i != old_like[pos]:
-                                found = True
-                                break
-                            pos += 1
+                        pos = 0
+                        if old_like is None:
+                            for i in data:
+                                if i != "_" and i != "%":
+                                    found = True
+                                    break
+                                pos += 1
+                        else:
+                            for i in data:
+                                if i != "_" and i != "%" and i != old_like[pos]:
+                                    found = True
+                                    break
+                                pos += 1
 
                         if found:
                             letr = random.choice(string.ascii_letters)
@@ -273,11 +281,10 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
 
                             invalid_data = data[0:pos] + letr + data[pos + 1:]
                             restricciones_col.update({"like": invalid_data})
-                            strings.append(gd.generate_string(restricciones_col)[0])
+                            col_data.append(gd.generate_string(restricciones_col)[0])
                         else:
                             raise Exception("Restricción LIKE en sentencia SELECT no soportada. "
                                             "Debe contener al menos un caracter válido.")
-
                         restricciones_col.update({"like": old_like})
 
                     elif len_ex != -1:  # Existe el campo length
@@ -295,9 +302,19 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                                 i = 0
                             restricciones_col.update({"min": data + i})
                             restricciones_col.update({"max": data + i})
-                            strings.append(gd.generate_string(restricciones_col)[0])
+                            col_data.append(gd.generate_string(restricciones_col)[0])
                             restricciones_col.update({"min": old_min})
                             restricciones_col.update({"max": old_max})
+
+                        # for i in strings:
+                        #     if _unique is None and _primary is None:
+                        #         col_data.append(i)
+                        #     elif _unique is not None and arg_data + i not in _unique:
+                        #         col_data.append(i)
+                        #         _unique.append(i)
+                        #     elif _primary is not None and arg_data + i not in _primary:
+                        #         col_data.append(i)
+                        #         _primary.append(i)
 
                     else:  # Operaciones con operadores
                         loop = loop_list(op_, 0)
@@ -307,17 +324,17 @@ def restricciones_where(col_name, restricciones_col, sentencia_where, gen_data, 
                                     gen_data[arg_data.lower()] = [data]
                             i = int(i)
                             char = chr(ord(data[-1]) + i)
-                            strings.append(data[0:-1] + char)  # Añade el siguiente caracter ascii al último caracter
+                            col_data.append(data[0:-1] + char)  # Añade el siguiente caracter ascii al último caracter
 
-                    for i in strings:
-                        if _unique is None and _primary is None:
-                            col_data.append(i)
-                        elif _unique is not None and arg_data + i not in _unique:
-                            col_data.append(i)
-                            _unique.append(i)
-                        elif _primary is not None and arg_data + i not in _primary:
-                            col_data.append(i)
-                            _primary.append(i)
+                        # for i in strings:
+                        #     if _unique is None and _primary is None:
+                        #         col_data.append(i)
+                        #     elif _unique is not None and arg_data + i not in _unique:
+                        #         col_data.append(i)
+                        #         _unique.append(i)
+                        #     elif _primary is not None and arg_data + i not in _primary:
+                        #         col_data.append(i)
+                        #         _primary.append(i)
 
                 else:  # tipo == "Fecha"
                     if compara_cols:
@@ -393,7 +410,12 @@ def comprobar_restricciones_check(parameters, check):
     if check is None:
         return {"min": _min, "max": _max, "eq": _eq, "neq": _neq, "like": _like, "scale": _scale}
 
-    comparisons = check.get("args")
+    # Si es de tipo string, solo tiene una condición check y esta condición el like,
+    # no tenemos que recoger el valor de 'args' de check, necesitamos la sentencia entera
+    if parameters[0] == "String" and (check.get("op") == "like"):
+        comparisons = [check]
+    else:
+        comparisons = check.get("args")
 
     for comparison in comparisons:
 
@@ -543,7 +565,7 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
 
             # char y nchar tienen un tamaño por defecto de 1
             max_size = 1 if parameters is None else parameters[0]
-            varying = False if data_type == "char" or data_type == "nchar" else True
+            varying = False if data_type not in constantes.VARYING else True
 
             data_type_param = ["String", col_name, varying, max_size]
             restricciones = restricciones_sql(data_type_param, column)
@@ -604,6 +626,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
         for permutation in permutations:
             ok = True
 
+            # Al realizar permutaciones se repiten los datos, con lo cual si tienen restricciones unique o primary key
+            # debemos asegurarnos de que no se repitan. Debido a la aleatoriedad de las permutaciones,
             for i in range(0, len(keys)):
                 if cumple_restricciones(col_restrictions.get(keys[i]), permutation[i]):
                     if uniques[i] is None and primaries[i] is None:

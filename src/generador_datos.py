@@ -71,7 +71,7 @@ def generate_string(restricciones):
     _primary = restricciones.get("primary key") if "primary key" in restricciones else None
     _nullable = restricciones.get("nullable")
 
-    fake = Faker(['en_US'])
+    fake = Faker(['es_ES'])
     generated_string = None
 
     if _eq is not None:

@@ -8,5 +8,6 @@ COMPARADORES = ["eq", "neq", "gt", "gte", "lt", "lte"]
 REALES = ["number", "float", "binary_float", "binary_double", "numeric", "decimal", "dec", "real"]
 COMA_FLOTANTE = ["float", "binary_float", "binary_double", "real"]
 STRINGS = ["char", "character", "varchar", "varchar2", "nchar", "nvarchar", "nvarchar2", "long"]
+VARYING = ["varchar", "varchar2", "nvarchar", "nvarchar2", "long"]
 FECHA = ["date", "timestamp"]
 
