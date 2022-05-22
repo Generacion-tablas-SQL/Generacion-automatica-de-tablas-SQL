@@ -11,15 +11,15 @@ def main():
                    "fec2 TIMESTAMP(2) NOT NULL, "\
                     "fec3 TIMESTAMP(2) NOT NULL)"
 
-    select1 = "SELECT string FROM Persona WHERE LENGTH(string) < 4"
-    select2 = "SELECT ent FROM Persona WHERE ent > 50 and real != 0.02"
-    select3 = "SELECT string FROM Persona WHERE ent > 30 and string like 'Carmen'"
+    select1 = "SELECT string FROM Persona WHERE LENGTH(string) <= 6 or LENGTH(string) > 2;"
+    select2 = "SELECT ent FROM Persona WHERE real > 50 and real != 0.02;"
+    select3 = "SELECT string FROM Persona WHERE ent > 30 and string like 'Carmen';"
     select4 = "SELECT ent FROM Persona WHERE ent > 30 and ent < 32"
-    select5 = "SELECT string FROM Persona WHERE string != 'Carmen' and string like 'Car%'"
-    select6 = "SELECT fec1, ent FROM Persona WHERE fec1 > '30/08/2000' and ent > 35"
-    select7 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting'"
-    select8 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting' and fec1 > '30/08/2000'"
-    select14 = "SELECT * FROM Persona WHERE fec2 = '05/10/1995 00:20:38.47'"
+    select5 = "SELECT string FROM Persona WHERE string != 'Carmen' and string like 'Car%';"
+    select6 = "SELECT fec1, ent FROM Persona WHERE fec1 > '30/08/2000' and ent > 35;"
+    select7 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting';"
+    select8 = "SELECT ent, real  FROM Persona WHERE ent > 30 and real > 0.00 and string != 'Carting' and fec1 > '30/08/2000';"
+    select0 = "SELECT * FROM Persona;"
 
     create_table2 = "CREATE TABLE Club(" \
                         "CIF NUMBER(4) PRIMARY KEY NOT NULL," \
@@ -32,6 +32,7 @@ def main():
                         "NIF NUMBER(8) PRIMARY KEY NOT NULL," \
                         "Nombre VARCHAR(30) NOT NULL," \
                         "Altura NUMBER(3, 2)," \
+                        "FechaNacimiento DATE," \
                         "CIF_Club NUMBER(4) REFERENCES Club(CIF)" \
                     ");" \
                     "CREATE TABLE Enfrenta(" \
@@ -54,9 +55,10 @@ def main():
     select11 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB WHERE Altura > 1.65;"
     select12 = "SELECT * From Club JOIN Jugador ON CIF = CIF_CLUB JOIN Enfrenta ON CIF = CIF_L WHERE Altura > 1.65;"
     select13 = "SELECT * From Club WHERE Nombre_Club = Sede;"
+    select14 = "SELECT * From Jugador WHERE NIF = 4356 AND FechaNacimiento > '12/12/1999';"
 
     try:
-        print(*poblador_tablas(create_table, select14), sep='\n')
+        print(*poblador_tablas(create_table2, select14), sep='\n')
     except Exception as msg:
         traceback.print_exc()
         print(msg)

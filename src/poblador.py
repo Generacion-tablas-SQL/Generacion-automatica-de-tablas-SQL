@@ -26,25 +26,27 @@ def poblador_tablas(sentencias_create, sentencia_select):
 
     # Seleccionar las tablas que aparecen en la sentencia SELECT para luego iterar sobre ellas
     # Así evitamos analizar las tablas con las que no vamos a trabajar
-    tablas_select = list()
+    # tablas_select = list()
     _from = select_parsed.get("from")
     if not isinstance(_from, list):
         _from = [_from]
-    if len(_from) > 1:
-        tablas_select = [x.get("join").lower() for x in _from[1:]]
-    tablas_select.insert(0, _from[0].lower())
+    # if len(_from) > 1:
+    #     tablas_select = [x.get("join").lower() for x in _from[1:]]
+    # tablas_select.insert(0, _from[0].lower())
+
+    name_tablas = [tablas_parsed[x].get("create table").get("name").lower() for x in range(0, len(tablas_parsed))]
 
     # Analizar los joins
     joins = dict()
     if len(_from) > 1:
         num_elems = 2
         for join in _from[1:]:
-            key = tuple([tablas_select[x] for x in range(0, num_elems)])
+            key = tuple([name_tablas[x] for x in range(0, num_elems)])
             joins.update({key: [join.get("on").get("op"), join.get("on")
                          .get("args")[0], join.get("on").get("args")[1]]})
             num_elems += 1
 
-    for tabla_s in tablas_select:
+    for tabla_s in name_tablas:
         tablas_restricciones.update({tabla_s: {}})
         tablas_datos.update({tabla_s: {}})
 
@@ -70,7 +72,7 @@ def poblador_tablas(sentencias_create, sentencia_select):
     insert_list = list()
     value_list = list()
 
-    for tabla_s in tablas_select:
+    for tabla_s in name_tablas:
         num_filas = 500
         for data in tablas_datos.get(tabla_s).values():
             num_filas = min(num_filas, len(data))
