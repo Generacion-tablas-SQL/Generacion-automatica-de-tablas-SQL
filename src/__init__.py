@@ -4,12 +4,11 @@ from poblador import poblador_tablas
 
 def main():
     create_table = "CREATE TABLE Persona (" \
-                   "real NUMBER(4,2) CHECK (REal >= 0.00 AND REAL <= 0.03)," \
-                   "ent INT CHECK (INT > 25 AND INT < 45)," \
-                   "string VARCHAR(15) NOT NULL CHECK (string LIKE 'C%' and LENGTH(string) > 5 and LENGTH(string) < 20)," \
-                   "fec1 DATE NOT NULL, " \
-                   "fec2 TIMESTAMP(2) NOT NULL, "\
-                    "fec3 TIMESTAMP(2) NOT NULL)"
+                   "real BINARY_FLOAT," \
+                   "ent INT CHECK (INT > 25 AND INT <= 28)," \
+                   "string VARCHAR(15) CHECK (string LIKE 'C%' and LENGTH(string) != 5 and LENGTH(string) <= 20)," \
+                   "fec1 DATE NOT NULL CHECK(fec1 > '10/12/2000'), " \
+                   "fec2 TIMESTAMP(2) NOT NULL)"
 
     select1 = "SELECT string FROM Persona WHERE LENGTH(string) <= 6 or LENGTH(string) > 2;"
     select2 = "SELECT ent FROM Persona WHERE real > 50 and real != 0.02;"
