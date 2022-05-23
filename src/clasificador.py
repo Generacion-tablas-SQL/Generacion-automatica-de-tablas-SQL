@@ -665,36 +665,37 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                     col = select_joins.get(join)[2].lower()
 
                 if col_restrictions.get(col) is not None:  # Puede ser que las col del JOIN no sean de la tabla actual
-                    if col_restrictions.get(col).get('primary_key') is not None:
-                        # Generar dos valores diferentes para la columna
-                        check = next((columna for columna in columnas if columna['name'] == col), None)
-                        datos_join = generar_datos(col_restrictions.get(col), 2)
-                        while datos_join[0] == datos_join[1]:              # Comprobamos que los dos datos son distintos
-                            datos_join[1] = generar_datos(col_restrictions.get(col), 1)
-                        col_data.update({col: datos_join})
-                    else:
-                        # Generar un valor que coincida con alguno de los creados en el primary key de la otra tabla
+                    # if col_restrictions.get(col).get('primary key') is not None:
+                        # # Generar dos valores diferentes para la columna
+                        # check = next((columna for columna in columnas if columna['name'] == col), None)
+                        # datos_join = generar_datos(col_restrictions.get(col), 2)
+                        # while datos_join[0] == datos_join[1]:  # Comprobamos que los dos datos son distintos
+                        #     datos_join[1] = generar_datos(col_restrictions.get(col), 1)
+                        # col_data.update({col: datos_join})
+                    # else:
+                    if col_restrictions.get(col).get('references') is not None:
+                        # Generar un valor que coincida con alguno de los creados en el la columna a la que referencia
                         datos_join = list()
                         # times es el número máximo de datos metidos en una columna por el where
                         aux_times = 1 if times == 0 else times
                         if len(col_data.get(col)) == 0:
-                            tabla_primary = join[0]
-                            col_primary = select_joins.get(join)[1].lower()
-                            dato_primary = tablas_datos.get(tabla_primary).get(col_primary)[0]
+                            tabla_referencia = join[0]
+                            col_referencia = select_joins.get(join)[1].lower()
+                            dato_referencia = tablas_datos.get(tabla_referencia).get(col_referencia)[0]
                             if select_joins.get(join)[0] == "eq":
-                                col_restrictions.get(col).update({"eq": dato_primary})
+                                col_restrictions.get(col).update({"eq": dato_referencia})
                             elif select_joins.get(join)[0] == "gt":
-                                col_restrictions.get(col).update({"min": dato_primary + 1})
+                                col_restrictions.get(col).update({"min": dato_referencia + 1})
                             elif select_joins.get(join)[0] == "gte":
-                                col_restrictions.get(col).update({"min": dato_primary})
+                                col_restrictions.get(col).update({"min": dato_referencia})
                             elif select_joins.get(join)[0] == "lt":
-                                col_restrictions.get(col).update({"max": dato_primary - 1})
+                                col_restrictions.get(col).update({"max": dato_referencia - 1})
                             elif select_joins.get(join)[0] == "lte":
-                                col_restrictions.get(col).update({"max": dato_primary})
+                                col_restrictions.get(col).update({"max": dato_referencia})
                             else:
                                 raise Exception("Operador en join no soportado")
 
-                            check = next((columna for columna in columnas if columna['name'] == col), None)
+                            # check = next((columna for columna in columnas if columna['name'] == col), None)
                             dato = generar_datos(col_restrictions.get(col), 1)
 
                             for i in range(0, aux_times):
