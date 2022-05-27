@@ -1,18 +1,19 @@
-# Tipos de datos y Generadores
 ## Generación automática de tablas para probar consultas SQL
-Dada una estructura de base de datos SQL y una consulta, generar filas de datos que rellenen las columnas
-de forma que haya filas que encajen con la consulta y filas que no lo hagan.
+Repositorio del Trabajo de Fin de Grado "Generación automática de tablas para probar consultas SQL".
 
-Para llegar a conseguir la finalidad deseada, se ha dividido el proyecto en varias fases:
-### Primera fase:
-- Fase de investigación: consultar los tipos de datos soportados por Oracle.
+Facultad de Informática, Universidad Complutense de Madrid (UCM).
 
-### Segunda fase:
-- Implementación de funciones generadoras de datos aleatorios. Uno para cada tipo de datos
-  - Se tienen en cuenta las posibles restricciones, tanto del propio tipo de dato como las restricciones
-  CHECK.   
-  
-### Tercera fase:
-- Implementación de una función generadora de tablas que dada una o varias sentencias CREATE TABLE y 
-una consulta, devuelva uno o varios strings de sentencias INSERT.
-  - Empezamos por una consulta muy sencilla como "SELECT <columna> FROM <tabla>". 
+Curso 2021/2022
+
+Autores:
+  - Maria de Lluc Bonet Seguí
+  - Álvaro Plaza Sanz
+
+Director:
+  - Enrique Martín Martín
+
+Biblioteca escrita en Python enfocada a su uso dentro del sistema LearnSQL, usado en la 
+asignatura de Bases de Datos del grado de Ingeniería Informática en la UCM. Su objetivo es 
+generar casos de prueba de forma automática a partir de una o varias sentencias
+CREATE TABLE y una consulta SQL.
+
