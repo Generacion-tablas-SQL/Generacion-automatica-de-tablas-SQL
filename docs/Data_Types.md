@@ -5,7 +5,8 @@
 - NUMBER [(p [,s])] → default s = 0. Si no se especifica ni _p_ ni _s_,
 se almacena el valor tal y como se da. Rango de _p_: 1 a 38.
 Rango de _s_: -84 a 127
-- FLOAT [(p)] → Default p = 53. Precisión en bits. Rango de _p_: 1 a 126
+- BINARY_FLOAT: precisión de 32 bits
+- BINARY_DOUBLE: presisión de 64 bits
 
 ####Ansi supported
 - NUMERIC [(p [,s])] ≡ NUMBER [(p [,s])]

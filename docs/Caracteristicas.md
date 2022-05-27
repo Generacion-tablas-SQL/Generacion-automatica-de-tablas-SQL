@@ -9,7 +9,8 @@ Muchas de estas limitaciones se pueden considerar para un trabajo futuro posteri
 
 ### Generadores de datos:
 
-- Se consideran los datos tipo **FLOAT** y **REAL** como números decimales de punto fijo con precisión 10 y escala 4.
+- Se consideran los datos tipo **FLOAT**, **BINARY_FLOAT**, **BINARY_DOUBLE** y **REAL** como números decimales de 
+coma fija con precisión 10 y escala 4.
 - Los datos tipo **NUMBER** tendrán una precision y una escala de máximo 16, ya que float no soporta tantos dígitos sin 
 cambiar su formato.
 - No se realiza la implementación del tipo de datos en coma (o punto) flotante de doble precisión (**DOUBLE PRECISION**), 
@@ -22,7 +23,7 @@ por tamaño en bytes debido a que mo-sql-parsing no lo soporta.
 
 
 - Comparaciones de strings: 
-  - Función LEN
+  - Función LENGTH
   - Restricción LIKE
     - No tiene en cuenta el parámetro ESCAPE
 
