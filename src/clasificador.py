@@ -415,7 +415,10 @@ def comprobar_restricciones_check(parameters, check):
     if parameters[0] == "String" and (check.get("op") == "like"):
         comparisons = [check]
     else:
-        comparisons = check.get("args")
+        if check.get("op") == "and" or check.get("op") == "or":
+            comparisons = check.get("args")
+        else:
+            comparisons = [check]
 
     for comparison in comparisons:
 
@@ -503,8 +506,8 @@ def clasificar_tipo(nombre_tabla, columnas, tablas_datos, select_joins, condicio
                     break
                 col_select.append(in_args[0].lower()) if isinstance(in_args[0], str) else (
                     col_select.append(in_args[1].lower()) if isinstance(in_args[1], str) else (
-                        col_select.append(in_args[0].get("args")[0]) if isinstance(in_args[0], dict) else
-                        col_select.append(in_args[1].get("args")[0])
+                        col_select.append(in_args[0].get("args")[0].lower()) if isinstance(in_args[0], dict) else
+                        col_select.append(in_args[1].get("args")[0].lower())
                     )
                 )
             else:
